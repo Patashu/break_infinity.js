@@ -345,9 +345,13 @@
 		}
 		
 		round() {
-			if (Math.abs(this.exponent) < 308)
+			if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
 				return new Decimal(Math.round(this.toNumber()));
+			}
+			else if (this.exponent < 0)
+			{
+				return new Decimal(0);
 			}
 			return this;
 		}
@@ -361,9 +365,13 @@
 		}
 		
 		floor() {
-			if (Math.abs(this.exponent) < 308)
+			if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
 				return new Decimal(Math.floor(this.toNumber()));
+			}
+			else if (this.exponent < 0)
+			{
+				return Math.sign(mantissa) >= 0 ? new Decimal(0) : new Decimal(1);
 			}
 			return this;
 		}
@@ -377,9 +385,13 @@
 		}
 		
 		ceil() {
-			if (Math.abs(this.exponent) < 308)
+			if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
 				return new Decimal(Math.ceil(this.toNumber()));
+			}
+			else if (this.exponent < 0)
+			{
+				return Math.sign(mantissa) > 0 ? new Decimal(1) : new Decimal(0);
 			}
 			return this;
 		}
@@ -393,9 +405,13 @@
 		}
 		
 		trunc() {
-			if (Math.abs(this.exponent) < 308)
+			if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
 				return new Decimal(Math.trunc(this.toNumber()));
+			}
+			else if (this.exponent < 0)
+			{
+				return new Decimal(0);
 			}
 			return this;
 		}
