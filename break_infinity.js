@@ -46,6 +46,14 @@
 	
 	---
 	
+	So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:
+	pow(1.5): 1e6 (1e4 for decimal.js - 100x faster)
+	exp: 2e6 (5e3 for decimal.js - 400x faster)
+	log: 3e7 (5e4 for decimal.js - 600x faster)
+	add, mul: 1e8 (2e6 for decimal.js - 50x faster)
+	
+	---
+	
 	Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimensions.
 	
 	Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
