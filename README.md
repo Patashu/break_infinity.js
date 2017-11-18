@@ -28,7 +28,8 @@ fromValue(value)
 toNumber()</br>
 mantissaWithDecimalPlaces(places)</br>
 toString()</br>
-toStringWithDecimalPlaces(places)
+toFixed(places)</br>
+toExponential(places)
 
 abs(), neg(), sign()</br>
 add(value), sub(value), mul(value), div(value), recip()</br>
