@@ -54,4 +54,4 @@ Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimens
 
 Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
 
-p.s. No, this library will never handle numbers bigger in mthan 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
+p.s. No, this library will never handle numbers bigger in magnitude than 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
