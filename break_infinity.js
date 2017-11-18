@@ -211,7 +211,7 @@
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
 			
-			return this.mantissa + "e" + this.exponent;
+			return this.mantissa + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
 		}
 		
 		toStringWithDecimalPlaces(places) {
@@ -233,6 +233,7 @@
 		
 		valueOf() { return this.toString(); }
 		toJSON() { return this.toString(); }
+		toExponential() { return this.toString(); }
 		
 		get m() { return this.mantissa; }
 		set m(value) { this.mantissa = value; }
@@ -526,6 +527,8 @@
 			
 			return value.div(other);
 		}
+		
+		dividedBy(value) { return this.div(value); }
 		
 		recip() {
 			return Decimal.fromMantissaExponent(1/this.mantissa, -this.exponent);
