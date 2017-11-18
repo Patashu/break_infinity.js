@@ -59,7 +59,7 @@
 	
 	Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
 	
-	p.s. No, this library will never handle numbers bigger in mthan 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
+	p.s. No, this library will never handle numbers bigger in magnitude than 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
 	
 	*/
 	
@@ -433,6 +433,7 @@
 				value = Decimal.fromNumber(value);
 			}
 			
+			//SAFETY: I think with the changes in normalize() this isn't necessary anymore
 			if (this.mantissa == 0) { return value; }
 			if (value.mantissa == 0) { return this; }
 			
@@ -1097,15 +1098,17 @@
 		pow(value) {
 			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games.
 		
-			//Fast track: If (this.exponent*value) is an integer, we can do a very fast method.
+			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
 			if (Number.isInteger(this.exponent*value))
 			{
-				return Decimal.fromMantissaExponent(Math.pow(this.mantissa, value), this.exponent*value);
+				var newMantissa = Math.pow(this.mantissa, value);
+				if (Number.isFinite(newMantissa))
+				{
+					return Decimal.fromMantissaExponent(newMantissa, this.exponent*value);
+				}
 			}
-			else
-			{
-				return Decimal.exp(value*this.ln());
-			}
+			
+			return Decimal.exp(value*this.ln());
 		}
 		
 		pow_base(value) {
@@ -1129,7 +1132,8 @@
 		
 		exp() {
 			//UN-SAFETY: Assuming this value is between [-2.1e15, -2.1e15].
-		
+			//TODO: This function probably has the most potential for being made to run faster.
+			
 			//Fast track: if -706 < this < 709, we can use regular exp.
 			var asNumber = this.toNumber();
 			if (-706 < asNumber && asNumber < 709)
