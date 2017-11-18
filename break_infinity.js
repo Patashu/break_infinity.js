@@ -479,6 +479,18 @@
 			return value.sub(other);
 		}
 		
+		minus(value) {
+			return this.sub(value);
+		}
+		
+		static minus(value, other) {
+			if (typeof(value) == 'number') {
+				value = Decimal.fromNumber(value);
+			}
+			
+			return value.sub(other);
+		}
+		
 		mul(value) {
 			/*
 			a_1*10^b_1 * a_2*10^b_2
