@@ -33,7 +33,8 @@
 	toNumber()
 	mantissaWithDecimalPlaces(places)
 	toString()
-	toStringWithDecimalPlaces(places)
+	toFixed(places)
+	toExponential(places)
 	
 	abs(), neg(), sign()
 	add(value), sub(value), mul(value), div(value), recip()
@@ -218,7 +219,7 @@
 				return this.toNumber().toString();
 			}
 			
-			return this.mantissa + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
+			return this.mantissa + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent;
 		}
 		
 		toStringWithDecimalPlaces(places) {
@@ -232,11 +233,12 @@
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
 			
 			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
-
-			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
-			var rounded = Math.round(this.mantissa*Math.pow(10,places-numDigits))*Math.pow(10,numDigits-places); 
 			
-			return rounded.toFixed(Math.max(places-numDigits,0)) + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
+			var len = places+1;
+			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
+			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len); 
+			
+			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent;
 		}
 		
 		toFixed(places) {
