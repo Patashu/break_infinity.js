@@ -311,6 +311,70 @@
 			return value.sign();
 		}
 		
+		round() {
+			if (Math.abs(this.exponent) < 308)
+			{
+				return new Decimal(Math.round(this.toNumber()));
+			}
+			return this;
+		}
+		
+		static round(value) {
+			if (typeof(value) == 'number') {
+				value = Decimal.fromNumber(value);
+			}
+			
+			return value.round();
+		}
+		
+		floor() {
+			if (Math.abs(this.exponent) < 308)
+			{
+				return new Decimal(Math.floor(this.toNumber()));
+			}
+			return this;
+		}
+		
+		static floor(value) {
+			if (typeof(value) == 'number') {
+				value = Decimal.fromNumber(value);
+			}
+			
+			return value.floor();
+		}
+		
+		ceil() {
+			if (Math.abs(this.exponent) < 308)
+			{
+				return new Decimal(Math.ceil(this.toNumber()));
+			}
+			return this;
+		}
+		
+		static ceil(value) {
+			if (typeof(value) == 'number') {
+				value = Decimal.fromNumber(value);
+			}
+			
+			return value.ceil();
+		}
+		
+		trunc() {
+			if (Math.abs(this.exponent) < 308)
+			{
+				return new Decimal(Math.trunc(this.toNumber()));
+			}
+			return this;
+		}
+		
+		static trunc(value) {
+			if (typeof(value) == 'number') {
+				value = Decimal.fromNumber(value);
+			}
+			
+			return value.trunc();
+		}
+		
 		add(value) {
 			//figure out which is bigger, shrink the mantissa of the smaller by the difference in exponents, add mantissas, normalize and return
 			
