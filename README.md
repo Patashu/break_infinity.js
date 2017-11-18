@@ -1,5 +1,5 @@
 # break_infinity.js
-A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.
+A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.</br>
 If you want to prioritize accuracy over speed, please use decimal.js instead.
 
 https://github.com/Patashu/break_infinity.js
@@ -12,39 +12,39 @@ By Patashu.
 
 Decimal has only two fields:
 
-mantissa: A number (double) with absolute value between [1, 10) OR exactly 0. If mantissa is ever 10 or greater, it should be normalized (divide by 10 and add 1 to exponent until it is less than 10, or multiply by 10 and subtract 1 from exponent until it is 1 or greater). Infinity/-Infinity/NaN will cause bad things to happen.
+mantissa: A number (double) with absolute value between [1, 10) OR exactly 0. If mantissa is ever 10 or greater, it should be normalized (divide by 10 and add 1 to exponent until it is less than 10, or multiply by 10 and subtract 1 from exponent until it is 1 or greater). Infinity/-Infinity/NaN will cause bad things to happen.</br>
 exponent: A number (integer) between -EXP_LIMIT and EXP_LIMIT. Non-integral/out of bounds will cause bad things to happen.
 
 The decimal's value is simply mantissa*10^exponent.
 
 Functions of Decimal:
 
-fromMantissaExponent(mantissa, exponent)
-fromDecimal(value)
-fromNumber(value)
-fromString(value)
+fromMantissaExponent(mantissa, exponent)</br>
+fromDecimal(value)</br>
+fromNumber(value)</br>
+fromString(value)</br>
 fromValue(value)
 
-toNumber()
-mantissaWithDecimalPlaces(places)
-toString()
+toNumber()</br>
+mantissaWithDecimalPlaces(places)</br>
+toString()</br>
 toStringWithDecimalPlaces(places)
 
-abs(), neg(), sign()
-add(value), sub(value), mul(value), div(value), recip()
+abs(), neg(), sign()</br>
+add(value), sub(value), mul(value), div(value), recip()</br>
 
-cmp(value), eq(value), neq(value), lt(value), lte(value), gt(value), gte(value)
+cmp(value), eq(value), neq(value), lt(value), lte(value), gt(value), gte(value)</br>
 cmp_tolerance(value, tolerance), eq_tolerance(value, tolerance), neq_tolerance(value, tolerance), lt_tolerance(value, tolerance), lte_tolerance(value, tolerance), gt_tolerance(value, tolerance), gte_tolerance(value, tolerance)
 
-log(base), log10(), log2(), ln()
+log(base), log10(), log2(), ln()</br>
 pow(value, other), pow(value), pow_base(value), exp(), sqr(), sqrt(), cube(), cbrt()
 
 ---
 
-So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:
-pow(1.5): 1e6 (1e4 for decimal.js - 100x faster)
-exp: 2e6 (5e3 for decimal.js - 400x faster)
-log: 3e7 (5e4 for decimal.js - 600x faster)
+So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:</br>
+pow(1.5): 1e6 (1e4 for decimal.js - 100x faster)</br>
+exp: 2e6 (5e3 for decimal.js - 400x faster)</br>
+log: 3e7 (5e4 for decimal.js - 600x faster)</br>
 add, mul: 1e8 (2e6 for decimal.js - 50x faster)
 
 ---
