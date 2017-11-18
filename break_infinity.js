@@ -211,6 +211,11 @@
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
 			
+			if (this.exponent >= 21 || this.exponent <= -7)
+			{
+				return this.toNumber().toString();
+			}
+			
 			return this.mantissa + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
 		}
 		
@@ -223,6 +228,8 @@
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
+			
+			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 
 			var len = places+1;
 			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
@@ -564,6 +571,7 @@
 			return value.div(other);
 		}
 		
+		divideBy(value) { return this.div(value); }
 		dividedBy(value) { return this.div(value); }
 		
 		recip() {
