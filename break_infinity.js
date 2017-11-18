@@ -231,7 +231,7 @@
 			
 			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 
-			var len = places+1;
+			var len = places;
 			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
 			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len); 
 			
