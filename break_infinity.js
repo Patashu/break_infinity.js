@@ -85,6 +85,7 @@
 				this.mantissa /= 10;
 				this.exponent += 1;
 			}
+			if (this.mantissa == 0) this.exponent = 0;
 			return this;
 		}
 		
@@ -231,11 +232,10 @@
 			
 			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 
-			var len = places;
 			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
-			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len); 
+			var rounded = Math.round(this.mantissa*Math.pow(10,places-numDigits))*Math.pow(10,numDigits-places); 
 			
-			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
+			return rounded.toFixed(Math.max(places-numDigits,0)) + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
 		}
 		
 		toFixed(places) {
@@ -413,6 +413,9 @@
 			if (typeof(value) == 'number') {
 				value = Decimal.fromNumber(value);
 			}
+			
+			if (this.mantissa == 0) { return value; }
+			if (value.mantissa == 0) { return this; }
 			
 			var biggerDecimal, smallerDecimal;
 			if (this.exponent >= value.exponent)
