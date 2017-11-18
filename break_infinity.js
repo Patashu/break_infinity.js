@@ -211,7 +211,7 @@
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
 			
-			if (this.exponent >= 21 || this.exponent <= -7)
+			if (this.exponent < 21 && this.exponent > -7)
 			{
 				return this.toNumber().toString();
 			}
