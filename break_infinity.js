@@ -228,12 +228,36 @@
 			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
 			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len); 
 			
-			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + this.exponent;
+			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + (this.exponent > 0 ? "+" : "") + this.exponent;
+		}
+		
+		toFixed(places) {
+			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) { return "NaN"; }
+			if (this.exponent >= EXP_LIMIT)
+			{
+				return this.mantissa > 0 ? "Infinity" : "-Infinity";
+			}
+			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
+			
+			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
+			
+			// two cases:
+			// 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
+			// 2) exponent is 16 or less: use basic toFixed
+			
+			if (this.exponent >= MAX_SIGNIFICANT_DIGITS)
+			{
+				return this.mantissa.toString().replace(".", "").padEnd(this.exponent+1, "0");
+			}
+			else
+			{
+				return this.toNumber().toFixed(places);
+			}
 		}
 		
 		valueOf() { return this.toString(); }
 		toJSON() { return this.toString(); }
-		toExponential() { return this.toString(); }
+		toExponential(places) { return this.toStringWithDecimalPlaces(places); }
 		
 		get m() { return this.mantissa; }
 		set m(value) { this.mantissa = value; }
