@@ -85,7 +85,8 @@
 				this.mantissa /= 10;
 				this.exponent += 1;
 			}
-			if (this.mantissa == 0) this.exponent = 0;
+			//SAFETY: turn negative 0 into 0 lol
+			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = 0; }
 			return this;
 		}
 		
