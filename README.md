@@ -43,8 +43,8 @@ pow(value, other), pow(value), pow_base(value), exp(), sqr(), sqrt(), cube(), cb
 ---
 
 So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:</br>
-pow(1.5): 1e6 (1e4 for decimal.js - 100x faster)</br>
-exp: 2e6 (5e3 for decimal.js - 400x faster)</br>
+pow(1.5): 5e6 (1e4 for decimal.js - 500x faster)</br>
+exp: 2e7 (1e4 for decimal.js - 2000x faster)</br>
 log: 3e7 (5e4 for decimal.js - 600x faster)</br>
 add, mul: 1e8 (2e6 for decimal.js - 50x faster)
 
