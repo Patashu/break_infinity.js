@@ -48,8 +48,8 @@
 	---
 	
 	So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:
-	pow(1.5): 1e6 (1e4 for decimal.js - 100x faster)
-	exp: 2e6 (5e3 for decimal.js - 400x faster)
+	pow(1.5): 5e6 (1e4 for decimal.js - 500x faster)
+	exp: 2e7 (1e4 for decimal.js - 2000x faster)
 	log: 3e7 (5e4 for decimal.js - 600x faster)
 	add, mul: 1e8 (2e6 for decimal.js - 50x faster)
 	
@@ -395,7 +395,7 @@
 		floor() {
 			if (this.exponent < 0)
 			{
-				return Math.sign(mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
+				return Math.sign(this.mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
 			}
 			else if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
@@ -413,7 +413,7 @@
 		ceil() {
 			if (this.exponent < 0)
 			{
-				return Math.sign(mantissa) > 0 ? new Decimal(1) : new Decimal(0);
+				return Math.sign(this.mantissa) > 0 ? new Decimal(1) : new Decimal(0);
 			}
 			if (this.exponent < MAX_SIGNIFICANT_DIGITS)
 			{
@@ -999,13 +999,24 @@
 		pow(value) {
 			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games.
 		
+			//TODO: Possibly implement slabdrill's generic fast track (with more precise tests)
+			/*
+			
+			var temp = Math.pow(this.mantissa,value)
+			if (Math.abs(temp) < 1.8e307) {
+				return Decimal.fromMantissaExponent(temp*Math.pow(10,(this.exponent*value)%1), Math.floor(this.exponent*value));
+			}
+
+			*/
+		
 			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
-			if (Number.isInteger(this.exponent*value))
+			var temp = this.exponent*value;
+			if (Number.isSafeInteger(temp))
 			{
 				var newMantissa = Math.pow(this.mantissa, value);
 				if (Number.isFinite(newMantissa))
 				{
-					return Decimal.fromMantissaExponent(newMantissa, this.exponent*value);
+					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
 			
@@ -1070,7 +1081,7 @@
 				
 				if (exp != 0)
 				{
-					expx = Math.floor(exp);
+					expx = Math.floor(exp); //TODO: or round, or even nothing? can it ever be non-integer?
 					x = Decimal.fromMantissaExponent(x, expx);
 				}
 				
@@ -1099,6 +1110,8 @@
 		}
 		
 		static sqrt(value) {
+			//TODO: If generic fast track pow is not used, implement slabdrill's sqrt and cbrt specific fast track like so:
+			///if (this.exponent % 2 = 1) return Decimal.fromMantissaExponent(this.mantissa*3.16227766017, Math.floor(this.exponent/2));
 			value = Decimal.fromValue(value);
 			
 			return value.sqrt();
