@@ -1016,6 +1016,7 @@
 				var newMantissa = Math.pow(this.mantissa, value);
 				if (Number.isFinite(newMantissa))
 				{
+					//TODO: This might actually be slower than the 'slow track' if pow is very large, because of the huge amount of normalization we have to do. For example, Decimal.pow(1.43534e-8, 1000) has to be normalized 156 times. Maybe only take fast track if abs(value) <= 10? (Alternatively normalization for very unnormalized numbers can be done)
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
