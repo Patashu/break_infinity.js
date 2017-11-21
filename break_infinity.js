@@ -1018,7 +1018,7 @@
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
-			else
+			/*else
 			{
 				//Fast track 2: If mantissa^value is not too huge in magnitude, we can still piggyback off of Math.pow and be precise enough.
 				var tempMantissa = Math.pow(this.mantissa, value);
@@ -1026,7 +1026,7 @@
 				{
 					return Decimal.fromMantissaExponent(tempMantissa*Math.pow(10,(this.exponent*value)%1), Math.trunc(this.exponent*value));
 				}
-			}
+			}*/
 			
 			return Decimal.exp(value*this.ln());
 		}
