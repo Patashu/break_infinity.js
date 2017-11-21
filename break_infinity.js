@@ -99,6 +99,13 @@
 			return this;
 		}
 		
+		fromMantissaExponent_noNormalize(mantissa, exponent) {
+			//Well, you know what you're doing!
+			this.mantissa = mantissa;
+			this.exponent = exponent;
+			return this;
+		}
+		
 		fromDecimal(value) {
 			this.mantissa = value.mantissa;
 			this.exponent = value.exponent;
@@ -179,6 +186,10 @@
 		
 		static fromMantissaExponent(mantissa, exponent) {
 			return new Decimal().fromMantissaExponent(mantissa, exponent);
+		}
+		
+		static fromMantissaExponent_noNormalize(mantissa, exponent) {
+			return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
 		}
 		
 		static fromDecimal(value) {
@@ -1007,7 +1018,7 @@
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
-			/*else
+			else
 			{
 				//Fast track 2: If mantissa^value is not too huge in magnitude, we can still piggyback off of Math.pow and be precise enough.
 				var tempMantissa = Math.pow(this.mantissa, value);
@@ -1015,7 +1026,7 @@
 				{
 					return Decimal.fromMantissaExponent(tempMantissa*Math.pow(10,(this.exponent*value)%1), Math.trunc(this.exponent*value));
 				}
-			}*/
+			}
 			
 			return Decimal.exp(value*this.ln());
 		}
@@ -1139,6 +1150,12 @@
 			return value.cbrt();
 		}
 		
+		//Joke function from Realm Grinder
+		ascensionPenalty(ascensions) {
+			if (ascensions == 0) return this;
+			return this.pow(Math.pow(10, -ascensions));
+		}
+		
 		static randomDecimalForTesting(absMaxExponent)
 		{
 			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
@@ -1150,13 +1167,23 @@
 			return Decimal.fromMantissaExponent(mantissa, exponent);
 			
 			/*
-For example, randomly test pow:
+Examples:
+
+randomly test pow:
 			
 var a = Decimal.randomDecimalForTesting(1000);
 var pow = Math.random()*20-10;
 if (Math.random()*2 < 1) { pow = Math.round(pow); }
 var result = Decimal.pow(a, pow);
 ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
+
+randomly test add:
+
+var a = Decimal.randomDecimalForTesting(1000);
+var b = Decimal.randomDecimalForTesting(17);
+var c = a.mul(b);
+var result = a.add(c);
+[a.toString() + "+" + c.toString(), result.toString()]
 			*/
 		}
 	}
