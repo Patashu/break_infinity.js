@@ -993,19 +993,11 @@
 		}
 		
 		pow(value) {
-			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games.
-		
-			//TODO: Possibly implement slabdrill's generic fast track (with more precise tests)
-			/*
+			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games. Accuracy not guaranteed beyond ~9~11 decimal places.
 			
-			var temp = Math.pow(this.mantissa,value)
-			if (Math.abs(temp) < 1.8e307) {
-				return Decimal.fromMantissaExponent(temp*Math.pow(10,(this.exponent*value)%1), Math.floor(this.exponent*value));
-			}
-
-			*/
-		
-			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
+			//TODO: It's unclear if either of these fast tracks actually improve performance. Fast track 1 is neutral for performance. Fast track 2 seems detrimental for performance.
+			
+			//Fast track 1: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
 			var temp = this.exponent*value;
 			if (Number.isSafeInteger(temp))
 			{
@@ -1015,6 +1007,15 @@
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
+			/*else
+			{
+				//Fast track 2: If mantissa^value is not too huge in magnitude, we can still piggyback off of Math.pow and be precise enough.
+				var tempMantissa = Math.pow(this.mantissa, value);
+				if (Math.abs(Math.log10(Math.abs(tempMantissa)) < 100))
+				{
+					return Decimal.fromMantissaExponent(tempMantissa*Math.pow(10,(this.exponent*value)%1), Math.trunc(this.exponent*value));
+				}
+			}*/
 			
 			return Decimal.exp(value*this.ln());
 		}
@@ -1035,7 +1036,7 @@
 		}
 		
 		exp() {
-			//UN-SAFETY: Assuming this value is between [-2.1e15, 2.1e15].
+			//UN-SAFETY: Assuming this value is between [-2.1e15, 2.1e15]. Accuracy not guaranteed beyond ~9~11 decimal places.
 			
 			//Fast track: if -706 < this < 709, we can use regular exp.
 			var x = this.toNumber();
@@ -1092,7 +1093,7 @@
 		}
 		
 		sqr() {
-			return this.pow(2);
+			return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 2), this.exponent*2);
 		}
 		
 		static sqr(value) {
@@ -1114,7 +1115,7 @@
 		}
 		
 		cube() {
-			return this.pow(3);
+			return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 3), this.exponent*3);
 		}
 		
 		static cube(value) {
@@ -1147,6 +1148,16 @@
 			mantissa *= Math.sign(Math.random()*2-1);
 			var exponent = Math.floor(Math.random()*absMaxExponent*2) + -absMaxExponent;
 			return Decimal.fromMantissaExponent(mantissa, exponent);
+			
+			/*
+For example, randomly test pow:
+			
+var a = Decimal.randomDecimalForTesting(1000);
+var pow = Math.random()*20-10;
+if (Math.random()*2 < 1) { pow = Math.round(pow); }
+var result = Decimal.pow(a, pow);
+["(" + a.toString() + ")^" + pow.toString(), result.toString()]
+			*/
 		}
 	}
 	
