@@ -79,6 +79,7 @@
 		normalize() {
 			//SAFETY: don't try to normalize non-numbers or we infinite loop
 			if (!Number.isFinite(this.mantissa)) return this;
+			//TODO: Do we want very unnormalized numbers to normalize fast? Should it be a separate function? I think the only place where it's relevant is in the current pow() fast track, and if that got removed I'm not sure we'd even need it any more...
 			while (Math.abs(this.mantissa) < 1 && this.mantissa != 0)
 			{
 				this.mantissa *= 10;
@@ -1107,12 +1108,12 @@
 		}
 		
 		sqrt() {
-			return this.pow(0.5);
+			if (this.mantissa < 0) { return new Decimal(Number.NaN) };
+			if (this.exponent % 2 != 0) { return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa)*3.16227766016838, Math.floor(this.exponent/2)); } //mod of a negative number is negative, so != means '1 or -1'
+			return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa), Math.floor(this.exponent/2));
 		}
 		
 		static sqrt(value) {
-			//TODO: If generic fast track pow is not used, implement slabdrill's sqrt and cbrt specific fast track like so:
-			///if (this.exponent % 2 = 1) return Decimal.fromMantissaExponent(this.mantissa*3.16227766017, Math.floor(this.exponent/2));
 			value = Decimal.fromValue(value);
 			
 			return value.sqrt();
@@ -1129,13 +1130,29 @@
 		}
 		
 		cbrt() {
-			return this.pow(1/3);
+			if (this.mantissa < 0) { return new Decimal(Number.NaN) };
+			
+			var mod = this.exponent % 3;
+			if (mod == 1 || mod == -1) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*2.1544346900318837, Math.floor(this.exponent/3)); }
+			if (mod != 0) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*4.6415888336127789, Math.floor(this.exponent/3)); } //mod != 0 at this point means 'mod == 2 || mod == -2'
+			return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3)), Math.floor(this.exponent/3));
 		}
 		
 		static cbrt(value) {
 			value = Decimal.fromValue(value);
 			
 			return value.cbrt();
+		}
+		
+		static randomDecimalForTesting(absMaxExponent)
+		{
+			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
+			//5% of the time, have a mantissa of 0
+			if (Math.random()*20 < 1) return Decimal.fromMantissaExponent(0, 0);
+			var mantissa = Math.random()*10;
+			mantissa *= Math.sign(Math.random()*2-1);
+			var exponent = Math.floor(Math.random()*absMaxExponent*2) + -absMaxExponent;
+			return Decimal.fromMantissaExponent(mantissa, exponent);
 		}
 	}
 	
