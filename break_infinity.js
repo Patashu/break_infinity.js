@@ -77,21 +77,16 @@
 	class Decimal { 
 	
 		normalize() {
-			//SAFETY: don't try to normalize non-numbers or we infinite loop
-			if (!Number.isFinite(this.mantissa)) return this;
-			//TODO: Do we want very unnormalized numbers to normalize fast? Should it be a separate function? I think the only place where it's relevant is in the current pow() fast track, and if that got removed I'm not sure we'd even need it any more...
-			while (Math.abs(this.mantissa) < 1 && this.mantissa != 0)
-			{
-				this.mantissa *= 10;
-				this.exponent -= 1;
-			}
-			while (Math.abs(this.mantissa) >= 10)
-			{
-				this.mantissa /= 10;
-				this.exponent += 1;
-			}
+			//When mantissa is very denormalized, use this to normalize much faster.
+			
 			//TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
-			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = 0; }
+			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = 0; return; }
+			if (this.mantissa >= 1 && this.mantissa < 10) { return; }
+			
+			var temp_exponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
+			this.mantissa = this.mantissa/powersof10[temp_exponent+indexof0inpowersof10];
+			this.exponent += temp_exponent;
+			
 			return this;
 		}
 		
@@ -100,7 +95,7 @@
 			if (!Number.isFinite(mantissa) || !Number.isFinite(exponent)) { mantissa = Number.NaN; exponent = Number.NaN; }
 			this.mantissa = mantissa;
 			this.exponent = exponent;
-			this.normalize(); //SAFETY: Doing two abs and two comparisons is a small price to pay to prevent weirdness everywhere.
+			this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
 			return this;
 		}
 		
@@ -128,7 +123,7 @@
 				{
 					this.mantissa = value/powersof10[this.exponent+indexof0inpowersof10];
 				}
-				this.normalize(); //SAFETY: Doing two abs and two comparisons is a small price to pay to prevent weirdness everywhere.
+				this.normalize(); //SAFETY: Prevent weirdness.
 			}
 			return this;
 		}
@@ -139,7 +134,7 @@
 				var parts = value.split("e");
 				this.mantissa = parseFloat(parts[0]);
 				this.exponent = parseFloat(parts[1]);
-				this.normalize(); //SAFETY: Doing two abs and two comparisons is a small price to pay to prevent weirdness everywhere.
+				this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
 				return this;
 			}
 			else
@@ -1017,7 +1012,6 @@
 				var newMantissa = Math.pow(this.mantissa, value);
 				if (Number.isFinite(newMantissa))
 				{
-					//TODO: This might actually be slower than the 'slow track' if pow is very large, because of the huge amount of normalization we have to do. For example, Decimal.pow(1.43534e-8, 1000) has to be normalized 156 times. Maybe only take fast track if abs(value) <= 10? (Alternatively normalization for very unnormalized numbers can be done)
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
