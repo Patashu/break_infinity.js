@@ -1,6 +1,7 @@
 # break_infinity.js
 A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.</br>
-If you want to prioritize accuracy over speed, please use decimal.js instead.
+If you want to prioritize accuracy over speed, please use decimal.js instead.</br>
+If you need to handle numbers as big as 1e(1.79e308), try break_break_infinity.js, which sacrifices speed to deal with such massive numbers.
 
 https://github.com/Patashu/break_infinity.js
 
@@ -53,5 +54,3 @@ add, mul: 1e8 (2e6 for decimal.js - 50x faster)
 Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimensions.
 
 Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
-
-p.s. No, this library will never handle numbers bigger in magnitude than 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
