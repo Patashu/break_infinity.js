@@ -493,11 +493,11 @@
 			
 			value = Decimal.fromValue(value);
 			
-			//TODO: I think with the changes in normalize() this isn't necessary any more
+			//TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
+			
 			if (this.mantissa == 0) { return value; }
 			if (value.mantissa == 0) { return this; }
 			
-			//TODO: the biggerDecimal, smallerDecimal thing is probably not needed.
 			var biggerDecimal, smallerDecimal;
 			if (this.exponent.compareTo(value.exponent) >= 0)
 			{
@@ -665,6 +665,8 @@
 		//-1 for less than value, 0 for equals value, 1 for greater than value
 		cmp(value) {
 			value = Decimal.fromValue(value);
+			
+			//TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 			
 			/*
 			from smallest to largest:
@@ -988,6 +990,8 @@
 		}
 		
 		log10() {
+			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15. 
+		
 			return parseInt(this.exponent.toString()) + Math.log10(this.mantissa);
 		}
 		
@@ -999,6 +1003,9 @@
 		
 		log(base) {
 			//UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a Decimal, and don't do any other kind of error checking.
+			
+			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15. 
+			
 			return (Math.LN10/Math.log(base))*this.log10();
 		}
 		
@@ -1009,6 +1016,8 @@
 		}
 		
 		log2() {
+			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15.
+		
 			return 3.32192809488736234787*this.log10();
 		}
 		
@@ -1019,6 +1028,8 @@
 		}
 		
 		ln() {
+			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15.
+			
 			return 2.30258509299404568402*this.log10();
 		}
 		
@@ -1039,11 +1050,9 @@
 		}
 		
 		pow(value) {
-			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games. Accuracy not guaranteed beyond ~9~11 decimal places.
+			if (value instanceof Decimal) { value = value.toNumber(); }
 			
-			//TODO: It's unclear if either of these fast tracks actually improve performance. Fast track 1 is neutral for performance. Fast track 2 seems detrimental for performance.
-			
-			//Fast track 1: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
+			//Fast track: If value is an integer and mantissa^value fits in a Number, we can do a very fast method.
 			if (Number.isSafeInteger(value))
 			{
 				var newMantissa = Math.pow(this.mantissa, value);
@@ -1052,15 +1061,6 @@
 					return Decimal.fromMantissaExponent(newMantissa, this.exponent.multiply(Decimal.toBigInteger(value)));
 				}
 			}
-			/*else
-			{
-				//Fast track 2: If mantissa^value is not too huge in magnitude, we can still piggyback off of Math.pow and be precise enough.
-				var tempMantissa = Math.pow(this.mantissa, value);
-				if (Math.abs(Math.log10(Math.abs(tempMantissa)) < 100))
-				{
-					return Decimal.fromMantissaExponent(tempMantissa*Math.pow(10,(this.exponent*value)%1), Math.trunc(this.exponent*value));
-				}
-			}*/
 			
 			return Decimal.exp(value*this.ln());
 		}
@@ -1081,10 +1081,6 @@
 		}
 		
 		exp() {
-			//UN-SAFETY: Assuming this value is between [-2.1e15, 2.1e15]. Accuracy not guaranteed beyond ~9~11 decimal places.
-			
-			//TODO: Test big integer cases.
-			
 			//Fast track: if -706 < this < 709, we can use regular exp.
 			var tmp = this.toNumber();
 			if (-706 < tmp && tmp < 709)
@@ -1094,7 +1090,6 @@
 			else
 			{
 				//This has to be implemented fundamentally, so that pow(value) can be implemented on top of it.
-				//Should be fast and accurate over the range [-2.1e15, 2.1e15]. Outside that it overflows, so we don't care about these cases.
 				
 				// Implementation from SpeedCrunch: https://bitbucket.org/heldercorreia/speedcrunch/src/9cffa7b674890affcb877bfebc81d39c26b20dcc/src/math/floatexp.c?at=master&fileviewer=file-view-default
 				
@@ -1107,13 +1102,9 @@
 				
 				if (expx >= 0)
 				{
-					//var debug0 = x.toString();
 					exp = x.div(ExpHelper.LN10).trunc();
-					//var debug1 = exp.toString();
 					tmp = exp.mul(ExpHelper.LN10);
-					//var debug2 = tmp.toString();
 					x = x.sub(tmp).toNumber();
-					//var debug3 = x.toString();
 					if (x >= Math.LN10)
 					{
 						exp = exp.add(1);
@@ -1147,7 +1138,6 @@
 		
 		sqr() {
 			return this.pow(2);
-			//return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 2), this.exponent*2);
 		}
 		
 		static sqr(value) {
@@ -1158,9 +1148,6 @@
 		
 		sqrt() {
 			return this.pow(0.5);
-			/*if (this.mantissa < 0) { return new Decimal(Number.NaN) };
-			if (this.exponent % 2 != 0) { return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa)*3.16227766016838, Math.floor(this.exponent/2)); } //mod of a negative number is negative, so != means '1 or -1'
-			return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa), Math.floor(this.exponent/2));*/
 		}
 		
 		static sqrt(value) {
@@ -1171,7 +1158,6 @@
 		
 		cube() {
 			return this.pow(3);
-			//return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 3), this.exponent*3);
 		}
 		
 		static cube(value) {
@@ -1182,12 +1168,6 @@
 		
 		cbrt() {
 			return this.pow(1/3);
-			/*if (this.mantissa < 0) { return new Decimal(Number.NaN) };
-			
-			var mod = this.exponent % 3;
-			if (mod == 1 || mod == -1) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*2.1544346900318837, Math.floor(this.exponent/3)); }
-			if (mod != 0) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*4.6415888336127789, Math.floor(this.exponent/3)); } //mod != 0 at this point means 'mod == 2 || mod == -2'
-			return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3)), Math.floor(this.exponent/3));*/
 		}
 		
 		static cbrt(value) {
