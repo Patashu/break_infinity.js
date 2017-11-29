@@ -6,6 +6,7 @@
 	# break_infinity.js
 	A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.
 	If you want to prioritize accuracy over speed, please use decimal.js instead.
+	If you need to handle numbers as big as 1e(1.79e308), try break_break_infinity.js, which sacrifices speed to deal with such massive numbers.
 	
 	https://github.com/Patashu/break_infinity.js
 	
@@ -59,13 +60,10 @@
 	
 	Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
 	
-	p.s. No, this library will never handle numbers bigger in magnitude than 1e(9e15) because it would incur a performance loss for non-ridiculouse use-cases. I would (or you would?) write a separate break_eternity.js for that.
-	
 	*/
 	
 	var MAX_SIGNIFICANT_DIGITS = 17; //for example: if two exponents are more than 17 apart, consider adding them together pointless, just return the larger one
 	var EXP_LIMIT = 9e15; //highest value you can safely put here is Number.MAX_SAFE_INTEGER-MAX_SIGNIFICANT_DIGITS
-	var LN10;
 	
 	var NUMBER_EXP_MAX = 308; //the largest exponent that can appear in a Number, though not all mantissas are valid here.
 	var NUMBER_EXP_MIN = -324; //The smallest exponent that can appear in a Number, though not all mantissas are valid here.
@@ -456,13 +454,13 @@
 		add(value) {
 			//figure out which is bigger, shrink the mantissa of the smaller by the difference in exponents, add mantissas, normalize and return
 			
+			//TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
+			
 			value = Decimal.fromValue(value);
 			
-			//TODO: I think with the changes in normalize() this isn't necessary anymore
 			if (this.mantissa == 0) { return value; }
 			if (value.mantissa == 0) { return this; }
 			
-			//TODO: the biggerDecimal, smallerDecimal thing is probably not needed.
 			var biggerDecimal, smallerDecimal;
 			if (this.exponent >= value.exponent)
 			{
@@ -630,6 +628,8 @@
 		//-1 for less than value, 0 for equals value, 1 for greater than value
 		cmp(value) {
 			value = Decimal.fromValue(value);
+			
+			//TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 			
 			/*
 			from smallest to largest:
@@ -1004,11 +1004,13 @@
 		}
 		
 		pow(value) {
-			//UN-SAFETY: We're assuming Decimal^number because number^Decimal or Decimal^Decimal is unheard of in incremental games. Accuracy not guaranteed beyond ~9~11 decimal places.
+			//UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
 			
-			//TODO: It's unclear if either of these fast tracks actually improve performance. Fast track 1 is neutral for performance. Fast track 2 seems detrimental for performance.
+			if (value instanceof Decimal) { value = value.toNumber(); }
 			
-			//Fast track 1: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
+			//TODO: Fast track seems about neutral for performance. It might become faster if an integer pow is implemented, or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
+			
+			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
 			var temp = this.exponent*value;
 			if (Number.isSafeInteger(temp))
 			{
@@ -1018,15 +1020,6 @@
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
 			}
-			/*else
-			{
-				//Fast track 2: If mantissa^value is not too huge in magnitude, we can still piggyback off of Math.pow and be precise enough.
-				var tempMantissa = Math.pow(this.mantissa, value);
-				if (Math.abs(Math.log10(Math.abs(tempMantissa)) < 100))
-				{
-					return Decimal.fromMantissaExponent(tempMantissa*Math.pow(10,(this.exponent*value)%1), Math.trunc(this.exponent*value));
-				}
-			}*/
 			
 			return Decimal.exp(value*this.ln());
 		}
