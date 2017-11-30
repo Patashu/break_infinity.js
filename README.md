@@ -41,6 +41,8 @@ cmp_tolerance(value, tolerance), eq_tolerance(value, tolerance), neq_tolerance(v
 log(base), log10(), log2(), ln()</br>
 pow(value, other), pow(value), pow_base(value), exp(), sqr(), sqrt(), cube(), cbrt()
 
+affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned), sumGeometricSeries(numItems, priceStart, priceRatio, currentOwned), affordArithmeticSeries(resourcesAvailable, priceStart, priceAdd, currentOwned), sumArithmeticSeries(numItems, priceStart, priceAdd, currentOwned)
+
 ---
 
 So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:</br>
