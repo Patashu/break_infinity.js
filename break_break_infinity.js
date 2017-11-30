@@ -60,6 +60,8 @@
 	log(base), log10(), log2(), ln()
 	pow(value, other), pow(value), pow_base(value), exp(), sqr(), sqrt(), cube(), cbrt()
 	
+	affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned), sumGeometricSeries(numItems, priceStart, priceRatio, currentOwned), affordArithmeticSeries(resourcesAvailable, priceStart, priceAdd, currentOwned), sumArithmeticSeries(numItems, priceStart, priceAdd, currentOwned)
+	
 	---
 	
 	Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimensions.
@@ -284,7 +286,7 @@
 			}
 			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0"; }
 			
-			if (this.exponent.compareTo(BigInteger.parseInt("21")) < 0 && this.exponent.compareTo(BigInteger.parseInt("7")) > 0)
+			if (this.exponent.compareTo(BigInteger.parseInt("21")) < 0 && this.exponent.compareTo(BigInteger.parseInt("-7")) > 0)
 			{
 				return this.toNumber().toString();
 			}
@@ -1175,11 +1177,84 @@
 			return value.cbrt();
 		}
 		
+		//If you're willing to spend 'resourcesAvailable' and want to buy something with exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio, already own currentOwned), how much of it can you buy? Adapted from Trimps source code.
+		static affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned)
+		{
+			resourcesAvailable = Decimal.fromValue(resourcesAvailable);
+			priceStart = Decimal.fromValue(priceStart);
+			priceRatio = Decimal.fromValue(priceRatio);
+			var actualStart = priceStart.mul(Decimal.pow(priceRatio, currentOwned));
+			
+			//return Math.floor(log10(((resourcesAvailable / (priceStart * Math.pow(priceRatio, currentOwned))) * (priceRatio - 1)) + 1) / log10(priceRatio));
+		
+			return Decimal.floor(Decimal.log10(((resourcesAvailable.div(actualStart)).mul((priceRatio.sub(1)))).add(1)) / (Decimal.log10(priceRatio)));
+		}
+		
+		//How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it multiplies by priceRatio each purchase?
+		static sumGeometricSeries(numItems, priceStart, priceRatio, currentOwned)
+		{
+			priceStart = Decimal.fromValue(priceStart);
+			priceRatio = Decimal.fromValue(priceRatio);
+			var actualStart = priceStart.mul(Decimal.pow(priceRatio, currentOwned));
+			
+			return (actualStart.mul(Decimal.sub(1,Decimal.pow(priceRatio,numItems)))).div(Decimal.sub(1,priceRatio));
+		}
+		
+		//If you're willing to spend 'resourcesAvailable' and want to buy something with additively increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned), how much of it can you buy?
+		static affordArithmeticSeries(resourcesAvailable, priceStart, priceAdd, currentOwned)
+		{
+			resourcesAvailable = Decimal.fromValue(resourcesAvailable);
+			priceStart = Decimal.fromValue(priceStart);
+			priceAdd = Decimal.fromValue(priceAdd);
+			currentOwned = Decimal.fromValue(currentOwned);
+			var actualStart = priceStart.add(Decimal.mul(currentOwned,priceAdd));
+			
+			//n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
+			//where a is actualStart, d is priceAdd and S is resourcesAvailable
+			//then floor it and you're done!
+			
+			var b = actualStart.sub(priceAdd.div(2));
+			var b2 = b.pow(2);
+			
+			return Decimal.floor(
+			(b.neg().add(Decimal.sqrt(b2.add(Decimal.mul(priceAdd, resourcesAvailable).mul(2))))
+			).div(priceAdd)
+			);
+			
+			//return Decimal.floor(something);
+		}
+		
+		//How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it adds priceAdd each purchase? Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+		static sumArithmeticSeries(numItems, priceStart, priceAdd, currentOwned)
+		{
+			numItems = Decimal.fromValue(numItems);
+			priceStart = Decimal.fromValue(priceStart);
+			priceAdd = Decimal.fromValue(priceAdd);
+			currentOwned = Decimal.fromValue(currentOwned);
+			var actualStart = priceStart.add(Decimal.mul(currentOwned,priceAdd));
+			
+			//(n/2)*(2*a+(n-1)*d)
+			
+			return Decimal.div(numItems,2).mul(Decimal.mul(2,actualStart).plus(numItems.sub(1).mul(priceAdd)))
+		}
+		
 		//Joke function from Realm Grinder
 		ascensionPenalty(ascensions) {
 			if (ascensions == 0) return this;
 			return this.pow(Math.pow(10, -ascensions));
 		}
+		
+		//When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS), the lowest efficiency score is the better one to purchase. From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
+		static efficiencyOfPurchase(cost, current_RpS, delta_RpS)
+		{
+			cost = Decimal.fromValue(cost);
+			current_RpS = Decimal.fromValue(current_RpS);
+			delta_RpS = Decimal.fromValue(delta_RpS);
+			return Decimal.add(cost.div(current_RpS), cost.div(delta_RpS));
+		}
+		
+		//Joke function from Cookie Clicker. It's 'egg'
+		egg() { return this.add(9); }
 		
 		static randomDecimalForTesting(absMaxExponent)
 		{
@@ -1188,7 +1263,7 @@
 			if (Math.random()*20 < 1) return Decimal.fromMantissaExponent(0, 0);
 			var mantissa = Math.random()*10;
 			mantissa *= Math.sign(Math.random()*2-1);
-			var exponent = Math.floor(Math.random()*absMaxExponent*2) + -absMaxExponent;
+			var exponent = Math.floor(Math.random()*absMaxExponent*2) - absMaxExponent;
 			return Decimal.fromMantissaExponent(mantissa, exponent);
 			
 			/*
