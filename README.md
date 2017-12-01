@@ -51,6 +51,10 @@ exp: 2e7 (1e4 for decimal.js - 2000x faster)</br>
 log: 3e7 (5e4 for decimal.js - 600x faster)</br>
 add, mul: 1e8 (2e6 for decimal.js - 50x faster)
 
+Antimatter Dimensions script time improved by 4.5x after swapping from decimal.js to break_infinity.js. This could be your incremental game:
+
+![image](https://user-images.githubusercontent.com/666597/33364256-b0dfb7da-d537-11e7-9469-b2857568a468.png)
+
 ---
 
 Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimensions.
