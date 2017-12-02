@@ -36,6 +36,7 @@
 	toString()
 	toFixed(places)
 	toExponential(places)
+	toPrecision(places)
 	
 	abs(), neg(), sign()
 	add(value), sub(value), mul(value), div(value), recip()
@@ -273,7 +274,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
+			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : "") + "e+0"; }
 			
 			// two cases:
 			// 1) exponent is < 308 and > -324: use basic toFixed
@@ -284,7 +285,7 @@
 			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 			
 			var len = places+1;
-			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
+			var numDigits = Math.max(1, Math.ceil(Math.log10(Math.abs(this.mantissa))));
 			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len);
 			
 			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent;
@@ -296,7 +297,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
+			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : ""); }
 			
 			// two cases:
 			// 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
@@ -310,6 +311,14 @@
 			{
 				return this.toNumber().toFixed(places);
 			}
+		}
+		
+		toPrecision(places) {
+			if (places > this.exponent)
+			{
+				return this.toFixed(places - this.exponent - 1);
+			}
+			return this.toExponential(places-1);
 		}
 		
 		valueOf() { return this.toString(); }
