@@ -30,7 +30,8 @@ toNumber()</br>
 mantissaWithDecimalPlaces(places)</br>
 toString()</br>
 toFixed(places)</br>
-toExponential(places)
+toExponential(places)</br>
+toPrecision(places)
 
 abs(), neg(), sign()</br>
 add(value), sub(value), mul(value), div(value), recip()</br>
