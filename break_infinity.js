@@ -36,7 +36,6 @@
 	toString()
 	toFixed(places)
 	toExponential(places)
-	toPrecision(places)
 	
 	abs(), neg(), sign()
 	add(value), sub(value), mul(value), div(value), recip()
@@ -314,6 +313,10 @@
 		}
 		
 		toPrecision(places) {
+			if (this.exponent <= -7)
+			{
+				return this.toExponential(places-1);
+			}
 			if (places > this.exponent)
 			{
 				return this.toFixed(places - this.exponent - 1);
