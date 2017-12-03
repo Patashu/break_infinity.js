@@ -36,6 +36,7 @@
 	toString()
 	toFixed(places)
 	toExponential(places)
+	toPrecision(places)
 	
 	abs(), neg(), sign()
 	add(value), sub(value), mul(value), div(value), recip()
