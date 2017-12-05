@@ -50,6 +50,7 @@
 	toString()
 	toFixed(places)
 	toExponential(places)
+	toPrecision(places)
 	
 	abs(), neg(), sign()
 	add(value), sub(value), mul(value), div(value), recip()
@@ -172,18 +173,20 @@
 			if (value.indexOf("e") != -1)
 			{
 				value = value.replace("(", "").replace(")", "");
-				var indexOfe = value.indexOf("e");
+				var indexOfE = value.indexOf("e");
 				var parts = [value.substring(0, indexOfE), value.substring(indexOfE+1)];
 				
 				this.mantissa = parseFloat(parts[0]);
 				this.exponent = Decimal.toBigInteger(parseFloat(parts[1]));
 				this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
-				return this;
 			}
+			else if (value == "NaN") { this.mantissa = Number.NaN; this.exponent = BIG_INT_INFINITY; }
 			else
 			{
-				return this.fromNumber(parseFloat(value));
+				this.fromNumber(parseFloat(value));
+				if (Number.isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
 			}
+			return this;
 		}
 		
 		fromValue(value) {
@@ -309,7 +312,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0"; }
+			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : "") + "e+0"; }
 			
 			// two cases:
 			// 1) exponent is < 308 and > -324: use basic toFixed
@@ -320,7 +323,7 @@
 			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 			
 			var len = places+1;
-			var numDigits = Math.ceil(Math.log10(Math.abs(this.mantissa)));
+			var numDigits = Math.max(1, Math.ceil(Math.log10(Math.abs(this.mantissa))));
 			var rounded = Math.round(this.mantissa*Math.pow(10,len-numDigits))*Math.pow(10,numDigits-len);
 			
 			return rounded.toFixed(Math.max(len-numDigits,0)) + "e" + (this.exponent.compareTo(BIG_INT_0) >= 0 ? "+" : "") + this.exponent.toString();
@@ -332,7 +335,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0"; }
+			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : ""); }
 			
 			// two cases:
 			// 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
@@ -346,6 +349,18 @@
 			{
 				return this.toNumber().toFixed(places);
 			}
+		}
+		
+		toPrecision(places) {
+			if (parseFloat(this.exponent.toString()) <= -7)
+			{
+				return this.toExponential(places-1);
+			}
+			if (places > parseFloat(this.exponent.toString()))
+			{
+				return this.toFixed(places - parseFloat(this.exponent.toString()) - 1);
+			}
+			return this.toExponential(places-1);
 		}
 		
 		valueOf() { return this.toString(); }
