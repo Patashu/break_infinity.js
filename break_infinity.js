@@ -145,9 +145,12 @@
 				this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
 				return this;
 			}
+			else if (value == "NaN") { this.mantissa = Number.NaN; this.exponent = Number.NaN; }
 			else
 			{
-				return this.fromNumber(parseFloat(value));
+				this.fromNumber(parseFloat(value));
+				if (Number.isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
+				return this;
 			}
 		}
 		
