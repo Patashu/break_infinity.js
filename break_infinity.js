@@ -1238,7 +1238,14 @@
 		
 		//Joke function from Cookie Clicker. It's 'egg'
 		egg() { return this.add(9); }
-		
+        
+        //  Porting some function from Decimal.js 
+        lessThanOrEqualTo(other) {return this.cmp(other) < 1; }
+        lessThan(other) {return this.cmp(other) < 0; }
+        greaterThanOrEqualTo(other) { return this.cmp(other) > -1; }
+        greaterThan(other) {return this.cmp(other) > 0; }
+
+
 		static randomDecimalForTesting(absMaxExponent)
 		{
 			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
