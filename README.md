@@ -61,3 +61,39 @@ Antimatter Dimensions script time improved by 4.5x after swapping from decimal.j
 Dedicated to Hevipelle, and all the CPUs that struggled to run Antimatter Dimensions.
 
 Related song: https://soundcloud.com/patashu/8-bit-progressive-stoic-platonic-ideal
+
+Thanks to https://github.com/MikeMcl/decimal.js/ , https://github.com/Yaffle/BigInteger and SpeedCrunch from which I have sourced code or ideas from.
+
+# Load
+
+The library is the single JavaScript file *break_infinity.js* (or minified, *break_infinity.min.js*). If you are already using decimal.js, just swap out for break_infinity.js and everything will work the same (if there's a missing function or behavioural difference, open an issue and I'll take a look).
+
+It can be loaded using a script tag in an HTML document for the browser
+
+    <script src='path/to/break_infinity.js'></script>
+
+or as a Node.js module using require.
+
+    var Decimal = require('break_infinity.js');
+
+For Node, the library is available from the npm registry
+
+    $ npm install --save break_infinity.js
+
+# Use
+
+The library exports a single function object, Decimal, the constructor of Decimal instances.
+
+It accepts a value of type number, string or Decimal.
+
+    x = new Decimal(123.4567)
+    y = new Decimal('123456.7e-3')
+    z = new Decimal(x)
+    x.equals(y) && y.equals(z) && x.equals(z)        // true
+    
+The methods that return a Decimal can be chained.
+
+    x.dividedBy(y).plus(z).times(9).floor()
+    x.times('1.23456780123456789e+9').plus(9876.5432321).dividedBy('4444562598.111772').ceil()
+    
+A list of functions is provided earlier in this readme, or you can use autocomplete or read through the js file to see for yourself.
