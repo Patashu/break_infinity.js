@@ -70,15 +70,21 @@ The library is the single JavaScript file *break_infinity.js* (or minified, *bre
 
 It can be loaded using a script tag in an HTML document for the browser
 
+```html
     <script src='path/to/break_infinity.js'></script>
+```
 
 or as a Node.js module using require.
 
+```javascript
     var Decimal = require('break_infinity.js');
+```
 
 For Node, the library is available from the npm registry
 
+```bash
     $ npm install --save break_infinity.js
+```
 
 # Use
 
@@ -86,14 +92,18 @@ The library exports a single function object, Decimal, the constructor of Decima
 
 It accepts a value of type number, string or Decimal.
 
+```javascript
     x = new Decimal(123.4567)
     y = new Decimal('123456.7e-3')
     z = new Decimal(x)
     x.equals(y) && y.equals(z) && x.equals(z)        // true
+```
     
 The methods that return a Decimal can be chained.
 
+```javascript
     x.dividedBy(y).plus(z).times(9).floor()
     x.times('1.23456780123456789e+9').plus(9876.5432321).dividedBy('4444562598.111772').ceil()
+````
     
 A list of functions is provided earlier in this readme, or you can use autocomplete or read through the js file to see for yourself.
