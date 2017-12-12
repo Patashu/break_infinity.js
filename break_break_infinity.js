@@ -1132,13 +1132,9 @@
 				
 				if (expx >= 0)
 				{
-					var debug0 = x.toString();
 					exp = x.div(ExpHelper.LN10).trunc();
-					var debug1 = exp.toString();
 					tmp = exp.mul(ExpHelper.LN10);
-					var debug2 = tmp.toString();
 					x = x.sub(tmp).toNumber();
-					var debug3 = x.toString();
 					if (x >= Math.LN10)
 					{
 						exp = exp.add(1);
