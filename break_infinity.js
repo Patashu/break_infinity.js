@@ -1146,12 +1146,15 @@
 		}
 		
 		cbrt() {
-			if (this.mantissa < 0) { return new Decimal(Number.NaN) };
+			var sign = 1;
+			var mantissa = this.mantissa;
+			if (mantissa < 0) { sign = -1; mantissa = -mantissa; };
+			var newmantissa = sign*Math.pow(mantissa, (1/3));
 			
 			var mod = this.exponent % 3;
-			if (mod == 1 || mod == -1) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*2.1544346900318837, Math.floor(this.exponent/3)); }
-			if (mod != 0) { return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3))*4.6415888336127789, Math.floor(this.exponent/3)); } //mod != 0 at this point means 'mod == 2 || mod == -2'
-			return Decimal.fromMantissaExponent(Math.pow(this.mantissa, (1/3)), Math.floor(this.exponent/3));
+			if (mod == 1 || mod == -1) { return Decimal.fromMantissaExponent(newmantissa*2.1544346900318837, Math.floor(this.exponent/3)); }
+			if (mod != 0) { return Decimal.fromMantissaExponent(newmantissa*4.6415888336127789, Math.floor(this.exponent/3)); } //mod != 0 at this point means 'mod == 2 || mod == -2'
+			return Decimal.fromMantissaExponent(newmantissa, Math.floor(this.exponent/3));
 		}
 		
 		static cbrt(value) {
