@@ -107,3 +107,9 @@ The methods that return a Decimal can be chained.
 ````
     
 A list of functions is provided earlier in this readme, or you can use autocomplete or read through the js file to see for yourself.
+
+---
+
+Need something even bigger? Take a look at SpectralFlame's WIP HugeNumber.java. It can reach up to 10 ↑↑ 100000000 and may give you some ideas.
+
+https://github.com/cyip92/HugeNumber/blob/master/HugeNumber.java
