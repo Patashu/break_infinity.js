@@ -771,15 +771,10 @@
 			value = Decimal.fromValue(value);
 			
 			if (this.m == 0) return value.m > 0
-			if (value.m == 0) return this.m < 0
-			if (this.m > 0) {
-				if (value.m < 0) return false;
-				if (this.e == value.e) return this.m < value.m;
-				return this.e < value.e;
-			}
-			if (value.m > 0) return true;
-			if (this.e == value.e) return this.m > value.m;
-			return this.e > value.e
+			if (value.m == 0) return this.m <= 0
+			if (this.e == value.e) return this.m < value.m;
+			if (this.m < 0) return value.m < 0 || this.e > value.e;
+			return value.m < 0 && this.e < value.e
 		}
 		
 		static lt(value, other) {
@@ -793,14 +788,9 @@
 			
 			if (this.m == 0) return value.m >= 0
 			if (value.m == 0) return this.m <= 0
-			if (this.m > 0) {
-				if (value.m < 0) return false;
-				if (this.e == value.e) return this.m <= value.m;
-				return this.e < value.e;
-			}
-			if (value.m > 0) return true;
-			if (this.e == value.e) return this.m >= value.m;
-			return this.e > value.e
+			if (this.e == value.e) return this.m <= value.m;
+			if (this.m < 0) return value.m < 0 || this.e > value.e;
+			return value.m < 0 && this.e < value.e
 		}
 		
 		static lte(value, other) {
@@ -814,14 +804,9 @@
 			
 			if (this.m == 0) return value.m < 0
 			if (value.m == 0) return this.m > 0
-			if (this.m > 0) {
-				if (value.m < 0) return true;
-				if (this.e == value.e) return this.m > value.m;
-				return this.e > value.e;
-			}
-			if (value.m > 0) return false;
-			if (this.e == value.e) return this.m < value.m;
-			return this.e < value.e
+			if (this.e == value.e) return this.m > value.m;
+			if (this.m > 0) return value.m < 0 || this.e > value.e;
+			return value.m < 0 && this.e < value.e
 		}
 		
 		static gt(value, other) {
@@ -834,15 +819,10 @@
 			value = Decimal.fromValue(value);
 			
 			if (this.m == 0) return value.m <= 0
-			if (value.m == 0) return this.m >= 0
-			if (this.m > 0) {
-				if (value.m < 0) return true;
-				if (this.e == value.e) return this.m >= value.m;
-				return this.e > value.e;
-			}
-			if (value.m > 0) return false;
-			if (this.e == value.e) return this.m <= value.m;
-			return this.e < value.e
+			if (value.m == 0) return this.m > 0
+			if (this.e == value.e) return this.m > value.m;
+			if (this.m > 0) return value.m < 0 || this.e >= value.e;
+			return value.m < 0 && this.e <= value.e
 		}
 		
 		static gte(value, other) {
