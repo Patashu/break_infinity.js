@@ -1253,8 +1253,10 @@
 		{
 			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
 			//5% of the time, have a mantissa of 0
-			if (Math.random()*20 < 1) return Decimal.fromMantissaExponent(0, 0);
+			if (Math.random()*20 < 1) { return Decimal.fromMantissaExponent(0, 0); }
 			var mantissa = Math.random()*10;
+			//10% of the time, have a simple mantissa
+			if (Math.random()*10 < 1) { mantissa = Math.round(mantissa); }
 			mantissa *= Math.sign(Math.random()*2-1);
 			var exponent = Math.floor(Math.random()*absMaxExponent*2) - absMaxExponent;
 			return Decimal.fromMantissaExponent(mantissa, exponent);
