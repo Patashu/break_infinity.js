@@ -820,7 +820,7 @@
 			
 			if (this.m == 0) return value.m <= 0
 			if (value.m == 0) return this.m > 0
-			if (this.e == value.e) return this.m > value.m;
+			if (this.e == value.e) return this.m >= value.m;
 			if (this.m > 0) return value.m < 0 || this.e >= value.e;
 			return value.m < 0 && this.e <= value.e
 		}
