@@ -77,6 +77,37 @@
 	
 	class Decimal { 
 	
+		static adjustMantissa(oldMantissa, exponent) {
+			//Multiplying or dividing by 0.1 causes rounding errors, dividing or multiplying by 10 does not.
+			//So always multiply/divide by a large number whenever we can get away with it.
+			
+			/*
+			Still a few weird cases, IDK if they'll ever come up though:
+0.001*1e308
+1e+305
+0.001*1e308*10
+9.999999999999999e+305
+			*/
+			
+			if (exponent == 0) { return oldMantissa; }
+			if (exponent > 0)
+			{
+				if (exponent > 308)
+				{
+					return oldMantissa*1e308*powersof10[(exponent-308)+indexof0inpowersof10];
+				}
+				return oldMantissa*powersof10[exponent+indexof0inpowersof10];
+			}
+			else
+			{
+				if (exponent < -308)
+				{
+					return oldMantissa*powersof10[exponent+indexof0inpowersof10];
+				}
+				return oldMantissa/powersof10[-exponent+indexof0inpowersof10];
+			}
+		}
+	
 		normalize() {
 			//When mantissa is very denormalized, use this to normalize much faster.
 			
@@ -85,7 +116,7 @@
 			if (this.mantissa >= 1 && this.mantissa < 10) { return; }
 			
 			var temp_exponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
-			this.mantissa = this.mantissa/powersof10[temp_exponent+indexof0inpowersof10];
+			this.mantissa = Decimal.adjustMantissa(this.mantissa, -temp_exponent);
 			this.exponent += temp_exponent;
 			
 			return this;
@@ -129,7 +160,7 @@
 				}
 				else
 				{
-					this.mantissa = value/powersof10[this.exponent+indexof0inpowersof10];
+					this.mantissa = Decimal.adjustMantissa(value, -this.exponent);
 				}
 				this.normalize(); //SAFETY: Prevent weirdness.
 			}
@@ -226,10 +257,10 @@
 			//SAFETY: again, handle 5e-324, -5e-324 separately
 			if (this.exponent == NUMBER_EXP_MIN) { return this.mantissa > 0 ? 5e-324 : -5e-324; }
 			
-			var result = this.mantissa*powersof10[this.exponent+indexof0inpowersof10];
+			var result = Decimal.adjustMantissa(this.mantissa, this.exponent);
 			if (!Number.isFinite(result) || this.exponent < 0) { return result; }
 			var resultrounded = Math.round(result);
-			if (Math.abs(resultrounded-result) < 1e-9) return resultrounded;
+			if (Math.abs(resultrounded-result) < 1e-10) return resultrounded;
 			return result;
 		}
 		
@@ -396,6 +427,12 @@
 			return value.sign();
 		}
 		
+		get s() {return this.sign(); }
+		set s(value) {
+			if (value == 0) { this.e = 0; this.m = 0; }
+			if (this.sgn() != value) { this.m = -this.m; }
+		}
+		
 		round() {
 			if (this.exponent < 0)
 			{
@@ -496,9 +533,11 @@
 			}
 			else
 			{
+				//have to do this because adding numbers that were once integers but scaled down is imprecise.
+				//Example: 299 + 18
 				return Decimal.fromMantissaExponent(
-				biggerDecimal.mantissa + smallerDecimal.mantissa*powersof10[(smallerDecimal.exponent-biggerDecimal.exponent)+indexof0inpowersof10],
-				biggerDecimal.exponent);
+				Math.round(1e14*biggerDecimal.mantissa + 1e14*Decimal.adjustMantissa(smallerDecimal.mantissa, smallerDecimal.exponent-biggerDecimal.exponent)),
+				biggerDecimal.exponent-14);
 			}
 		}
 		
