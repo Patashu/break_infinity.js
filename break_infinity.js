@@ -1,4 +1,4 @@
-;(function (globalScope) {
+function (globalScope) {
 	'use strict';
 	
 	/*
@@ -77,7 +77,7 @@
 	
 	class Decimal { 
 	
-		static adjustMantissa(oldMantissa, exponent) {
+		/*static adjustMantissa(oldMantissa, exponent) {
 			//Multiplying or dividing by 0.1 causes rounding errors, dividing or multiplying by 10 does not.
 			//So always multiply/divide by a large number whenever we can get away with it.
 			
@@ -98,7 +98,7 @@
 			So it's not even true that mul/div by a positive power of 10 is always the more accurate approach.
 			*/
 			
-			if (exponent == 0) { return oldMantissa; }
+			/*if (exponent == 0) { return oldMantissa; }
 			if (exponent > 0)
 			{
 				if (exponent > 308)
@@ -115,7 +115,7 @@
 				}
 				return oldMantissa/powersof10[-exponent+indexof0inpowersof10];
 			}
-		}
+		}*/
 	
 		normalize() {
 			//When mantissa is very denormalized, use this to normalize much faster.
@@ -125,7 +125,7 @@
 			if (this.mantissa >= 1 && this.mantissa < 10) { return; }
 			
 			var temp_exponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
-			this.mantissa = Decimal.adjustMantissa(this.mantissa, -temp_exponent);
+			this.mantissa = this.mantissa/powersof10[temp_exponent+indexof0inpowersof10];
 			this.exponent += temp_exponent;
 			
 			return this;
@@ -169,7 +169,7 @@
 				}
 				else
 				{
-					this.mantissa = Decimal.adjustMantissa(value, -this.exponent);
+					this.mantissa = value/powersof10[this.exponent+indexof0inpowersof10];
 				}
 				this.normalize(); //SAFETY: Prevent weirdness.
 			}
@@ -266,7 +266,7 @@
 			//SAFETY: again, handle 5e-324, -5e-324 separately
 			if (this.exponent == NUMBER_EXP_MIN) { return this.mantissa > 0 ? 5e-324 : -5e-324; }
 			
-			var result = Decimal.adjustMantissa(this.mantissa, this.exponent);
+			var result = this.mantissa*powersof10[this.exponent+indexof0inpowersof10];
 			if (!Number.isFinite(result) || this.exponent < 0) { return result; }
 			var resultrounded = Math.round(result);
 			if (Math.abs(resultrounded-result) < 1e-10) return resultrounded;
@@ -545,7 +545,7 @@
 				//have to do this because adding numbers that were once integers but scaled down is imprecise.
 				//Example: 299 + 18
 				return Decimal.fromMantissaExponent(
-				Math.round(1e14*biggerDecimal.mantissa + 1e14*Decimal.adjustMantissa(smallerDecimal.mantissa, smallerDecimal.exponent-biggerDecimal.exponent)),
+				Math.round(1e14*biggerDecimal.mantissa + 1e14*smallerDecimal.mantissa*powersof10[(smallerDecimal.exponent-biggerDecimal.exponent)+indexof0inpowersof10]),
 				biggerDecimal.exponent-14);
 			}
 		}
