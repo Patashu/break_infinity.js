@@ -1,4 +1,4 @@
-function (globalScope) {
+;function (globalScope) {
 	'use strict';
 	
 	/*
