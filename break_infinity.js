@@ -89,6 +89,15 @@
 9.999999999999999e+305
 			*/
 			
+			/*
+			TODO: I'm not even sure if this is a good idea in general, because
+1000*-4.03
+-4030.0000000000005
+-4.03/1e-3
+-4030
+			So it's not even true that mul/div by a positive power of 10 is always the more accurate approach.
+			*/
+			
 			if (exponent == 0) { return oldMantissa; }
 			if (exponent > 0)
 			{
