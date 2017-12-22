@@ -51,11 +51,14 @@
 	
 	---
 	
-	So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:
-	pow(1.5): 5e6 (1e4 for decimal.js - 500x faster)
-	exp: 2e7 (1e4 for decimal.js - 2000x faster)
-	log: 3e7 (5e4 for decimal.js - 600x faster)
-	add, mul: 1e8 (2e6 for decimal.js - 50x faster)
+	So how much faster than decimal.js is break_infinity.js? Operations per second comparison using the same computer:
+	new Decimal("1.23456789e987654321") : 1.5e6 to to 3e6 (2x speedup)
+	Decimal.add("1e999", "9e998") : 1e6 to 1.5e7 (15x speedup)
+	Decimal.mul("1e999", "9e998") : 1.5e6 to 1e8 (66x speedup)
+	Decimal.pow(987.789, 123.321) : 8e3 to 2e6 (250x speedup)
+	Decimal.exp(1e10) : 5e3 to 3.8e7 (7600x speedup)
+	Decimal.ln("987.654e789") : 4e4 to 4.5e8 (11250x speedup)
+	Decimal.log10("987.654e789") : 3e4 to 5e8 (16666x speedup)
 	
 	---
 	
