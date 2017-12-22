@@ -1,4 +1,4 @@
-;function (globalScope) {
+;(function (globalScope) {
 	'use strict';
 	
 	/*
@@ -1102,7 +1102,16 @@
 				}
 			}
 			
-			return Decimal.exp(value*this.ln());
+			//return Decimal.exp(value*this.ln());
+			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+		}
+		
+		static pow10(value) {
+			if (Number.isInteger(value))
+			{
+				return Decimal.fromMantissaExponent_noNormalize(1,value);
+			}
+			return Decimal.fromMantissaExponent(Math.pow(10,value%1),Math.trunc(value));
 		}
 		
 		pow_base(value) {
@@ -1118,6 +1127,14 @@
 			value = Decimal.fromValue(value);
 			
 			return value.pow(other);
+		}
+		
+		factorial() {
+			//Using Stirling's Approximation. https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
+			
+			var n = this.toNumber() + 1;
+			
+			return Decimal.pow((n/Math.E)*Math.sqrt(n*Math.sinh(1/n)+1/(810*Math.pow(n, 6))), n).mul(Math.sqrt(2*Math.PI/n));
 		}
 		
 		exp() {
