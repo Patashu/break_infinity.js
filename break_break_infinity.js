@@ -1,3 +1,36 @@
+//START pad-end ( https://www.npmjs.com/package/pad-end )
+
+var padEnd = function (string, maxLength, fillString) {
+
+  if (string == null || maxLength == null) {
+    return string;
+  }
+
+  var result    = String(string);
+
+  var length = result.length;
+  if (length >= maxLength) {
+    return result;
+  }
+
+  var filled = fillString == null ? '' : String(fillString);
+  if (filled === '') {
+    filled = ' ';
+  }
+
+  var fillLen = maxLength - length;
+
+  while (filled.length < fillLen) {
+    filled += filled;
+  }
+
+  var truncated = filled.length > fillLen ? filled.substr(0, fillLen) : filled;
+
+  return result + truncated;
+};
+
+//END pad-end
+
 //TODO: Import big integer instead of just pasting it here
 //big integer benchmark: http://yaffle.github.io/BigInteger/benchmark/
 //Going with https://github.com/Yaffle/BigInteger as it has incredibly fast create-10, add, mul, div and toString
@@ -81,7 +114,7 @@
 	var BIG_INT_1 = BigInteger.parseInt("1");
 	var BIG_INT_EXP_MAX = BigInteger.parseInt("308");
 	var BIG_INT_EXP_MIN = BigInteger.parseInt("-324");
-	var BIG_INT_INFINITY = BigInteger.parseInt("179769".padEnd(309, "0"));
+	var BIG_INT_INFINITY = BigInteger.parseInt(padEnd("179769", 309, "0"));
 	var BIG_INT_INFINITESIMAL = BIG_INT_INFINITY.negate();
 	var BIG_INT_MAX_SIGNIFICANT_DIGITS = BigInteger.parseInt("17");
 	
@@ -312,7 +345,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : "") + "e+0"; }
+			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? padEnd(".", places+1, "0") : "") + "e+0"; }
 			
 			// two cases:
 			// 1) exponent is < 308 and > -324: use basic toFixed
@@ -335,7 +368,7 @@
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
-			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? ".".padEnd(places+1, "0") : ""); }
+			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0" + (places > 0 ? padEnd(".", places+1, "0") : ""); }
 			
 			// two cases:
 			// 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
@@ -343,7 +376,7 @@
 			
 			if (this.exponent.compareTo(BIG_INT_MAX_SIGNIFICANT_DIGITS) >= 0)
 			{
-				return this.mantissa.toString().replace(".", "").padEnd(this.exponent.add(BIG_INT_1).toString(), "0") + (places > 0 ? ".".padEnd(places+1, "0") : "");
+				return padEnd(this.mantissa.toString().replace(".", ""), this.exponent.add(BIG_INT_1).toString(), "0") + (places > 0 ? padEnd(".", places+1, "0") : "");
 			}
 			else
 			{
