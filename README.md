@@ -46,11 +46,14 @@ affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned),
 
 ---
 
-So how much faster than decimal.js is break_infinity.js? Operations per second on my old-ish computer:</br>
-pow(1.5): 5e6 (1e4 for decimal.js - 500x faster)</br>
-exp: 2e7 (1e4 for decimal.js - 2000x faster)</br>
-log: 3e7 (5e4 for decimal.js - 600x faster)</br>
-add, mul: 1e8 (2e6 for decimal.js - 50x faster)
+So how much faster than decimal.js is break_infinity.js? Operations per second comparison using the same computer:</br>
+new Decimal("1.23456789e987654321") : 1.5e6 to to 3e6 (2x speedup)</br>
+Decimal.add("1e999", "9e998") : 1e6 to 1.5e7 (15x speedup)</br>
+Decimal.mul("1e999", "9e998") : 1.5e6 to 1e8 (66x speedup)</br>
+Decimal.pow(987.789, 123.321) : 8e3 to 2e6 (250x speedup)</br>
+Decimal.exp(1e10) : 5e3 to 3.8e7 (7600x speedup)</br>
+Decimal.ln("987.654e789") : 4e4 to 4.5e8 (11250x speedup)</br>
+Decimal.log10("987.654e789") : 3e4 to 5e8 (16666x speedup)</br>
 
 Antimatter Dimensions script time improved by 4.5x after swapping from decimal.js to break_infinity.js. This could be your incremental game:
 
