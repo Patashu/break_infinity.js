@@ -112,6 +112,7 @@ var padEnd = function (string, maxLength, fillString) {
 	
 	var BIG_INT_0 = BigInteger.parseInt("0");
 	var BIG_INT_1 = BigInteger.parseInt("1");
+	var BIG_INT_MINUS_1 = BigInteger.parseInt("-1");
 	var BIG_INT_EXP_MAX = BigInteger.parseInt("308");
 	var BIG_INT_EXP_MIN = BigInteger.parseInt("-324");
 	var BIG_INT_INFINITY = BigInteger.parseInt(padEnd("179769", 309, "0"));
@@ -466,7 +467,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		round() {
-			if (this.exponent.compareTo(BIG_INT_0) < 0)
+			if (this.exponent.compareTo(BIG_INT_MINUS_1) < 0)
 			{
 				return new Decimal(0);
 			}
@@ -484,7 +485,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		floor() {
-			if (this.exponent.compareTo(BIG_INT_0) < 0)
+			if (this.exponent.compareTo(BIG_INT_MINUS_1) < 0)
 			{
 				return Math.sign(this.mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
 			}
@@ -502,7 +503,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		ceil() {
-			if (this.exponent.compareTo(BIG_INT_0) < 0)
+			if (this.exponent.compareTo(BIG_INT_MINUS_1) < 0)
 			{
 				return Math.sign(this.mantissa) > 0 ? new Decimal(1) : new Decimal(0);
 			}
