@@ -479,7 +479,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		round() {
-			if (this.exponent < 0)
+			if (this.exponent < -1)
 			{
 				return new Decimal(0);
 			}
@@ -497,7 +497,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		floor() {
-			if (this.exponent < 0)
+			if (this.exponent < -1)
 			{
 				return Math.sign(this.mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
 			}
@@ -515,7 +515,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		ceil() {
-			if (this.exponent < 0)
+			if (this.exponent < -1)
 			{
 				return Math.sign(this.mantissa) > 0 ? new Decimal(1) : new Decimal(0);
 			}
