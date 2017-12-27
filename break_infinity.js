@@ -810,7 +810,7 @@ var padEnd = function (string, maxLength, fillString) {
 		eq(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.e == value.e && this.m == value.m
+			return this.exponent == value.exponent && this.mantissa == value.mantissa
 		}
 		
 		static eq(value, other) {
@@ -832,7 +832,7 @@ var padEnd = function (string, maxLength, fillString) {
 		neq(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.e != value.e || this.m != value.m
+			return this.exponent != value.exponent || this.mantissa != value.mantissa
 		}
 		
 		static neq(value, other) {
@@ -854,11 +854,11 @@ var padEnd = function (string, maxLength, fillString) {
 		lt(value) {
 			value = Decimal.fromValue(value);
 			
-			if (this.m == 0) return value.m > 0
-			if (value.m == 0) return this.m <= 0
-			if (this.e == value.e) return this.m < value.m;
-			if (this.m > 0) return value.m > 0 && this.e < value.e;
-			return value.m > 0 || this.e > value.e
+			if (this.mantissa == 0) return value.mantissa > 0;
+			if (value.mantissa == 0) return this.mantissa <= 0;
+			if (this.exponent == value.exponent) return this.mantissa < value.mantissa;
+			if (this.mantissa > 0) return value.mantissa > 0 && this.exponent < value.exponent;
+			return value.mantissa > 0 || this.exponent > value.exponent;
 		}
 		
 		static lt(value, other) {
@@ -870,11 +870,11 @@ var padEnd = function (string, maxLength, fillString) {
 		lte(value) {
 			value = Decimal.fromValue(value);
 			
-			if (this.m == 0) return value.m >= 0
-			if (value.m == 0) return this.m <= 0
-			if (this.e == value.e) return this.m <= value.m;
-			if (this.m > 0) return value.m > 0 && this.e < value.e;
-			return value.m > 0 || this.e > value.e
+			if (this.mantissa == 0) return value.mantissa >= 0;
+			if (value.mantissa == 0) return this.mantissa <= 0;
+			if (this.exponent == value.exponent) return this.mantissa <= value.mantissa;
+			if (this.mantissa > 0) return value.mantissa > 0 && this.exponent < value.exponent;
+			return value.mantissa > 0 || this.exponent > value.exponent;
 		}
 		
 		static lte(value, other) {
@@ -886,11 +886,11 @@ var padEnd = function (string, maxLength, fillString) {
 		gt(value) {
 			value = Decimal.fromValue(value);
 			
-			if (this.m == 0) return value.m < 0
-			if (value.m == 0) return this.m > 0
-			if (this.e == value.e) return this.m > value.m;
-			if (this.m > 0) return value.m < 0 || this.e > value.e;
-			return value.m < 0 && this.e < value.e
+			if (this.mantissa == 0) return value.mantissa < 0;
+			if (value.mantissa == 0) return this.mantissa > 0;
+			if (this.exponent == value.exponent) return this.mantissa > value.mantissa;
+			if (this.mantissa > 0) return value.mantissa < 0 || this.exponent > value.exponent;
+			return value.mantissa < 0 && this.exponent < value.exponent;
 		}
 		
 		static gt(value, other) {
@@ -902,11 +902,11 @@ var padEnd = function (string, maxLength, fillString) {
 		gte(value) {
 			value = Decimal.fromValue(value);
 			
-			if (this.m == 0) return value.m <= 0
-			if (value.m == 0) return this.m > 0
-			if (this.e == value.e) return this.m >= value.m;
-			if (this.m > 0) return value.m < 0 || this.e >= value.e;
-			return value.m < 0 && this.e <= value.e
+			if (this.mantissa == 0) return value.mantissa <= 0;
+			if (value.mantissa == 0) return this.mantissa > 0;
+			if (this.exponent == value.exponent) return this.mantissa >= value.mantissa;
+			if (this.mantissa > 0) return value.mantissa < 0 || this.exponent > value.exponent;
+			return value.mantissa < 0 && this.exponent < value.exponent;
 		}
 		
 		static gte(value, other) {
