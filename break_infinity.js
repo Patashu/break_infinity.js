@@ -918,8 +918,7 @@ var padEnd = function (string, maxLength, fillString) {
 		max(value) {
 			value = Decimal.fromValue(value);
 			
-			var discriminant = this.cmp(value);
-			if (discriminant >= 0) return this;
+			if (this.gte(value)) return this;
 			return value;
 		}
 		
@@ -932,8 +931,7 @@ var padEnd = function (string, maxLength, fillString) {
 		min(value) {
 			value = Decimal.fromValue(value);
 			
-			var discriminant = this.cmp(value);
-			if (discriminant <= 0) return this;
+			if (this.lte(value)) return this;
 			return value;
 		}
 		
@@ -1138,15 +1136,18 @@ var padEnd = function (string, maxLength, fillString) {
 				}
 			}
 			
-			//return Decimal.exp(value*this.ln());
-			//return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
-			
 			//Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
 			
-			var newexponent = Math.trunc(temp);
-			var residue = temp-newexponent;
-			var newmantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
-			return Decimal.fromMantissaExponent(newmantissa, newexponent);
+			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
+			if (Number.isFinite(newMantissa))
+			{
+				var newexponent = Math.trunc(temp);
+				var residue = temp-newexponent;
+				return Decimal.fromMantissaExponent(newmantissa, newexponent);
+			}
+			
+			//return Decimal.exp(value*this.ln());
+			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
 		}
 		
 		static pow10(value) {
