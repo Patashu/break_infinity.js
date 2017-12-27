@@ -1141,7 +1141,7 @@ var padEnd = function (string, maxLength, fillString) {
 			//return Decimal.exp(value*this.ln());
 			//return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
 			
-			//Same speed and slightly more precision:
+			//Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
 			
 			var newexponent = Math.trunc(temp);
 			var residue = temp-newexponent;
