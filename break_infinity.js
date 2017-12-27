@@ -1139,7 +1139,14 @@ var padEnd = function (string, maxLength, fillString) {
 			}
 			
 			//return Decimal.exp(value*this.ln());
-			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+			//return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+			
+			//Same speed and slightly more precision:
+			
+			var newexponent = Math.trunc(temp);
+			var residue = temp-newexponent;
+			var newmantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
+			return Decimal.fromMantissaExponent(newmantissa, newexponent);
 		}
 		
 		static pow10(value) {
