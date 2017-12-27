@@ -1,3 +1,5 @@
+<script>
+
 //START pad-end ( https://www.npmjs.com/package/pad-end )
 
 var padEnd = function (string, maxLength, fillString) {
@@ -1146,7 +1148,7 @@ var padEnd = function (string, maxLength, fillString) {
 			}
 			
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
-			if (Number.isFinite(newMantissa)
+			if (Number.isFinite(newMantissa))
 			{
 				///ExpHelper time, to get dat precision!
 				
@@ -1437,3 +1439,4 @@ var result = a.add(c);
 	globalScope.Decimal = Decimal;
 	}
 })(this);
+</script>
