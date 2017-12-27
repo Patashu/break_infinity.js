@@ -113,6 +113,9 @@ var padEnd = function (string, maxLength, fillString) {
 	var BIG_INT_0 = BigInteger.parseInt("0");
 	var BIG_INT_1 = BigInteger.parseInt("1");
 	var BIG_INT_MINUS_1 = BigInteger.parseInt("-1");
+	var BIG_INT_MINUS_7 = BigInteger.parseInt("-7");
+	var BIG_INT_14 = BigInteger.parseInt("14");
+	var BIG_INT_21 = BigInteger.parseInt("21");
 	var BIG_INT_EXP_MAX = BigInteger.parseInt("308");
 	var BIG_INT_EXP_MIN = BigInteger.parseInt("-324");
 	var BIG_INT_INFINITY = BigInteger.parseInt(padEnd("179769", 309, "0"));
@@ -299,7 +302,7 @@ var padEnd = function (string, maxLength, fillString) {
 			var result = this.mantissa*powersof10[parseInt(this.exponent.toString())+indexof0inpowersof10];
 			if (!Number.isFinite(result) || this.exponent.compareTo(BIG_INT_0) < 0) { return result; }
 			var resultrounded = Math.round(result);
-			if (Math.abs(resultrounded-result) < 1e-9) return resultrounded;
+			if (Math.abs(resultrounded-result) < 1e-10) return resultrounded;
 			return result;
 		}
 		
@@ -323,7 +326,7 @@ var padEnd = function (string, maxLength, fillString) {
 			}
 			if (this.exponent.compareTo(BIG_INT_INFINITESIMAL) <= 0 || this.mantissa == 0) { return "0"; }
 			
-			if (this.exponent.compareTo(BigInteger.parseInt("21")) < 0 && this.exponent.compareTo(BigInteger.parseInt("-7")) > 0)
+			if (this.exponent.compareTo(BIG_INT_21) < 0 && this.exponent.compareTo(BIG_INT_MINUS_7) > 0)
 			{
 				return this.toNumber().toString();
 			}
@@ -566,9 +569,11 @@ var padEnd = function (string, maxLength, fillString) {
 			}
 			else
 			{
+				//have to do this because adding numbers that were once integers but scaled down is imprecise.
+				//Example: 299 + 18
 				return Decimal.fromMantissaExponent(
-				biggerDecimal.mantissa + smallerDecimal.mantissa*powersof10[parseInt(smallerDecimal.exponent.subtract(biggerDecimal.exponent).toString())+indexof0inpowersof10],
-				biggerDecimal.exponent);
+				Math.round(1e14*biggerDecimal.mantissa + 1e14*smallerDecimal.mantissa*powersof10[parseInt(smallerDecimal.exponent.subtract(biggerDecimal.exponent).toString())+indexof0inpowersof10]),
+				biggerDecimal.exponent.subtract(BIG_INT_14));
 			}
 		}
 		
@@ -796,7 +801,7 @@ var padEnd = function (string, maxLength, fillString) {
 		eq(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) == 0;
+			return this.mantissa == value.mantissa && this.exponent.compareTo(value.exponent) == 0
 		}
 		
 		static eq(value, other) {
@@ -818,7 +823,7 @@ var padEnd = function (string, maxLength, fillString) {
 		neq(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) != 0;
+			return this.mantissa != value.mantissa || this.exponent.compareTo(value.exponent) != 0
 		}
 		
 		static neq(value, other) {
@@ -840,7 +845,11 @@ var padEnd = function (string, maxLength, fillString) {
 		lt(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) < 0;
+			if (this.mantissa == 0) return value.mantissa > 0;
+			if (value.mantissa == 0) return this.mantissa <= 0;
+			if (this.exponent.compareTo(value.exponent) == 0) return this.mantissa < value.mantissa;
+			if (this.mantissa > 0) return value.mantissa > 0 && this.exponent.compareTo(value.exponent) < 0;
+			return value.mantissa > 0 || this.exponent.compareTo(value.exponent) > 0; 
 		}
 		
 		static lt(value, other) {
@@ -852,7 +861,11 @@ var padEnd = function (string, maxLength, fillString) {
 		lte(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) <= 0;
+			if (this.mantissa == 0) return value.mantissa >= 0;
+			if (value.mantissa == 0) return this.mantissa <= 0;
+			if (this.exponent.compareTo(value.exponent) == 0) return this.mantissa <= value.mantissa;
+			if (this.mantissa > 0) return value.mantissa > 0 && this.exponent.compareTo(value.exponent) < 0;
+			return value.mantissa > 0 || this.exponent.compareTo(value.exponent) > 0; 
 		}
 		
 		static lte(value, other) {
@@ -864,7 +877,11 @@ var padEnd = function (string, maxLength, fillString) {
 		gt(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) > 0;
+			if (this.mantissa == 0) return value.mantissa < 0;
+			if (value.mantissa == 0) return this.mantissa > 0;
+			if (this.exponent.compareTo(value.exponent) == 0) return this.mantissa > value.mantissa;
+			if (this.mantissa > 0) return value.mantissa < 0 || this.exponent.compareTo(value.exponent) > 0;
+			return value.mantissa < 0 && this.exponent.compareTo(value.exponent) < 0;
 		}
 		
 		static gt(value, other) {
@@ -876,7 +893,11 @@ var padEnd = function (string, maxLength, fillString) {
 		gte(value) {
 			value = Decimal.fromValue(value);
 			
-			return this.cmp(value) >= 0;
+			if (this.mantissa == 0) return value.mantissa <= 0;
+			if (value.mantissa == 0) return this.mantissa > 0;
+			if (this.exponent.compareTo(value.exponent) == 0) return this.mantissa >= value.mantissa;
+			if (this.mantissa > 0) return value.mantissa < 0 || this.exponent.compareTo(value.exponent) > 0;
+			return value.mantissa < 0 && this.exponent.compareTo(value.exponent) < 0;
 		}
 		
 		static gte(value, other) {
@@ -1126,7 +1147,16 @@ var padEnd = function (string, maxLength, fillString) {
 				}
 			}
 			
-			return Decimal.exp(value*this.ln());
+			//return Decimal.exp(value*this.ln());
+			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+		}
+		
+		static pow10(value) {
+			if (Number.isInteger(value))
+			{
+				return Decimal.fromMantissaExponent_noNormalize(1,value);
+			}
+			return Decimal.fromMantissaExponent(Math.pow(10,value%1),Math.trunc(value));
 		}
 		
 		pow_base(value) {
@@ -1143,10 +1173,19 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			return value.pow(other);
 		}
+
+		factorial() {
+			//Using Stirling's Approximation. https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
+			
+			var n = this.toNumber() + 1;
+			
+			return Decimal.pow((n/Math.E)*Math.sqrt(n*Math.sinh(1/n)+1/(810*Math.pow(n, 6))), n).mul(Math.sqrt(2*Math.PI/n));
+		}
 		
 		exp() {
 			//Fast track: if -706 < this < 709, we can use regular exp.
 			var tmp = this.toNumber();
+			if (!Number.isFinite(tmp)) return tmp;
 			if (-706 < tmp && tmp < 709)
 			{
 				return Decimal.fromNumber(Math.exp(tmp));
@@ -1331,6 +1370,8 @@ var padEnd = function (string, maxLength, fillString) {
 			//5% of the time, have a mantissa of 0
 			if (Math.random()*20 < 1) return Decimal.fromMantissaExponent(0, 0);
 			var mantissa = Math.random()*10;
+			//10% of the time, have a simple mantissa
+			if (Math.random()*10 < 1) { mantissa = Math.round(mantissa); }
 			mantissa *= Math.sign(Math.random()*2-1);
 			var exponent = Math.floor(Math.random()*absMaxExponent*2) - absMaxExponent;
 			return Decimal.fromMantissaExponent(mantissa, exponent);
