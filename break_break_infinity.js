@@ -909,8 +909,7 @@ var padEnd = function (string, maxLength, fillString) {
 		max(value) {
 			value = Decimal.fromValue(value);
 			
-			var discriminant = this.cmp(value);
-			if (discriminant >= 0) return this;
+			if (this.gte(value)) return this;
 			return value;
 		}
 		
@@ -923,8 +922,7 @@ var padEnd = function (string, maxLength, fillString) {
 		min(value) {
 			value = Decimal.fromValue(value);
 			
-			var discriminant = this.cmp(value);
-			if (discriminant <= 0) return this;
+			if (this.lte(value)) return this;
 			return value;
 		}
 		
@@ -1147,17 +1145,21 @@ var padEnd = function (string, maxLength, fillString) {
 				}
 			}
 			
+			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
+			if (Number.isFinite(newMantissa)
+			{
+				///ExpHelper time, to get dat precision!
+				
+				ExpHelper.precision = MAX_SIGNIFICANT_DIGITS + this.exponent.toString().length;
+				var temp = new ExpHelper(value).mul(new ExpHelper(this.exponent.toString()));
+				var newexponent = temp.trunc();
+				var residue = temp.sub(newexponent).toNumber();
+				
+				return Decimal.fromMantissaExponent(newmantissa, newexponent.toFixed());
+			}
+			
 			//return Decimal.exp(value*this.ln());
-			//return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
-			
-			///ExpHelper time, to get dat precision!
-			
-			ExpHelper.precision = MAX_SIGNIFICANT_DIGITS + this.exponent.toString().length;
-			var temp = new ExpHelper(value).mul(new ExpHelper(this.exponent.toString()));
-			var newexponent = temp.trunc();
-			var residue = temp.sub(newexponent).toNumber();
-			var newmantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
-			return Decimal.fromMantissaExponent(newmantissa, newexponent.toFixed());
+			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
 		}
 		
 		static pow10(value) {
