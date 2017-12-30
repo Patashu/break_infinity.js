@@ -1299,6 +1299,16 @@ var padEnd = function (string, maxLength, fillString) {
 		tanh() {
 			return this.sinh().div(this.cosh());
 		}
+		asinh() {
+			return Decimal.ln(this.add(this.sqr().add(1).sqrt()));
+		}
+		acosh() {
+			return Decimal.ln(this.add(this.sqr().sub(1).sqrt()));
+		}
+		atanh() {
+		if (this.abs().gte(1)) return Number.NaN;
+		return Decimal.ln(this.add(1).div(new Decimal(1).sub(this))).div(2);
+		}
 		
 		//If you're willing to spend 'resourcesAvailable' and want to buy something with exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio, already own currentOwned), how much of it can you buy? Adapted from Trimps source code.
 		static affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned)
