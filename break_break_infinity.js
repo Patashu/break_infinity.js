@@ -1289,6 +1289,17 @@ var padEnd = function (string, maxLength, fillString) {
 			return value.cbrt();
 		}
 		
+		//Some hyperbolic trig functions that happen to be easy
+		sinh() {
+			return this.exp().sub(this.negate().exp()).div(2);
+		}
+		cosh() {
+			return this.exp().add(this.negate().exp()).div(2);
+		}
+		tanh() {
+			return this.sinh().div(this.cosh());
+		}
+		
 		//If you're willing to spend 'resourcesAvailable' and want to buy something with exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio, already own currentOwned), how much of it can you buy? Adapted from Trimps source code.
 		static affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned)
 		{
