@@ -1,5 +1,3 @@
-<script>
-
 //START pad-end ( https://www.npmjs.com/package/pad-end )
 
 var padEnd = function (string, maxLength, fillString) {
@@ -1147,16 +1145,15 @@ var padEnd = function (string, maxLength, fillString) {
 				}
 			}
 			
+			///ExpHelper time, to get dat precision!
+				
+			ExpHelper.precision = MAX_SIGNIFICANT_DIGITS + this.exponent.toString().length;
+			var temp = new ExpHelper(value).mul(new ExpHelper(this.exponent.toString()));
+			var newexponent = temp.trunc();
+			var residue = temp.sub(newexponent).toNumber();
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
 			if (Number.isFinite(newMantissa))
 			{
-				///ExpHelper time, to get dat precision!
-				
-				ExpHelper.precision = MAX_SIGNIFICANT_DIGITS + this.exponent.toString().length;
-				var temp = new ExpHelper(value).mul(new ExpHelper(this.exponent.toString()));
-				var newexponent = temp.trunc();
-				var residue = temp.sub(newexponent).toNumber();
-				
 				return Decimal.fromMantissaExponent(newmantissa, newexponent.toFixed());
 			}
 			
@@ -1439,4 +1436,3 @@ var result = a.add(c);
 	globalScope.Decimal = Decimal;
 	}
 })(this);
-</script>
