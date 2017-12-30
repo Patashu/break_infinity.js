@@ -1138,11 +1138,11 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			//Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
 			
+			var newexponent = Math.trunc(temp);
+			var residue = temp-newexponent;
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
 			if (Number.isFinite(newMantissa))
 			{
-				var newexponent = Math.trunc(temp);
-				var residue = temp-newexponent;
 				return Decimal.fromMantissaExponent(newmantissa, newexponent);
 			}
 			
