@@ -1143,7 +1143,7 @@ var padEnd = function (string, maxLength, fillString) {
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
 			if (Number.isFinite(newMantissa))
 			{
-				return Decimal.fromMantissaExponent(newmantissa, newexponent);
+				return Decimal.fromMantissaExponent(newMantissa, newexponent);
 			}
 			
 			//return Decimal.exp(value*this.ln());
