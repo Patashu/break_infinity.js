@@ -31,6 +31,22 @@ var padEnd = function (string, maxLength, fillString) {
 
 //END pad-end
 
+//IE6 shims
+
+Math.log10 = Math.log10 || function(x) {
+	return Math.log(x) * Math.LOG10E;
+};
+
+Number.isInteger = Number.isInteger || function(value) {
+  return typeof value === 'number' && 
+    isFinite(value) && 
+    Math.floor(value) === value;
+};
+
+Number.isSafeInteger = Number.isSafeInteger || function (value) {
+   return Number.isInteger(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+};
+
 //TODO: Import big integer instead of just pasting it here
 //big integer benchmark: http://yaffle.github.io/BigInteger/benchmark/
 //Going with https://github.com/Yaffle/BigInteger as it has incredibly fast create-10, add, mul, div and toString
@@ -151,7 +167,7 @@ var padEnd = function (string, maxLength, fillString) {
 			//TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
 			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = BIG_INT_0; return; }
 			if (this.mantissa >= 1 && this.mantissa < 10) { return; }
-			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) { return; }
+			if (isNaN(this.mantissa) || isNaN(this.exponent)) { return; }
 			
 			var temp_exponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
 			this.mantissa = this.mantissa/powersof10[temp_exponent+indexof0inpowersof10];
@@ -162,7 +178,7 @@ var padEnd = function (string, maxLength, fillString) {
 		
 		fromMantissaExponent(mantissa, exponent) {
 			//SAFETY: don't let in non-numbers
-			if (!Number.isFinite(mantissa)) { mantissa = Number.NaN; exponent = BIG_INT_INFINITY; }
+			if (!isFinite(mantissa)) { mantissa = Number.NaN; exponent = BIG_INT_INFINITY; }
 			this.mantissa = mantissa;
 			this.exponent = Decimal.toBigInteger(exponent);
 			this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
@@ -184,7 +200,7 @@ var padEnd = function (string, maxLength, fillString) {
 		
 		fromNumber(value) {
 			//SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
-			if (Number.isNaN(value)) { this.mantissa = Number.NaN; this.exponent = BIG_INT_INFINITY; }
+			if (isNaN(value)) { this.mantissa = Number.NaN; this.exponent = BIG_INT_INFINITY; }
 			else if (value == Number.POSITIVE_INFINITY) { this.mantissa = 1; this.exponent = BIG_INT_INFINITY; }
 			else if (value == Number.NEGATIVE_INFINITY) { this.mantissa = -1; this.exponent = BIG_INT_INFINITY; }
 			else if (value == 0) { this.mantissa = 0; this.exponent = BIG_INT_0; }
@@ -221,7 +237,7 @@ var padEnd = function (string, maxLength, fillString) {
 			else
 			{
 				this.fromNumber(parseFloat(value));
-				if (Number.isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
+				if (isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
 			}
 			return this;
 		}
@@ -293,14 +309,14 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			//var result = this.mantissa*Math.pow(10, this.exponent);
 			
-			if (!Number.isFinite(this.mantissa)) { return Number.NaN; }
+			if (!isFinite(this.mantissa)) { return Number.NaN; }
 			if (this.exponent.compareTo(BIG_INT_EXP_MAX) > 0) { return this.mantissa > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY; }
 			if (this.exponent.compareTo(BIG_INT_EXP_MIN) < 0) { return 0; }
 			//SAFETY: again, handle 5e-324, -5e-324 separately
 			if (this.exponent.compareTo(BIG_INT_EXP_MIN) == 0) { return this.mantissa > 0 ? 5e-324 : -5e-324; }
 			
 			var result = this.mantissa*powersof10[parseInt(this.exponent.toString())+indexof0inpowersof10];
-			if (!Number.isFinite(result) || this.exponent.compareTo(BIG_INT_0) < 0) { return result; }
+			if (!isFinite(result) || this.exponent.compareTo(BIG_INT_0) < 0) { return result; }
 			var resultrounded = Math.round(result);
 			if (Math.abs(resultrounded-result) < 1e-10) return resultrounded;
 			return result;
@@ -309,7 +325,7 @@ var padEnd = function (string, maxLength, fillString) {
 		mantissaWithDecimalPlaces(places) {
 			// https://stackoverflow.com/a/37425022
 		
-			if (Number.isNaN(this.mantissa)) return Number.NaN;
+			if (isNaN(this.mantissa)) return Number.NaN;
 			if (this.mantissa == 0) return 0;
 			
 			var len = places+1;
@@ -319,7 +335,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		toString() {
-			if (Number.isNaN(this.mantissa)) { return "NaN"; }
+			if (isNaN(this.mantissa)) { return "NaN"; }
 			if (this.exponent.compareTo(BIG_INT_INFINITY) >= 0)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -344,7 +360,7 @@ var padEnd = function (string, maxLength, fillString) {
 			//"1.000000000000000000e-999"
 			//TBH I'm tempted to just say it's a feature. If you're doing pretty formatting then why don't you know how many decimal places you want...?
 		
-			if (Number.isNaN(this.mantissa)) { return "NaN"; }
+			if (isNaN(this.mantissa)) { return "NaN"; }
 			if (this.exponent.compareTo(BIG_INT_INFINITY) >= 0)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -357,7 +373,7 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			if (this.exponent.compareTo(BIG_INT_EXP_MIN) > 0 && this.exponent.compareTo(BIG_INT_EXP_MAX) < 0) { return this.toNumber().toExponential(places); }
 			
-			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
+			if (!isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 			
 			var len = places+1;
 			var numDigits = Math.max(1, Math.ceil(Math.log10(Math.abs(this.mantissa))));
@@ -367,7 +383,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		toFixed(places) {
-			if (Number.isNaN(this.mantissa)) { return "NaN"; }
+			if (isNaN(this.mantissa)) { return "NaN"; }
 			if (this.exponent.compareTo(BIG_INT_INFINITY) >= 0)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -1135,7 +1151,7 @@ var padEnd = function (string, maxLength, fillString) {
 			if (Number.isInteger(value))
 			{
 				var newMantissa = Math.pow(this.mantissa, value);
-				if (Number.isFinite(newMantissa))
+				if (isFinite(newMantissa))
 				{
 					if (bigintegervalue != null)
 					{
@@ -1152,7 +1168,7 @@ var padEnd = function (string, maxLength, fillString) {
 			var newexponent = temp.trunc();
 			var residue = temp.sub(newexponent).toNumber();
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
-			if (Number.isFinite(newMantissa))
+			if (isFinite(newMantissa))
 			{
 				return Decimal.fromMantissaExponent(newMantissa, newexponent.toFixed());
 			}
@@ -1195,7 +1211,7 @@ var padEnd = function (string, maxLength, fillString) {
 		exp() {
 			//Fast track: if -706 < this < 709, we can use regular exp.
 			var tmp = this.toNumber();
-			if (!Number.isFinite(tmp)) return tmp;
+			if (!isFinite(tmp)) return tmp;
 			if (-706 < tmp && tmp < 709)
 			{
 				return Decimal.fromNumber(Math.exp(tmp));

@@ -33,7 +33,65 @@ var padEnd = function (string, maxLength, fillString) {
 };
 
 //END pad-end
-	
+
+//IE6 polyfills
+
+//Also need polyfills on IE6: log2, log1p, hypot, imul, fround, expm1, clz32, cbrt, hyperbolic trig
+
+Math.log10 = Math.log10 || function(x) {
+	return Math.log(x) * Math.LOG10E;
+};
+
+Number.isInteger = Number.isInteger || function(value) {
+  return typeof value === 'number' && 
+    isFinite(value) && 
+    Math.floor(value) === value;
+};
+
+Number.isSafeInteger = Number.isSafeInteger || function (value) {
+   return Number.isInteger(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+};
+
+if (!Math.trunc) {
+	Math.trunc = function(v) {
+		v = +v;
+		if (!isFinite(v)) return v;
+		
+		return (v - v % 1)   ||   (v < 0 ? -0 : v === 0 ? v : 0);
+		
+		// returns:
+		//  0        ->  0
+		// -0        -> -0
+		//  0.2      ->  0
+		// -0.2      -> -0
+		//  0.7      ->  0
+		// -0.7      -> -0
+		//  Infinity ->  Infinity
+		// -Infinity -> -Infinity
+		//  NaN      ->  NaN
+		//  null     ->  0
+	};
+}
+
+if (!Math.sign) {
+  Math.sign = function(x) {
+    // If x is NaN, the result is NaN.
+    // If x is -0, the result is -0.
+    // If x is +0, the result is +0.
+    // If x is negative and not -0, the result is -1.
+    // If x is positive and not +0, the result is +1.
+    return ((x > 0) - (x < 0)) || +x;
+    // A more aesthetical persuado-representation is shown below
+    //
+    // ( (x > 0) ? 0 : 1 )  // if x is negative then negative one
+    //          +           // else (because you cant be both - and +)
+    // ( (x < 0) ? 0 : -1 ) // if x is positive then positive one
+    //         ||           // if x is 0, -0, or NaN, or not a number,
+    //         +x           // Then the result will be x, (or) if x is
+    //                      // not a number, then x converts to number
+  };
+}
+
 	/*
 	
 	# break_infinity.js
@@ -169,7 +227,7 @@ var padEnd = function (string, maxLength, fillString) {
 		
 		fromMantissaExponent(mantissa, exponent) {
 			//SAFETY: don't let in non-numbers
-			if (!Number.isFinite(mantissa) || !Number.isFinite(exponent)) { mantissa = Number.NaN; exponent = Number.NaN; }
+			if (!isFinite(mantissa) || !isFinite(exponent)) { mantissa = Number.NaN; exponent = Number.NaN; }
 			this.mantissa = mantissa;
 			this.exponent = exponent;
 			this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
@@ -191,7 +249,7 @@ var padEnd = function (string, maxLength, fillString) {
 		
 		fromNumber(value) {
 			//SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
-			if (Number.isNaN(value)) { this.mantissa = Number.NaN; this.exponent = Number.NaN; }
+			if (isNaN(value)) { this.mantissa = Number.NaN; this.exponent = Number.NaN; }
 			else if (value == Number.POSITIVE_INFINITY) { this.mantissa = 1; this.exponent = EXP_LIMIT; }
 			else if (value == Number.NEGATIVE_INFINITY) { this.mantissa = -1; this.exponent = EXP_LIMIT; }
 			else if (value == 0) { this.mantissa = 0; this.exponent = 0; }
@@ -224,7 +282,7 @@ var padEnd = function (string, maxLength, fillString) {
 			else
 			{
 				this.fromNumber(parseFloat(value));
-				if (Number.isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
+				if (isNaN(this.mantissa)) { throw Error("[DecimalError] Invalid argument: " + value); }
 			}
 			return this;
 		}
@@ -296,14 +354,14 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			//var result = this.mantissa*Math.pow(10, this.exponent);
 			
-			if (!Number.isFinite(this.exponent)) { return Number.NaN; }
+			if (!isFinite(this.exponent)) { return Number.NaN; }
 			if (this.exponent > NUMBER_EXP_MAX) { return this.mantissa > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY; }
 			if (this.exponent < NUMBER_EXP_MIN) { return 0; }
 			//SAFETY: again, handle 5e-324, -5e-324 separately
 			if (this.exponent == NUMBER_EXP_MIN) { return this.mantissa > 0 ? 5e-324 : -5e-324; }
 			
 			var result = this.mantissa*powersof10[this.exponent+indexof0inpowersof10];
-			if (!Number.isFinite(result) || this.exponent < 0) { return result; }
+			if (!isFinite(result) || this.exponent < 0) { return result; }
 			var resultrounded = Math.round(result);
 			if (Math.abs(resultrounded-result) < 1e-10) return resultrounded;
 			return result;
@@ -312,7 +370,7 @@ var padEnd = function (string, maxLength, fillString) {
 		mantissaWithDecimalPlaces(places) {
 			// https://stackoverflow.com/a/37425022
 		
-			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) return Number.NaN;
+			if (isNaN(this.mantissa) || isNaN(this.exponent)) return Number.NaN;
 			if (this.mantissa == 0) return 0;
 			
 			var len = places+1;
@@ -322,7 +380,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		toString() {
-			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) { return "NaN"; }
+			if (isNaN(this.mantissa) || isNaN(this.exponent)) { return "NaN"; }
 			if (this.exponent >= EXP_LIMIT)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -347,7 +405,7 @@ var padEnd = function (string, maxLength, fillString) {
 			//"1.000000000000000000e-999"
 			//TBH I'm tempted to just say it's a feature. If you're doing pretty formatting then why don't you know how many decimal places you want...?
 		
-			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) { return "NaN"; }
+			if (isNaN(this.mantissa) || isNaN(this.exponent)) { return "NaN"; }
 			if (this.exponent >= EXP_LIMIT)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -360,7 +418,7 @@ var padEnd = function (string, maxLength, fillString) {
 			
 			if (this.exponent > NUMBER_EXP_MIN && this.exponent < NUMBER_EXP_MAX) { return this.toNumber().toExponential(places); }
 			
-			if (!Number.isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
+			if (!isFinite(places)) { places = MAX_SIGNIFICANT_DIGITS; }
 			
 			var len = places+1;
 			var numDigits = Math.max(1, Math.ceil(Math.log10(Math.abs(this.mantissa))));
@@ -370,7 +428,7 @@ var padEnd = function (string, maxLength, fillString) {
 		}
 		
 		toFixed(places) {
-			if (Number.isNaN(this.mantissa) || Number.isNaN(this.exponent)) { return "NaN"; }
+			if (isNaN(this.mantissa) || isNaN(this.exponent)) { return "NaN"; }
 			if (this.exponent >= EXP_LIMIT)
 			{
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
@@ -1130,7 +1188,7 @@ var padEnd = function (string, maxLength, fillString) {
 			if (Number.isSafeInteger(temp))
 			{
 				var newMantissa = Math.pow(this.mantissa, value);
-				if (Number.isFinite(newMantissa))
+				if (isFinite(newMantissa))
 				{
 					return Decimal.fromMantissaExponent(newMantissa, temp);
 				}
@@ -1141,7 +1199,7 @@ var padEnd = function (string, maxLength, fillString) {
 			var newexponent = Math.trunc(temp);
 			var residue = temp-newexponent;
 			var newMantissa = Math.pow(10, value*Math.log10(this.mantissa)+residue);
-			if (Number.isFinite(newMantissa))
+			if (isFinite(newMantissa))
 			{
 				return Decimal.fromMantissaExponent(newMantissa, newexponent);
 			}
