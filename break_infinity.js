@@ -1128,6 +1128,10 @@ if (!Math.sign) {
 			return value.gte_tolerance(other, tolerance);
 		}
 		
+		abslog10() {
+			return this.exponent + Math.log10(Math.abs(this.mantissa));
+		}
+		
 		log10() {
 			return this.exponent + Math.log10(this.mantissa);
 		}
@@ -1181,6 +1185,7 @@ if (!Math.sign) {
 		
 		pow(value) {
 			//UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
+			//TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1); makes an exponent of -0! Is a negative zero ever a problem?
 			
 			if (value instanceof Decimal) { value = value.toNumber(); }
 			
@@ -1208,7 +1213,13 @@ if (!Math.sign) {
 			}
 			
 			//return Decimal.exp(value*this.ln());
-			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+			//UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
+			var result = Decimal.pow10(value*this.abslog10()); //this is 2x faster and gives same values AFAIK
+			if (this.sign() == -1 && value % 2 == 1)
+			{
+				return result.neg();
+			}
+			return result;
 		}
 		
 		static pow10(value) {

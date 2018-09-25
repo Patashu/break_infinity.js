@@ -1077,6 +1077,12 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 			return value.gte_tolerance(other, tolerance);
 		}
 		
+		abslog10() {
+			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15. 
+			
+			return parseInt(this.exponent.toString()) + Math.log10(Math.abs(this.mantissa));
+		}
+		
 		log10() {
 			//UN-SAFETY: Returns a Number, not something with arbitrary precision, so expect inaccuracies if abs(exponent) is greater than 9e15. 
 		
@@ -1177,7 +1183,13 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 			}
 			
 			//return Decimal.exp(value*this.ln());
-			return Decimal.pow10(value*this.log10()); //this is 2x faster and gives same values AFAIK
+			//UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
+			var result = Decimal.pow10(value*this.abslog10()); //this is 2x faster and gives same values AFAIK
+			if (this.sign() == -1 && value % 2 == 1)
+			{
+				return result.neg();
+			}
+			return result;
 		}
 		
 		static pow10(value) {
