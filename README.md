@@ -9,7 +9,7 @@ This library is open source and free to use/modify/fork for any purpose you want
 
 By Patashu.
 
-NEW: C# port BreakInfinity.js, for your C#/Unity incremental games: https://github.com/Razenpok/BreakInfinity.cs
+NEW: C# port BreakInfinity.js / BigDouble.cs, for your C#/Unity incremental games: https://github.com/Razenpok/BreakInfinity.cs
 
 ---
 
