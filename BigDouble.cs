@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 namespace BreakInfinity
@@ -18,23 +18,10 @@ namespace BreakInfinity
         //The smallest exponent that can appear in a Double, though not all mantissas are valid here.
         private const long DoubleExpMin = -324;
 
-        public BigDouble(double mantissa, long exponent, bool normalize = true)
+        public BigDouble(double mantissa, long exponent)
         {
-            if (!normalize || mantissa >= 1 && mantissa < 10 || !IsFinite(mantissa))
-            {
-                Mantissa = mantissa;
-                Exponent = exponent;
-            }
-            else if (IsZero(mantissa))
-            {
-                this = Zero;
-            }
-            else
-            {
-                var tempExponent = (long)Math.Floor(Math.Log10(Math.Abs(mantissa)));
-                Mantissa = mantissa / PowersOf10.Lookup(tempExponent);
-                Exponent = exponent + tempExponent;
-            }
+            Mantissa = mantissa;
+            Exponent = exponent;
         }
 
         public BigDouble(BigDouble other)
@@ -64,45 +51,58 @@ namespace BreakInfinity
             }
             else
             {
-                var exponent = (long) Math.Floor(Math.Log10(Math.Abs(value)));
-                double mantissa;
-                //SAFETY: handle 5e-324, -5e-324 separately
-                if (exponent == DoubleExpMin)
-                {
-                    mantissa = value * 10 / 1e-323;
-                }
-                else
-                {
-                    mantissa = value / PowersOf10.Lookup(exponent);
-                }
-
-                this = new BigDouble(mantissa, exponent);
+                this = Normalize(value, 0);
             }
+        }
+
+        public static BigDouble Normalize(double mantissa, long exponent)
+        {
+            if (mantissa >= 1 && mantissa < 10 || !IsFinite(mantissa))
+            {
+                return new BigDouble(mantissa, exponent);
+            }
+            if (IsZero(mantissa))
+            {
+                return Zero;
+            }
+
+            var tempExponent = (long)Math.Floor(Math.Log10(Math.Abs(mantissa)));
+            //SAFETY: handle 5e-324, -5e-324 separately
+            if (tempExponent == DoubleExpMin)
+            {
+                mantissa = mantissa * 10 / 1e-323;
+            }
+            else
+            {
+                mantissa = mantissa / PowersOf10.Lookup(tempExponent);
+            }
+
+            return new BigDouble(mantissa, exponent + tempExponent);
         }
 
         public double Mantissa { get; }
 
         public long Exponent { get; }
 
-        public static BigDouble Zero { get; } = new BigDouble(0, 0);
+        public static BigDouble Zero = new BigDouble(0, 0);
 
-        public static BigDouble One { get; } = new BigDouble(1, 0);
+        public static BigDouble One = new BigDouble(1, 0);
 
-        public static BigDouble NaN { get; } = new BigDouble(double.NaN, long.MinValue);
+        public static BigDouble NaN = new BigDouble(double.NaN, long.MinValue);
 
         public static bool IsNaN(BigDouble value)
         {
-            return double.IsNaN(value.Mantissa) || value.Exponent == long.MinValue;
+            return double.IsNaN(value.Mantissa);
         }
 
-        public static BigDouble PositiveInfinity { get; } = new BigDouble(double.PositiveInfinity, 0);
+        public static BigDouble PositiveInfinity = new BigDouble(double.PositiveInfinity, 0);
 
         public static bool IsPositiveInfinity(BigDouble value)
         {
             return double.IsPositiveInfinity(value.Mantissa);
         }
 
-        public static BigDouble NegativeInfinity { get; } = new BigDouble(double.NegativeInfinity, 0);
+        public static BigDouble NegativeInfinity = new BigDouble(double.NegativeInfinity, 0);
 
         public static bool IsNegativeInfinity(BigDouble value)
         {
@@ -121,12 +121,12 @@ namespace BreakInfinity
                 var parts = value.Split('e');
                 var mantissa = double.Parse(parts[0], CultureInfo.InvariantCulture);
                 var exponent = long.Parse(parts[1], CultureInfo.InvariantCulture);
-                return new BigDouble(mantissa, exponent);
+                return Normalize(mantissa, exponent);
             }
 
             if (value == "NaN")
             {
-                return new BigDouble(double.NaN, long.MinValue, false);
+                return NaN;
             }
 
             var result = new BigDouble(double.Parse(value, CultureInfo.InvariantCulture));
@@ -204,6 +204,11 @@ namespace BreakInfinity
 
         public static BigDouble Round(BigDouble value)
         {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
             if (value.Exponent < -1)
             {
                 return Zero;
@@ -219,6 +224,11 @@ namespace BreakInfinity
 
         public static BigDouble Floor(BigDouble value)
         {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
             if (value.Exponent < -1)
             {
                 return Math.Sign(value.Mantissa) >= 0 ? Zero : -One;
@@ -234,6 +244,11 @@ namespace BreakInfinity
 
         public static BigDouble Ceiling(BigDouble value)
         {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
             if (value.Exponent < -1)
             {
                 return Math.Sign(value.Mantissa) > 0 ? One : Zero;
@@ -249,6 +264,11 @@ namespace BreakInfinity
 
         public static BigDouble Truncate(BigDouble value)
         {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
             if (value.Exponent < 0)
             {
                 return Zero;
@@ -278,14 +298,10 @@ namespace BreakInfinity
                 return left;
             }
 
-            if (IsNaN(left) || IsInfinity(left))
+            if (IsNaN(left) || IsNaN(right) || IsInfinity(left) || IsInfinity(right))
             {
-                return left;
-            }
-
-            if (IsNaN(right) || IsInfinity(right))
-            {
-                return right;
+                // Let Double handle these cases.
+                return left.Mantissa + right.Mantissa;
             }
 
             BigDouble bigger, smaller;
@@ -307,7 +323,7 @@ namespace BreakInfinity
 
             //have to do this because adding numbers that were once integers but scaled down is imprecise.
             //Example: 299 + 18
-            return new BigDouble(
+            return Normalize(
                 Math.Round(1e14 * bigger.Mantissa + 1e14 * smaller.Mantissa *
                            PowersOf10.Lookup(smaller.Exponent - bigger.Exponent)),
                 bigger.Exponent - 14);
@@ -321,7 +337,7 @@ namespace BreakInfinity
         public static BigDouble Multiply(BigDouble left, BigDouble right)
         {
             // 2e3 * 4e5 = (2 * 4)e(3 + 5)
-            return new BigDouble(left.Mantissa * right.Mantissa, left.Exponent + right.Exponent);
+            return Normalize(left.Mantissa * right.Mantissa, left.Exponent + right.Exponent);
         }
 
         public static BigDouble Divide(BigDouble left, BigDouble right)
@@ -331,7 +347,7 @@ namespace BreakInfinity
 
         public static BigDouble Reciprocate(BigDouble value)
         {
-            return new BigDouble(1.0 / value.Mantissa, -value.Exponent);
+            return Normalize(1.0 / value.Mantissa, -value.Exponent);
         }
 
         public static implicit operator BigDouble(double value)
@@ -385,18 +401,22 @@ namespace BreakInfinity
             {
                 return 1;
             }
-
-            if (!(other is BigDouble bigDouble))
+			
+            if (!(other is BigDouble))
             {
                 throw new ArgumentException("The parameter must be a BigDouble.");
             }
-            return CompareTo(bigDouble);
+            return CompareTo((BigDouble)other);
         }
 
         public int CompareTo(BigDouble other)
         {
-            if (IsZero(Mantissa) || IsZero(other.Mantissa))
+            if (
+                IsZero(Mantissa) || IsZero(other.Mantissa)
+                || IsNaN(this) || IsNaN(other)
+                || IsInfinity(this) || IsInfinity(other))
             {
+                // Let Double handle these cases.
                 return Mantissa.CompareTo(other.Mantissa);
             }
             if (Mantissa > 0 && other.Mantissa < 0)
@@ -416,11 +436,11 @@ namespace BreakInfinity
 
         public override bool Equals(object other)
         {
-            if (!(other is BigDouble bigDouble))
+            if (!(other is BigDouble))
             {
-                return false;
+				return false;
             }
-            return Equals(bigDouble);
+            return Equals((BigDouble)other);
         }
 
         public override int GetHashCode()
@@ -433,7 +453,8 @@ namespace BreakInfinity
 
         public bool Equals(BigDouble other)
         {
-            return Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
+            return !IsNaN(this) && !IsNaN(other) && (AreSameInfinity(this, other)
+                || Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa));
         }
 
         /// <summary>
@@ -445,7 +466,14 @@ namespace BreakInfinity
         /// </summary>
         public bool Equals(BigDouble other, double tolerance)
         {
-            return Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
+            return !IsNaN(this) && !IsNaN(other) && (AreSameInfinity(this, other)
+                || Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance);
+        }
+
+        private static bool AreSameInfinity(BigDouble first, BigDouble second)
+        {
+            return IsPositiveInfinity(first) && IsPositiveInfinity(second)
+                || IsNegativeInfinity(first) && IsNegativeInfinity(second);
         }
 
         public static bool operator ==(BigDouble left, BigDouble right)
@@ -460,8 +488,12 @@ namespace BreakInfinity
 
         public static bool operator <(BigDouble a, BigDouble b)
         {
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
             if (IsZero(a.Mantissa)) return b.Mantissa > 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa <= 0;
+            if (IsZero(b.Mantissa)) return a.Mantissa < 0;
             if (a.Exponent == b.Exponent) return a.Mantissa < b.Mantissa;
             if (a.Mantissa > 0) return b.Mantissa > 0 && a.Exponent < b.Exponent;
             return b.Mantissa > 0 || a.Exponent > b.Exponent;
@@ -469,15 +501,20 @@ namespace BreakInfinity
 
         public static bool operator <=(BigDouble a, BigDouble b)
         {
-            if (IsZero(a.Mantissa)) return b.Mantissa >= 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa <= 0;
-            if (a.Exponent == b.Exponent) return a.Mantissa <= b.Mantissa;
-            if (a.Mantissa > 0) return b.Mantissa > 0 && a.Exponent < b.Exponent;
-            return b.Mantissa > 0 || a.Exponent > b.Exponent;
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
+
+            return !(a > b);
         }
 
         public static bool operator >(BigDouble a, BigDouble b)
         {
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
             if (IsZero(a.Mantissa)) return b.Mantissa < 0;
             if (IsZero(b.Mantissa)) return a.Mantissa > 0;
             if (a.Exponent == b.Exponent) return a.Mantissa > b.Mantissa;
@@ -487,21 +524,30 @@ namespace BreakInfinity
 
         public static bool operator >=(BigDouble a, BigDouble b)
         {
-            if (IsZero(a.Mantissa)) return b.Mantissa <= 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa > 0;
-            if (a.Exponent == b.Exponent) return a.Mantissa >= b.Mantissa;
-            if (a.Mantissa > 0) return b.Mantissa < 0 || a.Exponent > b.Exponent;
-            return b.Mantissa < 0 && a.Exponent < b.Exponent;
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
+
+            return !(a < b);
         }
 
         public static BigDouble Max(BigDouble left, BigDouble right)
         {
-            return left >= right ? left : right;
+            if (IsNaN(left) || IsNaN(right))
+            {
+                return NaN;
+            }
+            return left > right ? left : right;
         }
 
         public static BigDouble Min(BigDouble left, BigDouble right)
         {
-            return left <= right ? left : right;
+            if (IsNaN(left) || IsNaN(right))
+            {
+                return NaN;
+            }
+            return left > right ? right : left;
         }
 
         public static double AbsLog10(BigDouble value)
@@ -512,6 +558,11 @@ namespace BreakInfinity
         public static double Log10(BigDouble value)
         {
             return value.Exponent + Math.Log10(value.Mantissa);
+        }
+
+        public static double Log(BigDouble value, BigDouble @base)
+        {
+            return Log(value, @base.ToDouble());
         }
 
         public static double Log(BigDouble value, double @base)
@@ -539,7 +590,7 @@ namespace BreakInfinity
         {
             return IsInteger(power)
                 ? Pow10((long) power)
-                : new BigDouble(Math.Pow(10, power % 1), (long) Math.Truncate(power));
+                : Normalize(Math.Pow(10, power % 1), (long) Math.Truncate(power));
         }
 
         public static BigDouble Pow10(long power)
@@ -554,10 +605,10 @@ namespace BreakInfinity
 
         public static BigDouble Pow(BigDouble value, long power)
         {
-            return value == 10
+            return Is10(value)
                 ? Pow10(power)
                 // TODO: overflows
-                : new BigDouble(Math.Pow(value.Mantissa, power), value.Exponent * power);
+                : Normalize(Math.Pow(value.Mantissa, power), value.Exponent * power);
         }
 
         public static BigDouble Pow(BigDouble value, double power)
@@ -568,7 +619,12 @@ namespace BreakInfinity
             {
                 return NaN;
             }
-            return value == 10 && powerIsInteger ? Pow10(power) : PowInternal(value, power);
+            return Is10(value) && powerIsInteger ? Pow10(power) : PowInternal(value, power);
+        }
+
+        private static bool Is10(BigDouble value)
+        {
+            return value.Exponent == 1 && value.Mantissa - 1 < double.Epsilon;
         }
 
         private static BigDouble PowInternal(BigDouble value, double other)
@@ -585,7 +641,7 @@ namespace BreakInfinity
                 newMantissa = Math.Pow(value.Mantissa, other);
                 if (IsFinite(newMantissa))
                 {
-                    return new BigDouble(newMantissa, (long) temp);
+                    return Normalize(newMantissa, (long) temp);
                 }
             }
 
@@ -596,7 +652,7 @@ namespace BreakInfinity
             newMantissa = Math.Pow(10, other * Math.Log10(value.Mantissa) + residue);
             if (IsFinite(newMantissa))
             {
-                return new BigDouble(newMantissa, (long) newexponent);
+                return Normalize(newMantissa, (long) newexponent);
             }
 
             //UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
@@ -633,10 +689,10 @@ namespace BreakInfinity
             if (value.Exponent % 2 != 0)
             {
                 // mod of a negative number is negative, so != means '1 or -1'
-                return new BigDouble(Math.Sqrt(value.Mantissa) * 3.16227766016838, (long) Math.Floor(value.Exponent / 2.0));
+                return Normalize(Math.Sqrt(value.Mantissa) * 3.16227766016838, (long) Math.Floor(value.Exponent / 2.0));
             }
 
-            return new BigDouble(Math.Sqrt(value.Mantissa), (long) Math.Floor(value.Exponent / 2.0));
+            return Normalize(Math.Sqrt(value.Mantissa), (long) Math.Floor(value.Exponent / 2.0));
         }
 
         public static BigDouble Cbrt(BigDouble value)
@@ -654,15 +710,15 @@ namespace BreakInfinity
             var mod = value.Exponent % 3;
             if (mod == 1 || mod == -1)
             {
-                return new BigDouble(newmantissa * 2.1544346900318837, (long) Math.Floor(value.Exponent / 3.0));
+                return Normalize(newmantissa * 2.1544346900318837, (long) Math.Floor(value.Exponent / 3.0));
             }
 
             if (mod != 0)
             {
-                return new BigDouble(newmantissa * 4.6415888336127789, (long) Math.Floor(value.Exponent / 3.0));
+                return Normalize(newmantissa * 4.6415888336127789, (long) Math.Floor(value.Exponent / 3.0));
             } //mod != 0 at this point means 'mod == 2 || mod == -2'
 
-            return new BigDouble(newmantissa, (long) Math.Floor(value.Exponent / 3.0));
+            return Normalize(newmantissa, (long) Math.Floor(value.Exponent / 3.0));
         }
 
         public static BigDouble Sinh(BigDouble value)
@@ -711,9 +767,9 @@ namespace BreakInfinity
             return IsZero(Math.Abs(value % 1));
         }
 
-        public static bool IsFinite(double value)
+        private static bool IsFinite(double value)
         {
-            return !(double.IsNaN(value) || double.IsInfinity(value));
+            return !double.IsNaN(value) && !double.IsInfinity(value);
         }
 
         /// <summary>
@@ -729,7 +785,9 @@ namespace BreakInfinity
                     return value.Mantissa > 0 ? "Infinity" : "-Infinity";
                 }
 
-                var formatSpecifier = ParseFormatSpecifier(format, out var formatDigits);
+				int formatDigits;
+				
+                var formatSpecifier = ParseFormatSpecifier(format, out formatDigits);
                 switch (formatSpecifier)
                 {
                     case 'R':
@@ -882,7 +940,7 @@ namespace BreakInfinity
 
     public static class BigMath
     {
-        private static readonly Random Random = new Random();
+        private static readonly System.Random Random = new System.Random();
 
         /// <summary>
         /// This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
@@ -893,7 +951,7 @@ namespace BreakInfinity
         {
             if (Random.NextDouble() * 20 < 1)
             {
-                return new BigDouble(0, 0);
+                return BigDouble.Normalize(0, 0);
             }
 
             var mantissa = Random.NextDouble() * 10;
@@ -904,7 +962,7 @@ namespace BreakInfinity
 
             mantissa *= Math.Sign(Random.NextDouble() * 2 - 1);
             var exponent = (long)(Math.Floor(Random.NextDouble() * absMaxExponent * 2) - absMaxExponent);
-            return new BigDouble(mantissa, exponent);
+            return BigDouble.Normalize(mantissa, exponent);
         }
 
         /// <summary>
@@ -1069,6 +1127,11 @@ namespace BreakInfinity
         public static double Log10(this BigDouble value)
         {
             return BigDouble.Log10(value);
+        }
+
+        public static double Log(BigDouble value, BigDouble @base)
+        {
+            return BigDouble.Log(value, @base);
         }
 
         public static double Log(this BigDouble value, double @base)
