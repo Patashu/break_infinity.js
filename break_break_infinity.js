@@ -1208,7 +1208,7 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 		
 		static pow(value, other) {
 			//Fast track: 10^integer
-			if (value == 10 && Number.isInteger(other)) { return Decimal.fromMantissaExponent(1, other); }
+			if (value === 10 && Number.isInteger(other)) { return Decimal.fromMantissaExponent(1, other); }
 			
 			value = Decimal.fromValue(value);
 			
