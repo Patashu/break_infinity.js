@@ -1,9 +1,8 @@
-export type DecimalSource = Decimal | number | string | undefined | null;
-
-export declare class Decimal {
-    exponent: number;
+declare type DecimalSource = Decimal | number | string | undefined | null;
+export default class Decimal {
     mantissa: number;
-    normalize(): this;
+    exponent: number;
+    normalize(): this | undefined;
     fromMantissaExponent(mantissa: number, exponent: number): this;
     fromMantissaExponent_noNormalize(mantissa: number, exponent: number): this;
     fromDecimal(value: Decimal): this;
@@ -26,6 +25,8 @@ export declare class Decimal {
     valueOf(): string;
     toJSON(): string;
     toStringWithDecimalPlaces(places: number): string;
+    m: number;
+    e: number;
     abs(): Decimal;
     static abs(value: DecimalSource): Decimal;
     neg(): Decimal;
@@ -38,6 +39,7 @@ export declare class Decimal {
     static sign(value: DecimalSource): number;
     sgn(): number;
     static sgn(value: DecimalSource): number;
+    s: number;
     round(): Decimal;
     static round(value: DecimalSource): Decimal;
     floor(): Decimal;
@@ -118,6 +120,7 @@ export declare class Decimal {
     static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean;
     gte_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean;
     static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean;
+    abslog10(): number;
     log10(): number;
     static log10(value: DecimalSource): number;
     log(base: number): number;
@@ -133,8 +136,8 @@ export declare class Decimal {
     pow_base(value: DecimalSource): Decimal;
     static pow(value: DecimalSource, other: number | Decimal): Decimal;
     factorial(): Decimal;
-    exp(): number | Decimal;
-    static exp(value: DecimalSource): number | Decimal;
+    exp(): Decimal;
+    static exp(value: DecimalSource): Decimal;
     sqr(): Decimal;
     static sqr(value: DecimalSource): Decimal;
     sqrt(): Decimal;
@@ -146,33 +149,15 @@ export declare class Decimal {
     sinh(): Decimal;
     cosh(): Decimal;
     tanh(): Decimal;
-    asinh(): Decimal;
-    acosh(): Decimal;
-    atanh(): Decimal;
-    // If you're willing to spend 'resourcesAvailable' and want to buy something
-    // with exponentially increasing cost each purchase
-    // (start at priceStart, multiply by priceRatio, already own currentOwned),
-    // how much of it can you buy? Adapted from Trimps source code.
-    static affordGeometricSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: DecimalSource): Decimal;
-    // How much resource would it cost to buy (numItems) items if you already have currentOwned,
-    // the initial price is priceStart and it multiplies by priceRatio each purchase?
-    static sumGeometricSeries(numItems: DecimalSource, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: DecimalSource): Decimal;
-    // If you're willing to spend 'resourcesAvailable' and want to buy something
-    // with additively increasing cost each purchase
-    // (start at priceStart, add by priceAdd, already own currentOwned),
-    // how much of it can you buy?
+    asinh(): number;
+    acosh(): number;
+    atanh(): number;
+    static affordGeometricSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal;
+    static sumGeometricSeries(numItems: number | Decimal, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal;
     static affordArithmeticSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal;
-    // How much resource would it cost to buy (numItems) items if you already have currentOwned,
-    // the initial price is priceStart and it adds priceAdd each purchase?
-    // Adapted from http://www.mathwords.com/a/arithmetic_series.htm
     static sumArithmeticSeries(numItems: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal;
-    //Joke function from Realm Grinder
     ascensionPenalty(ascensions: number): Decimal;
-    //When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS),
-    // the lowest efficiency score is the better one to purchase.
-    // From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
     static efficiencyOfPurchase(cost: DecimalSource, current_RpS: DecimalSource, delta_RpS: DecimalSource): Decimal;
-    //Joke function from Cookie Clicker. It's 'egg'
     egg(): Decimal;
     lessThanOrEqualTo(other: DecimalSource): boolean;
     lessThan(other: DecimalSource): boolean;
@@ -180,3 +165,4 @@ export declare class Decimal {
     greaterThan(other: DecimalSource): boolean;
     static randomDecimalForTesting(absMaxExponent: number): Decimal;
 }
+export {};

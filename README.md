@@ -1,7 +1,6 @@
 # break_infinity.js
-A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.</br>
+A replacement for decimal.js for incremental games which need to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.</br>
 If you want to prioritize accuracy over speed, please use decimal.js instead.</br>
-If you need to handle numbers as big as 1e(1.79e308), try break_break_infinity.js, which sacrifices speed to deal with such massive numbers.
 
 https://github.com/Patashu/break_infinity.js
 
@@ -112,6 +111,26 @@ The methods that return a Decimal can be chained.
 ````
     
 A list of functions is provided earlier in this readme, or you can use autocomplete or read through the js file to see for yourself.
+
+---
+
+#Build
+
+First, clone the repo
+```
+git clone git://github.com/Patashu/break_infinity.js.git
+cd break_infinity.js
+```
+
+Then install npm dependencies
+```
+npm install
+```
+
+And then run build command which will build all targets to the dist directory.
+```
+npm run build
+```
 
 ---
 
