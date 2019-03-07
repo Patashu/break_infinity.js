@@ -114,7 +114,7 @@ A list of functions is provided earlier in this readme, or you can use autocompl
 
 ---
 
-#Build
+# Build
 
 First, clone the repo
 ```
