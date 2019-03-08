@@ -1194,9 +1194,7 @@ export default class Decimal {
     // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
     //  makes an exponent of -0! Is a negative zero ever a problem?
 
-    if (value instanceof Decimal) {
-      value = value.toNumber();
-    }
+    const numberValue = value instanceof Decimal ? value.toNumber() : value;
 
     // TODO: Fast track seems about neutral for performance.
     //  It might become faster if an integer pow is implemented,
@@ -1204,10 +1202,10 @@ export default class Decimal {
 
     // Fast track: If (this.exponent*value) is an integer and mantissa^value
     // fits in a Number, we can do a very fast method.
-    const temp = this.exponent * value;
+    const temp = this.exponent * numberValue;
     let newMantissa;
     if (Number.isSafeInteger(temp)) {
-      newMantissa = Math.pow(this.mantissa, value);
+      newMantissa = Math.pow(this.mantissa, numberValue);
       if (isFinite(newMantissa)) {
         return Decimal.fromMantissaExponent(newMantissa, temp);
       }
@@ -1217,15 +1215,15 @@ export default class Decimal {
 
     const newExponent = Math.trunc(temp);
     const residue = temp - newExponent;
-    newMantissa = Math.pow(10, value * Math.log10(this.mantissa) + residue);
+    newMantissa = Math.pow(10, numberValue * Math.log10(this.mantissa) + residue);
     if (isFinite(newMantissa)) {
       return Decimal.fromMantissaExponent(newMantissa, newExponent);
     }
 
     // return Decimal.exp(value*this.ln());
-    // UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
-    const result = Decimal.pow10(value * this.abslog10()); // this is 2x faster and gives same values AFAIK
-    if (this.sign() === -1 && value % 2 === 1) {
+    // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
+    const result = Decimal.pow10(numberValue * this.abslog10()); // this is 2x faster and gives same values AFAIK
+    if (this.sign() === -1 && numberValue % 2 === 1) {
       return result.neg();
     }
     return result;
