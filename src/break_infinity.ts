@@ -85,303 +85,203 @@ export default class Decimal {
   }
 
   public static abs(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.abs();
+    return Decimal.fromValue(value).abs();
   }
 
   public static neg(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.neg();
+    return Decimal.fromValue(value).neg();
   }
 
   public static negate(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.neg();
+    return Decimal.fromValue(value).neg();
   }
 
   public static negated(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.neg();
+    return Decimal.fromValue(value).neg();
   }
 
   public static sign(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sign();
+    return Decimal.fromValue(value).sign();
   }
 
   public static sgn(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sign();
+    return Decimal.fromValue(value).sign();
   }
 
   public static round(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.round();
+    return Decimal.fromValue(value).round();
   }
 
   public static floor(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.floor();
+    return Decimal.fromValue(value).floor();
   }
 
   public static ceil(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.ceil();
+    return Decimal.fromValue(value).ceil();
   }
 
   public static trunc(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.trunc();
+    return Decimal.fromValue(value).trunc();
   }
 
   public static add(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.add(other);
+    return Decimal.fromValue(value).add(other);
   }
 
   public static plus(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.add(other);
+    return Decimal.fromValue(value).add(other);
   }
 
   public static sub(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sub(other);
+    return Decimal.fromValue(value).sub(other);
   }
 
   public static subtract(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sub(other);
+    return Decimal.fromValue(value).sub(other);
   }
 
   public static minus(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sub(other);
+    return Decimal.fromValue(value).sub(other);
   }
 
   public static mul(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.mul(other);
+    return Decimal.fromValue(value).mul(other);
   }
 
   public static multiply(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.mul(other);
+    return Decimal.fromValue(value).mul(other);
   }
 
   public static times(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.mul(other);
+    return Decimal.fromValue(value).mul(other);
   }
 
   public static div(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.div(other);
+    return Decimal.fromValue(value).div(other);
   }
 
   public static divide(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.div(other);
+    return Decimal.fromValue(value).div(other);
   }
 
   public static recip(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.recip();
+    return Decimal.fromValue(value).recip();
   }
 
   public static reciprocal(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.recip();
+    return Decimal.fromValue(value).recip();
   }
 
   public static reciprocate(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.reciprocate();
+    return Decimal.fromValue(value).reciprocate();
   }
 
   public static cmp(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cmp(other);
+    return Decimal.fromValue(value).cmp(other);
   }
 
   public static compare(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cmp(other);
+    return Decimal.fromValue(value).cmp(other);
   }
 
   public static eq(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.eq(other);
+    return Decimal.fromValue(value).eq(other);
   }
 
   public static equals(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.eq(other);
+    return Decimal.fromValue(value).eq(other);
   }
 
   public static neq(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.neq(other);
+    return Decimal.fromValue(value).neq(other);
   }
 
   public static notEquals(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.notEquals(other);
+    return Decimal.fromValue(value).notEquals(other);
   }
 
   public static lt(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.lt(other);
+    return Decimal.fromValue(value).lt(other);
   }
 
   public static lte(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.lte(other);
+    return Decimal.fromValue(value).lte(other);
   }
 
   public static gt(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.gt(other);
+    return Decimal.fromValue(value).gt(other);
   }
 
   public static gte(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.gte(other);
+    return Decimal.fromValue(value).gte(other);
   }
 
   public static max(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.max(other);
+    return Decimal.fromValue(value).max(other);
   }
 
   public static min(value: DecimalSource, other: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.min(other);
+    return Decimal.fromValue(value).min(other);
   }
 
   public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cmp_tolerance(other, tolerance);
+    return Decimal.fromValue(value).cmp_tolerance(other, tolerance);
   }
 
   public static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cmp_tolerance(other, tolerance);
+    return Decimal.fromValue(value).cmp_tolerance(other, tolerance);
   }
 
   public static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.eq_tolerance(other, tolerance);
+    return Decimal.fromValue(value).eq_tolerance(other, tolerance);
   }
 
   public static equals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.eq_tolerance(other, tolerance);
+    return Decimal.fromValue(value).eq_tolerance(other, tolerance);
   }
 
   public static neq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.neq_tolerance(other, tolerance);
+    return Decimal.fromValue(value).neq_tolerance(other, tolerance);
   }
 
   public static notEquals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.notEquals_tolerance(other, tolerance);
+    return Decimal.fromValue(value).notEquals_tolerance(other, tolerance);
   }
 
   public static lt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.lt_tolerance(other, tolerance);
+    return Decimal.fromValue(value).lt_tolerance(other, tolerance);
   }
 
   public static lte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.lte_tolerance(other, tolerance);
+    return Decimal.fromValue(value).lte_tolerance(other, tolerance);
   }
 
   public static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.gt_tolerance(other, tolerance);
+    return Decimal.fromValue(value).gt_tolerance(other, tolerance);
   }
 
   public static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.gte_tolerance(other, tolerance);
+    return Decimal.fromValue(value).gte_tolerance(other, tolerance);
   }
 
   public static log10(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.log10();
+    return Decimal.fromValue(value).log10();
   }
 
   public static log(value: DecimalSource, base: number) {
-    value = Decimal.fromValue(value);
-
-    return value.log(base);
+    return Decimal.fromValue(value).log(base);
   }
 
   public static log2(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.log2();
+    return Decimal.fromValue(value).log2();
   }
 
   public static ln(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.ln();
+    return Decimal.fromValue(value).ln();
   }
 
   public static logarithm(value: DecimalSource, base: number) {
-    value = Decimal.fromValue(value);
-
-    return value.logarithm(base);
+    return Decimal.fromValue(value).logarithm(base);
   }
 
   public static pow10(value: number) {
@@ -397,39 +297,27 @@ export default class Decimal {
       return Decimal.fromMantissaExponent_noNormalize(1, other);
     }
 
-    value = Decimal.fromValue(value);
-
-    return value.pow(other);
+    return Decimal.fromValue(value).pow(other);
   }
 
   public static exp(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.exp();
+    return Decimal.fromValue(value).exp();
   }
 
   public static sqr(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sqr();
+    return Decimal.fromValue(value).sqr();
   }
 
   public static sqrt(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.sqrt();
+    return Decimal.fromValue(value).sqrt();
   }
 
   public static cube(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cube();
+    return Decimal.fromValue(value).cube();
   }
 
   public static cbrt(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.cbrt();
+    return Decimal.fromValue(value).cbrt();
   }
 
   /**
