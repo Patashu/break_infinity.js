@@ -1,3 +1,3 @@
 declare module "pad-end" {
-  export default function padEnd(a: string, as: number, asd: string): number;
+  export default function padEnd(originalString: string, maxLength: number, fillString: string): number;
 }
