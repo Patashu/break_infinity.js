@@ -528,7 +528,6 @@ export default class Decimal {
     const tempExponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
     this.mantissa = this.mantissa / powerOf10(tempExponent);
     this.exponent += tempExponent;
-
     return this;
   }
 
@@ -981,7 +980,9 @@ export default class Decimal {
       if (decimal.mantissa > 0) {
         return -1;
       }
-    } else if (decimal.mantissa === 0) {
+    }
+
+    if (decimal.mantissa === 0) {
       if (this.mantissa < 0) {
         return -1;
       }
@@ -1007,7 +1008,9 @@ export default class Decimal {
         return -1;
       }
       return 0;
-    } else if (this.mantissa < 0) {
+    }
+
+    if (this.mantissa < 0) {
       if (decimal.mantissa > 0) {
         return -1;
       }
@@ -1025,8 +1028,8 @@ export default class Decimal {
       }
       return 0;
     }
-    // FIXME: What should be here?
-    return 0;
+
+    throw Error("Unreachable code");
   }
 
   public compare(value: DecimalSource) {
@@ -1043,8 +1046,7 @@ export default class Decimal {
   }
 
   public neq(value: DecimalSource) {
-    const decimal = Decimal.fromValue_noAlloc(value);
-    return this.exponent !== decimal.exponent || this.mantissa !== decimal.mantissa;
+    return !this.eq(value);
   }
 
   public notEquals(value: DecimalSource) {
@@ -1069,20 +1071,7 @@ export default class Decimal {
   }
 
   public lte(value: DecimalSource) {
-    const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.mantissa === 0) {
-      return decimal.mantissa >= 0;
-    }
-    if (decimal.mantissa === 0) {
-      return this.mantissa <= 0;
-    }
-    if (this.exponent === decimal.exponent) {
-      return this.mantissa <= decimal.mantissa;
-    }
-    if (this.mantissa > 0) {
-      return decimal.mantissa > 0 && this.exponent < decimal.exponent;
-    }
-    return decimal.mantissa > 0 || this.exponent > decimal.exponent;
+    return !this.gt(value);
   }
 
   public gt(value: DecimalSource) {
@@ -1103,30 +1092,17 @@ export default class Decimal {
   }
 
   public gte(value: DecimalSource) {
-    const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.mantissa === 0) {
-      return decimal.mantissa <= 0;
-    }
-    if (decimal.mantissa === 0) {
-      return this.mantissa > 0;
-    }
-    if (this.exponent === decimal.exponent) {
-      return this.mantissa >= decimal.mantissa;
-    }
-    if (this.mantissa > 0) {
-      return decimal.mantissa < 0 || this.exponent > decimal.exponent;
-    }
-    return decimal.mantissa < 0 && this.exponent < decimal.exponent;
+    return !this.lt(value);
   }
 
   public max(value: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    return this.gte(decimal) ? this : decimal;
+    return this.lt(decimal) ? decimal : this;
   }
 
   public min(value: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    return this.lte(decimal) ? this : decimal;
+    return this.gt(decimal) ? decimal : this;
   }
 
   public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
@@ -1168,34 +1144,22 @@ export default class Decimal {
 
   public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.eq_tolerance(decimal, tolerance)) {
-      return false;
-    }
-    return this.lt(decimal);
+    return !this.eq_tolerance(decimal, tolerance) && this.lt(decimal);
   }
 
   public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.eq_tolerance(decimal, tolerance)) {
-      return true;
-    }
-    return this.lt(decimal);
+    return this.eq_tolerance(decimal, tolerance) || this.lt(decimal);
   }
 
   public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.eq_tolerance(decimal, tolerance)) {
-      return false;
-    }
-    return this.gt(decimal);
+    return !this.eq_tolerance(decimal, tolerance) && this.gt(decimal);
   }
 
   public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     const decimal = Decimal.fromValue_noAlloc(value);
-    if (this.eq_tolerance(decimal, tolerance)) {
-      return true;
-    }
-    return this.gt(decimal);
+    return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
   }
 
   public abslog10() {
