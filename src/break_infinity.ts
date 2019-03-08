@@ -85,204 +85,208 @@ export default class Decimal {
     return new Decimal().fromValue(value);
   }
 
+  public static fromValue_noAlloc(value: DecimalSource) {
+    return value instanceof Decimal ? value : new Decimal(value);
+  }
+
   public static abs(value: DecimalSource) {
-    return Decimal.fromValue(value).abs();
+    return Decimal.fromValue_noAlloc(value).abs();
   }
 
   public static neg(value: DecimalSource) {
-    return Decimal.fromValue(value).neg();
+    return Decimal.fromValue_noAlloc(value).neg();
   }
 
   public static negate(value: DecimalSource) {
-    return Decimal.fromValue(value).neg();
+    return Decimal.fromValue_noAlloc(value).neg();
   }
 
   public static negated(value: DecimalSource) {
-    return Decimal.fromValue(value).neg();
+    return Decimal.fromValue_noAlloc(value).neg();
   }
 
   public static sign(value: DecimalSource) {
-    return Decimal.fromValue(value).sign();
+    return Decimal.fromValue_noAlloc(value).sign();
   }
 
   public static sgn(value: DecimalSource) {
-    return Decimal.fromValue(value).sign();
+    return Decimal.fromValue_noAlloc(value).sign();
   }
 
   public static round(value: DecimalSource) {
-    return Decimal.fromValue(value).round();
+    return Decimal.fromValue_noAlloc(value).round();
   }
 
   public static floor(value: DecimalSource) {
-    return Decimal.fromValue(value).floor();
+    return Decimal.fromValue_noAlloc(value).floor();
   }
 
   public static ceil(value: DecimalSource) {
-    return Decimal.fromValue(value).ceil();
+    return Decimal.fromValue_noAlloc(value).ceil();
   }
 
   public static trunc(value: DecimalSource) {
-    return Decimal.fromValue(value).trunc();
+    return Decimal.fromValue_noAlloc(value).trunc();
   }
 
   public static add(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).add(other);
+    return Decimal.fromValue_noAlloc(value).add(other);
   }
 
   public static plus(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).add(other);
+    return Decimal.fromValue_noAlloc(value).add(other);
   }
 
   public static sub(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).sub(other);
+    return Decimal.fromValue_noAlloc(value).sub(other);
   }
 
   public static subtract(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).sub(other);
+    return Decimal.fromValue_noAlloc(value).sub(other);
   }
 
   public static minus(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).sub(other);
+    return Decimal.fromValue_noAlloc(value).sub(other);
   }
 
   public static mul(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).mul(other);
+    return Decimal.fromValue_noAlloc(value).mul(other);
   }
 
   public static multiply(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).mul(other);
+    return Decimal.fromValue_noAlloc(value).mul(other);
   }
 
   public static times(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).mul(other);
+    return Decimal.fromValue_noAlloc(value).mul(other);
   }
 
   public static div(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).div(other);
+    return Decimal.fromValue_noAlloc(value).div(other);
   }
 
   public static divide(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).div(other);
+    return Decimal.fromValue_noAlloc(value).div(other);
   }
 
   public static recip(value: DecimalSource) {
-    return Decimal.fromValue(value).recip();
+    return Decimal.fromValue_noAlloc(value).recip();
   }
 
   public static reciprocal(value: DecimalSource) {
-    return Decimal.fromValue(value).recip();
+    return Decimal.fromValue_noAlloc(value).recip();
   }
 
   public static reciprocate(value: DecimalSource) {
-    return Decimal.fromValue(value).reciprocate();
+    return Decimal.fromValue_noAlloc(value).reciprocate();
   }
 
   public static cmp(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).cmp(other);
+    return Decimal.fromValue_noAlloc(value).cmp(other);
   }
 
   public static compare(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).cmp(other);
+    return Decimal.fromValue_noAlloc(value).cmp(other);
   }
 
   public static eq(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).eq(other);
+    return Decimal.fromValue_noAlloc(value).eq(other);
   }
 
   public static equals(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).eq(other);
+    return Decimal.fromValue_noAlloc(value).eq(other);
   }
 
   public static neq(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).neq(other);
+    return Decimal.fromValue_noAlloc(value).neq(other);
   }
 
   public static notEquals(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).notEquals(other);
+    return Decimal.fromValue_noAlloc(value).notEquals(other);
   }
 
   public static lt(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).lt(other);
+    return Decimal.fromValue_noAlloc(value).lt(other);
   }
 
   public static lte(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).lte(other);
+    return Decimal.fromValue_noAlloc(value).lte(other);
   }
 
   public static gt(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).gt(other);
+    return Decimal.fromValue_noAlloc(value).gt(other);
   }
 
   public static gte(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).gte(other);
+    return Decimal.fromValue_noAlloc(value).gte(other);
   }
 
   public static max(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).max(other);
+    return Decimal.fromValue_noAlloc(value).max(other);
   }
 
   public static min(value: DecimalSource, other: DecimalSource) {
-    return Decimal.fromValue(value).min(other);
+    return Decimal.fromValue_noAlloc(value).min(other);
   }
 
   public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).cmp_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).cmp_tolerance(other, tolerance);
   }
 
   public static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).cmp_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).cmp_tolerance(other, tolerance);
   }
 
   public static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).eq_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).eq_tolerance(other, tolerance);
   }
 
   public static equals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).eq_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).eq_tolerance(other, tolerance);
   }
 
   public static neq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).neq_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).neq_tolerance(other, tolerance);
   }
 
   public static notEquals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).notEquals_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).notEquals_tolerance(other, tolerance);
   }
 
   public static lt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).lt_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).lt_tolerance(other, tolerance);
   }
 
   public static lte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).lte_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).lte_tolerance(other, tolerance);
   }
 
   public static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).gt_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).gt_tolerance(other, tolerance);
   }
 
   public static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
-    return Decimal.fromValue(value).gte_tolerance(other, tolerance);
+    return Decimal.fromValue_noAlloc(value).gte_tolerance(other, tolerance);
   }
 
   public static log10(value: DecimalSource) {
-    return Decimal.fromValue(value).log10();
+    return Decimal.fromValue_noAlloc(value).log10();
   }
 
   public static log(value: DecimalSource, base: number) {
-    return Decimal.fromValue(value).log(base);
+    return Decimal.fromValue_noAlloc(value).log(base);
   }
 
   public static log2(value: DecimalSource) {
-    return Decimal.fromValue(value).log2();
+    return Decimal.fromValue_noAlloc(value).log2();
   }
 
   public static ln(value: DecimalSource) {
-    return Decimal.fromValue(value).ln();
+    return Decimal.fromValue_noAlloc(value).ln();
   }
 
   public static logarithm(value: DecimalSource, base: number) {
-    return Decimal.fromValue(value).logarithm(base);
+    return Decimal.fromValue_noAlloc(value).logarithm(base);
   }
 
   public static pow10(value: number) {
@@ -298,27 +302,27 @@ export default class Decimal {
       return Decimal.fromMantissaExponent_noNormalize(1, other);
     }
 
-    return Decimal.fromValue(value).pow(other);
+    return Decimal.fromValue_noAlloc(value).pow(other);
   }
 
   public static exp(value: DecimalSource) {
-    return Decimal.fromValue(value).exp();
+    return Decimal.fromValue_noAlloc(value).exp();
   }
 
   public static sqr(value: DecimalSource) {
-    return Decimal.fromValue(value).sqr();
+    return Decimal.fromValue_noAlloc(value).sqr();
   }
 
   public static sqrt(value: DecimalSource) {
-    return Decimal.fromValue(value).sqrt();
+    return Decimal.fromValue_noAlloc(value).sqrt();
   }
 
   public static cube(value: DecimalSource) {
-    return Decimal.fromValue(value).cube();
+    return Decimal.fromValue_noAlloc(value).cube();
   }
 
   public static cbrt(value: DecimalSource) {
-    return Decimal.fromValue(value).cbrt();
+    return Decimal.fromValue_noAlloc(value).cbrt();
   }
 
   /**
@@ -332,9 +336,9 @@ export default class Decimal {
     priceRatio: DecimalSource, currentOwned: number | Decimal) {
 
     return this.affordGeometricSeries_core(
-      Decimal.fromValue(resourcesAvailable),
-      Decimal.fromValue(priceStart),
-      Decimal.fromValue(priceRatio),
+      Decimal.fromValue_noAlloc(resourcesAvailable),
+      Decimal.fromValue_noAlloc(priceStart),
+      Decimal.fromValue_noAlloc(priceRatio),
       currentOwned,
     );
   }
@@ -349,8 +353,8 @@ export default class Decimal {
 
     return this.sumGeometricSeries_core(
       numItems,
-      Decimal.fromValue(priceStart),
-      Decimal.fromValue(priceRatio),
+      Decimal.fromValue_noAlloc(priceStart),
+      Decimal.fromValue_noAlloc(priceRatio),
       currentOwned,
     );
   }
@@ -365,10 +369,10 @@ export default class Decimal {
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
     return this.affordArithmeticSeries_core(
-      Decimal.fromValue(resourcesAvailable),
-      Decimal.fromValue(priceStart),
-      Decimal.fromValue(priceAdd),
-      Decimal.fromValue(currentOwned),
+      Decimal.fromValue_noAlloc(resourcesAvailable),
+      Decimal.fromValue_noAlloc(priceStart),
+      Decimal.fromValue_noAlloc(priceAdd),
+      Decimal.fromValue_noAlloc(currentOwned),
     );
   }
 
@@ -382,10 +386,10 @@ export default class Decimal {
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
     return this.sumArithmeticSeries_core(
-      Decimal.fromValue(numItems),
-      Decimal.fromValue(priceStart),
-      Decimal.fromValue(priceAdd),
-      Decimal.fromValue(currentOwned),
+      Decimal.fromValue_noAlloc(numItems),
+      Decimal.fromValue_noAlloc(priceStart),
+      Decimal.fromValue_noAlloc(priceAdd),
+      Decimal.fromValue_noAlloc(currentOwned),
     );
   }
 
@@ -397,9 +401,9 @@ export default class Decimal {
    */
   public static efficiencyOfPurchase(cost: DecimalSource, currentRpS: DecimalSource, deltaRpS: DecimalSource) {
     return this.efficiencyOfPurchase_core(
-      Decimal.fromValue(cost),
-      Decimal.fromValue(currentRpS),
-      Decimal.fromValue(deltaRpS),
+      Decimal.fromValue_noAlloc(cost),
+      Decimal.fromValue_noAlloc(currentRpS),
+      Decimal.fromValue_noAlloc(deltaRpS),
     );
   }
 
@@ -839,22 +843,22 @@ export default class Decimal {
 
     // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
 
-    value = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
 
     if (this.mantissa === 0) {
-      return value;
+      return decimal;
     }
-    if (value.mantissa === 0) {
+    if (decimal.mantissa === 0) {
       return this;
     }
 
     let biggerDecimal;
     let smallerDecimal;
-    if (this.exponent >= value.exponent) {
+    if (this.exponent >= decimal.exponent) {
       biggerDecimal = this;
-      smallerDecimal = value;
+      smallerDecimal = decimal;
     } else {
-      biggerDecimal = value;
+      biggerDecimal = decimal;
       smallerDecimal = this;
     }
 
@@ -876,7 +880,7 @@ export default class Decimal {
   }
 
   public sub(value: DecimalSource) {
-    return this.add(Decimal.fromValue(value).neg());
+    return this.add(Decimal.fromValue_noAlloc(value).neg());
   }
 
   public subtract(value: DecimalSource) {
@@ -892,7 +896,7 @@ export default class Decimal {
     // a_1*10^b_1 * a_2*10^b_2
     // = a_1*a_2*10^(b_1+b_2)
 
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return Decimal.fromMantissaExponent(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
   }
 
@@ -905,7 +909,7 @@ export default class Decimal {
   }
 
   public div(value: DecimalSource) {
-    return this.mul(Decimal.fromValue(value).recip());
+    return this.mul(Decimal.fromValue_noAlloc(value).recip());
   }
 
   public divide(value: DecimalSource) {
@@ -936,7 +940,7 @@ export default class Decimal {
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
   public cmp(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
 
     // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 
@@ -1030,7 +1034,7 @@ export default class Decimal {
   }
 
   public eq(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return this.exponent === decimal.exponent && this.mantissa === decimal.mantissa;
   }
 
@@ -1039,7 +1043,7 @@ export default class Decimal {
   }
 
   public neq(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return this.exponent !== decimal.exponent || this.mantissa !== decimal.mantissa;
   }
 
@@ -1048,7 +1052,7 @@ export default class Decimal {
   }
 
   public lt(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.mantissa === 0) {
       return decimal.mantissa > 0;
     }
@@ -1065,7 +1069,7 @@ export default class Decimal {
   }
 
   public lte(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.mantissa === 0) {
       return decimal.mantissa >= 0;
     }
@@ -1082,7 +1086,7 @@ export default class Decimal {
   }
 
   public gt(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.mantissa === 0) {
       return decimal.mantissa < 0;
     }
@@ -1099,7 +1103,7 @@ export default class Decimal {
   }
 
   public gte(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.mantissa === 0) {
       return decimal.mantissa <= 0;
     }
@@ -1116,17 +1120,17 @@ export default class Decimal {
   }
 
   public max(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return this.gte(decimal) ? this : decimal;
   }
 
   public min(value: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return this.lte(decimal) ? this : decimal;
   }
 
   public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
   }
 
@@ -1140,7 +1144,7 @@ export default class Decimal {
    * larger number than (larger number)*1e-9 will be considered equal.
    */
   public eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     // https://stackoverflow.com/a/33024979
     // return abs(a-b) <= tolerance * max(abs(a), abs(b))
 
@@ -1163,7 +1167,7 @@ export default class Decimal {
   }
 
   public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.eq_tolerance(decimal, tolerance)) {
       return false;
     }
@@ -1171,7 +1175,7 @@ export default class Decimal {
   }
 
   public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.eq_tolerance(decimal, tolerance)) {
       return true;
     }
@@ -1179,7 +1183,7 @@ export default class Decimal {
   }
 
   public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.eq_tolerance(decimal, tolerance)) {
       return false;
     }
@@ -1187,7 +1191,7 @@ export default class Decimal {
   }
 
   public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue_noAlloc(value);
     if (this.eq_tolerance(decimal, tolerance)) {
       return true;
     }
@@ -1264,7 +1268,7 @@ export default class Decimal {
   }
 
   public pow_base(value: DecimalSource) {
-    return Decimal.fromValue(value).pow(this);
+    return Decimal.fromValue_noAlloc(value).pow(this);
   }
 
   public factorial() {
