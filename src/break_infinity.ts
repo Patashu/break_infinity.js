@@ -179,10 +179,7 @@ export default class Decimal {
   }
 
   static fromValue(value: DecimalSource) {
-    if (value instanceof Decimal) {
-      return value;
-    }
-    return new Decimal(value);
+    return new Decimal().fromValue(value);
   }
 
   toNumber() {
