@@ -331,14 +331,12 @@ export default class Decimal {
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
     priceRatio: DecimalSource, currentOwned: number | Decimal) {
 
-    resourcesAvailable = Decimal.fromValue(resourcesAvailable);
-    priceStart = Decimal.fromValue(priceStart);
-    priceRatio = Decimal.fromValue(priceRatio);
-    const actualStart = priceStart.mul(Decimal.pow(priceRatio, currentOwned));
-
-    return Decimal.floor(
-      Decimal.log10((resourcesAvailable.div(actualStart).mul(priceRatio.sub(1))).add(1))
-      / Decimal.log10(priceRatio));
+    return this.affordGeometricSeries_core(
+      Decimal.fromValue(resourcesAvailable),
+      Decimal.fromValue(priceStart),
+      Decimal.fromValue(priceRatio),
+      currentOwned,
+    );
   }
 
   /**
@@ -349,11 +347,12 @@ export default class Decimal {
     numItems: number | Decimal, priceStart: DecimalSource,
     priceRatio: DecimalSource, currentOwned: number | Decimal) {
 
-    priceStart = Decimal.fromValue(priceStart);
-    priceRatio = Decimal.fromValue(priceRatio);
-    const actualStart = priceStart.mul(Decimal.pow(priceRatio, currentOwned));
-
-    return (actualStart.mul(Decimal.sub(1, Decimal.pow(priceRatio, numItems)))).div(Decimal.sub(1, priceRatio));
+    return this.sumGeometricSeries_core(
+      numItems,
+      Decimal.fromValue(priceStart),
+      Decimal.fromValue(priceRatio),
+      currentOwned,
+    );
   }
 
   /**
@@ -365,25 +364,12 @@ export default class Decimal {
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
-    resourcesAvailable = Decimal.fromValue(resourcesAvailable);
-    priceStart = Decimal.fromValue(priceStart);
-    priceAdd = Decimal.fromValue(priceAdd);
-    currentOwned = Decimal.fromValue(currentOwned);
-    const actualStart = priceStart.add(Decimal.mul(currentOwned, priceAdd));
-
-    // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
-    // where a is actualStart, d is priceAdd and S is resourcesAvailable
-    // then floor it and you're done!
-
-    const b = actualStart.sub(priceAdd.div(2));
-    const b2 = b.pow(2);
-
-    return Decimal.floor(
-      (b.neg().add(Decimal.sqrt(b2.add(Decimal.mul(priceAdd, resourcesAvailable).mul(2))))
-      ).div(priceAdd),
+    return this.affordArithmeticSeries_core(
+      Decimal.fromValue(resourcesAvailable),
+      Decimal.fromValue(priceStart),
+      Decimal.fromValue(priceAdd),
+      Decimal.fromValue(currentOwned),
     );
-
-    // return Decimal.floor(something);
   }
 
   /**
@@ -395,15 +381,12 @@ export default class Decimal {
     numItems: DecimalSource, priceStart: DecimalSource,
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
-    numItems = Decimal.fromValue(numItems);
-    priceStart = Decimal.fromValue(priceStart);
-    priceAdd = Decimal.fromValue(priceAdd);
-    currentOwned = Decimal.fromValue(currentOwned);
-    const actualStart = priceStart.add(Decimal.mul(currentOwned, priceAdd));
-
-    // (n/2)*(2*a+(n-1)*d)
-
-    return Decimal.div(numItems, 2).mul(Decimal.mul(2, actualStart).plus(numItems.sub(1).mul(priceAdd)));
+    return this.sumArithmeticSeries_core(
+      Decimal.fromValue(numItems),
+      Decimal.fromValue(priceStart),
+      Decimal.fromValue(priceAdd),
+      Decimal.fromValue(currentOwned),
+    );
   }
 
   /**
@@ -413,10 +396,11 @@ export default class Decimal {
    * http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
    */
   public static efficiencyOfPurchase(cost: DecimalSource, currentRpS: DecimalSource, deltaRpS: DecimalSource) {
-    cost = Decimal.fromValue(cost);
-    currentRpS = Decimal.fromValue(currentRpS);
-    deltaRpS = Decimal.fromValue(deltaRpS);
-    return Decimal.add(cost.div(currentRpS), cost.div(deltaRpS));
+    return this.efficiencyOfPurchase_core(
+      Decimal.fromValue(cost),
+      Decimal.fromValue(currentRpS),
+      Decimal.fromValue(deltaRpS),
+    );
   }
 
   public static randomDecimalForTesting(absMaxExponent: number) {
@@ -453,6 +437,57 @@ export default class Decimal {
       var result = a.add(c);
       [a.toString() + "+" + c.toString(), result.toString()]
     */
+  }
+
+  private static affordGeometricSeries_core(
+    resourcesAvailable: Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal) {
+
+    const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
+
+    return Decimal.floor(
+      resourcesAvailable.div(actualStart).mul(priceRatio.sub(1)).add(1).log10()
+      / priceRatio.log10());
+  }
+
+  private static sumGeometricSeries_core(
+    numItems: number | Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal) {
+
+    return priceStart
+      .mul(priceRatio.pow(currentOwned))
+      .mul(Decimal.sub(1, priceRatio.pow(numItems)))
+      .div(Decimal.sub(1, priceRatio));
+  }
+
+  private static affordArithmeticSeries_core(
+    resourcesAvailable: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal) {
+
+    // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
+    // where a is actualStart, d is priceAdd and S is resourcesAvailable
+    // then floor it and you're done!
+
+    const actualStart = priceStart.add(currentOwned.mul(priceAdd));
+    const b = actualStart.sub(priceAdd.div(2));
+    const b2 = b.pow(2);
+
+    return b.neg()
+      .add(b2.add(priceAdd.mul(resourcesAvailable).mul(2)).sqrt())
+      .div(priceAdd)
+      .floor();
+  }
+
+  private static sumArithmeticSeries_core(
+    numItems: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal) {
+
+    const actualStart = priceStart.add(currentOwned.mul(priceAdd));
+
+    // (n/2)*(2*a+(n-1)*d)
+    return numItems
+      .div(2)
+      .mul(actualStart.mul(2).plus(numItems.sub(1).mul(priceAdd)));
+  }
+
+  private static efficiencyOfPurchase_core(cost: Decimal, currentRpS: Decimal, deltaRpS: Decimal) {
+    return cost.div(currentRpS).add(cost.div(deltaRpS));
   }
 
   public mantissa = NaN;
@@ -841,9 +876,7 @@ export default class Decimal {
   }
 
   public sub(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return this.add(Decimal.fromMantissaExponent_noNormalize(-value.mantissa, value.exponent));
+    return this.add(Decimal.fromValue(value).neg());
   }
 
   public subtract(value: DecimalSource) {
@@ -859,9 +892,8 @@ export default class Decimal {
     // a_1*10^b_1 * a_2*10^b_2
     // = a_1*a_2*10^(b_1+b_2)
 
-    value = Decimal.fromValue(value);
-
-    return Decimal.fromMantissaExponent(this.mantissa * value.mantissa, this.exponent + value.exponent);
+    const decimal = Decimal.fromValue(value);
+    return Decimal.fromMantissaExponent(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
   }
 
   public multiply(value: DecimalSource) {
@@ -873,9 +905,7 @@ export default class Decimal {
   }
 
   public div(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return this.mul(value.recip());
+    return this.mul(Decimal.fromValue(value).recip());
   }
 
   public divide(value: DecimalSource) {
@@ -906,7 +936,7 @@ export default class Decimal {
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
   public cmp(value: DecimalSource) {
-    value = Decimal.fromValue(value);
+    const decimal = Decimal.fromValue(value);
 
     // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 
@@ -938,16 +968,16 @@ export default class Decimal {
     */
 
     if (this.mantissa === 0) {
-      if (value.mantissa === 0) {
+      if (decimal.mantissa === 0) {
         return 0;
       }
-      if (value.mantissa < 0) {
+      if (decimal.mantissa < 0) {
         return 1;
       }
-      if (value.mantissa > 0) {
+      if (decimal.mantissa > 0) {
         return -1;
       }
-    } else if (value.mantissa === 0) {
+    } else if (decimal.mantissa === 0) {
       if (this.mantissa < 0) {
         return -1;
       }
@@ -957,36 +987,36 @@ export default class Decimal {
     }
 
     if (this.mantissa > 0) {
-      if (value.mantissa < 0) {
+      if (decimal.mantissa < 0) {
         return 1;
       }
-      if (this.exponent > value.exponent) {
+      if (this.exponent > decimal.exponent) {
         return 1;
       }
-      if (this.exponent < value.exponent) {
+      if (this.exponent < decimal.exponent) {
         return -1;
       }
-      if (this.mantissa > value.mantissa) {
+      if (this.mantissa > decimal.mantissa) {
         return 1;
       }
-      if (this.mantissa < value.mantissa) {
+      if (this.mantissa < decimal.mantissa) {
         return -1;
       }
       return 0;
     } else if (this.mantissa < 0) {
-      if (value.mantissa > 0) {
+      if (decimal.mantissa > 0) {
         return -1;
       }
-      if (this.exponent > value.exponent) {
+      if (this.exponent > decimal.exponent) {
         return -1;
       }
-      if (this.exponent < value.exponent) {
+      if (this.exponent < decimal.exponent) {
         return 1;
       }
-      if (this.mantissa > value.mantissa) {
+      if (this.mantissa > decimal.mantissa) {
         return 1;
       }
-      if (this.mantissa < value.mantissa) {
+      if (this.mantissa < decimal.mantissa) {
         return -1;
       }
       return 0;
@@ -1000,9 +1030,8 @@ export default class Decimal {
   }
 
   public eq(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return this.exponent === value.exponent && this.mantissa === value.mantissa;
+    const decimal = Decimal.fromValue(value);
+    return this.exponent === decimal.exponent && this.mantissa === decimal.mantissa;
   }
 
   public equals(value: DecimalSource) {
@@ -1010,9 +1039,8 @@ export default class Decimal {
   }
 
   public neq(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return this.exponent !== value.exponent || this.mantissa !== value.mantissa;
+    const decimal = Decimal.fromValue(value);
+    return this.exponent !== decimal.exponent || this.mantissa !== decimal.mantissa;
   }
 
   public notEquals(value: DecimalSource) {
@@ -1020,102 +1048,86 @@ export default class Decimal {
   }
 
   public lt(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
+    const decimal = Decimal.fromValue(value);
     if (this.mantissa === 0) {
-      return value.mantissa > 0;
+      return decimal.mantissa > 0;
     }
-    if (value.mantissa === 0) {
+    if (decimal.mantissa === 0) {
       return this.mantissa <= 0;
     }
-    if (this.exponent === value.exponent) {
-      return this.mantissa < value.mantissa;
+    if (this.exponent === decimal.exponent) {
+      return this.mantissa < decimal.mantissa;
     }
     if (this.mantissa > 0) {
-      return value.mantissa > 0 && this.exponent < value.exponent;
+      return decimal.mantissa > 0 && this.exponent < decimal.exponent;
     }
-    return value.mantissa > 0 || this.exponent > value.exponent;
+    return decimal.mantissa > 0 || this.exponent > decimal.exponent;
   }
 
   public lte(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
+    const decimal = Decimal.fromValue(value);
     if (this.mantissa === 0) {
-      return value.mantissa >= 0;
+      return decimal.mantissa >= 0;
     }
-    if (value.mantissa === 0) {
+    if (decimal.mantissa === 0) {
       return this.mantissa <= 0;
     }
-    if (this.exponent === value.exponent) {
-      return this.mantissa <= value.mantissa;
+    if (this.exponent === decimal.exponent) {
+      return this.mantissa <= decimal.mantissa;
     }
     if (this.mantissa > 0) {
-      return value.mantissa > 0 && this.exponent < value.exponent;
+      return decimal.mantissa > 0 && this.exponent < decimal.exponent;
     }
-    return value.mantissa > 0 || this.exponent > value.exponent;
+    return decimal.mantissa > 0 || this.exponent > decimal.exponent;
   }
 
   public gt(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
+    const decimal = Decimal.fromValue(value);
     if (this.mantissa === 0) {
-      return value.mantissa < 0;
+      return decimal.mantissa < 0;
     }
-    if (value.mantissa === 0) {
+    if (decimal.mantissa === 0) {
       return this.mantissa > 0;
     }
-    if (this.exponent === value.exponent) {
-      return this.mantissa > value.mantissa;
+    if (this.exponent === decimal.exponent) {
+      return this.mantissa > decimal.mantissa;
     }
     if (this.mantissa > 0) {
-      return value.mantissa < 0 || this.exponent > value.exponent;
+      return decimal.mantissa < 0 || this.exponent > decimal.exponent;
     }
-    return value.mantissa < 0 && this.exponent < value.exponent;
+    return decimal.mantissa < 0 && this.exponent < decimal.exponent;
   }
 
   public gte(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
+    const decimal = Decimal.fromValue(value);
     if (this.mantissa === 0) {
-      return value.mantissa <= 0;
+      return decimal.mantissa <= 0;
     }
-    if (value.mantissa === 0) {
+    if (decimal.mantissa === 0) {
       return this.mantissa > 0;
     }
-    if (this.exponent === value.exponent) {
-      return this.mantissa >= value.mantissa;
+    if (this.exponent === decimal.exponent) {
+      return this.mantissa >= decimal.mantissa;
     }
     if (this.mantissa > 0) {
-      return value.mantissa < 0 || this.exponent > value.exponent;
+      return decimal.mantissa < 0 || this.exponent > decimal.exponent;
     }
-    return value.mantissa < 0 && this.exponent < value.exponent;
+    return decimal.mantissa < 0 && this.exponent < decimal.exponent;
   }
 
   public max(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.gte(value)) {
-      return this;
-    }
-    return value;
+    const decimal = Decimal.fromValue(value);
+    return this.gte(decimal) ? this : decimal;
   }
 
   public min(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.lte(value)) {
-      return this;
-    }
-    return value;
+    const decimal = Decimal.fromValue(value);
+    return this.lte(decimal) ? this : decimal;
   }
 
   public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.eq_tolerance(value, tolerance)) {
-      return 0;
-    }
-    return this.cmp(value);
+    const decimal = Decimal.fromValue(value);
+    return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
   }
 
   public compare_tolerance(value: DecimalSource, tolerance: DecimalSource) {
@@ -1128,14 +1140,13 @@ export default class Decimal {
    * larger number than (larger number)*1e-9 will be considered equal.
    */
   public eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
+    const decimal = Decimal.fromValue(value);
     // https://stackoverflow.com/a/33024979
     // return abs(a-b) <= tolerance * max(abs(a), abs(b))
 
     return Decimal.lte(
-      this.sub(value).abs(),
-      Decimal.max(this.abs(), value.abs()).mul(tolerance),
+      this.sub(decimal).abs(),
+      Decimal.max(this.abs(), decimal.abs()).mul(tolerance),
     );
   }
 
@@ -1144,8 +1155,6 @@ export default class Decimal {
   }
 
   public neq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
     return !this.eq_tolerance(value, tolerance);
   }
 
@@ -1154,39 +1163,35 @@ export default class Decimal {
   }
 
   public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.eq_tolerance(value, tolerance)) {
+    const decimal = Decimal.fromValue(value);
+    if (this.eq_tolerance(decimal, tolerance)) {
       return false;
     }
-    return this.lt(value);
+    return this.lt(decimal);
   }
 
   public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.eq_tolerance(value, tolerance)) {
+    const decimal = Decimal.fromValue(value);
+    if (this.eq_tolerance(decimal, tolerance)) {
       return true;
     }
-    return this.lt(value);
+    return this.lt(decimal);
   }
 
   public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.eq_tolerance(value, tolerance)) {
+    const decimal = Decimal.fromValue(value);
+    if (this.eq_tolerance(decimal, tolerance)) {
       return false;
     }
-    return this.gt(value);
+    return this.gt(decimal);
   }
 
   public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    if (this.eq_tolerance(value, tolerance)) {
+    const decimal = Decimal.fromValue(value);
+    if (this.eq_tolerance(decimal, tolerance)) {
       return true;
     }
-    return this.gt(value);
+    return this.gt(decimal);
   }
 
   public abslog10() {
@@ -1259,9 +1264,7 @@ export default class Decimal {
   }
 
   public pow_base(value: DecimalSource) {
-    value = Decimal.fromValue(value);
-
-    return value.pow(this);
+    return Decimal.fromValue(value).pow(this);
   }
 
   public factorial() {
