@@ -2,8 +2,14 @@ declare type DecimalSource = Decimal | number | string | undefined | null;
 export default class Decimal {
     mantissa: number;
     exponent: number;
+    /**
+     * When mantissa is very denormalized, use this to normalize much faster.
+     */
     normalize(): this | undefined;
     fromMantissaExponent(mantissa: number, exponent: number): this;
+    /**
+     * Well, you know what you're doing!
+     */
     fromMantissaExponent_noNormalize(mantissa: number, exponent: number): this;
     fromDecimal(value: Decimal): this;
     fromNumber(value: number): this;
@@ -76,6 +82,9 @@ export default class Decimal {
     static reciprocal(value: DecimalSource): Decimal;
     reciprocate(): Decimal;
     static reciprocate(value: DecimalSource): Decimal;
+    /**
+     * -1 for less than value, 0 for equals value, 1 for greater than value
+     */
     cmp(value: DecimalSource): 1 | 0 | -1;
     static cmp(value: DecimalSource, other: DecimalSource): 1 | 0 | -1;
     compare(value: DecimalSource): 1 | 0 | -1;
@@ -104,6 +113,11 @@ export default class Decimal {
     static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): 1 | 0 | -1;
     compare_tolerance(value: DecimalSource, tolerance: DecimalSource): 1 | 0 | -1;
     static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): 1 | 0 | -1;
+    /**
+     * Tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments.
+     * For example, if you put in 1e-9, then any number closer to the
+     * larger number than (larger number)*1e-9 will be considered equal.
+     */
     eq_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean;
     static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean;
     equals_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean;
@@ -152,12 +166,43 @@ export default class Decimal {
     asinh(): number;
     acosh(): number;
     atanh(): number;
+    /**
+     * If you're willing to spend 'resourcesAvailable' and want to buy something
+     * with exponentially increasing cost each purchase (start at priceStart,
+     * multiply by priceRatio, already own currentOwned), how much of it can you buy?
+     * Adapted from Trimps source code.
+     */
     static affordGeometricSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal;
+    /**
+     * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+     * the initial price is priceStart and it multiplies by priceRatio each purchase?
+     */
     static sumGeometricSeries(numItems: number | Decimal, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal;
+    /**
+     * If you're willing to spend 'resourcesAvailable' and want to buy something with additively
+     * increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned),
+     * how much of it can you buy?
+     */
     static affordArithmeticSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal;
+    /**
+     * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+     * the initial price is priceStart and it adds priceAdd each purchase?
+     * Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+     */
     static sumArithmeticSeries(numItems: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal;
+    /**
+     * Joke function from Realm Grinder
+     */
     ascensionPenalty(ascensions: number): Decimal;
+    /**
+     * When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS),
+     * the lowest efficiency score is the better one to purchase.
+     * From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
+     */
     static efficiencyOfPurchase(cost: DecimalSource, current_RpS: DecimalSource, delta_RpS: DecimalSource): Decimal;
+    /**
+     * Joke function from Cookie Clicker. It's 'egg'
+     */
     egg(): Decimal;
     lessThanOrEqualTo(other: DecimalSource): boolean;
     lessThan(other: DecimalSource): boolean;

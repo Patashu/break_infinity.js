@@ -1,15 +1,25 @@
 import padEnd from "pad-end"
 
-const MAX_SIGNIFICANT_DIGITS = 17; //for example: if two exponents are more than 17 apart, consider adding them together pointless, just return the larger one
-const EXP_LIMIT = 9e15; //highest value you can safely put here is Number.MAX_SAFE_INTEGER-MAX_SIGNIFICANT_DIGITS
+// For example: if two exponents are more than 17 apart,
+// consider adding them together pointless, just return the larger one
+const MAX_SIGNIFICANT_DIGITS = 17;
 
-const NUMBER_EXP_MAX = 308; //the largest exponent that can appear in a Number, though not all mantissas are valid here.
-const NUMBER_EXP_MIN = -324; //The smallest exponent that can appear in a Number, though not all mantissas are valid here.
+// Highest value you can safely put here is Number.MAX_SAFE_INTEGER-MAX_SIGNIFICANT_DIGITS
+const EXP_LIMIT = 9e15;
 
-//we need this lookup table because Math.pow(10, exponent) when exponent's absolute value is large is slightly inaccurate. you can fix it with the power of math... or just make a lookup table. faster AND simpler
+// The largest exponent that can appear in a Number, though not all mantissas are valid here.
+const NUMBER_EXP_MAX = 308;
+
+// The smallest exponent that can appear in a Number, though not all mantissas are valid here.
+const NUMBER_EXP_MIN = -324;
+
+// We need this lookup table because Math.pow(10, exponent)
+// when exponent's absolute value is large is slightly inaccurate.
+// You can fix it with the power of math... or just make a lookup table.
+// Faster AND simpler
 let powersOf10: number[] = [];
 for (let i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
-  powersOf10.push(Number('1e' + i));
+  powersOf10.push(Number("1e" + i));
 }
 const indexOf0InPowersOf10 = 323;
 
@@ -19,51 +29,12 @@ export default class Decimal {
   mantissa = NaN;
   exponent = NaN;
 
-  /*static adjustMantissa(oldMantissa, exponent) {
-      //Multiplying or dividing by 0.1 causes rounding errors, dividing or multiplying by 10 does not.
-      //So always multiply/divide by a large number whenever we can get away with it.
-
-      /*
-      Still a few weird cases, IDK if they'll ever come up though:
-0.001*1e308
-1e+305
-0.001*1e308*10
-9.999999999999999e+305
-      */
-
-  /*
-  TODO: I'm not even sure if this is a good idea in general, because
-1000*-4.03
--4030.0000000000005
--4.03/1e-3
--4030
-  So it's not even true that mul/div by a positive power of 10 is always the more accurate approach.
-  */
-
-  /*if (exponent == 0) { return oldMantissa; }
-  if (exponent > 0)
-  {
-      if (exponent > 308)
-      {
-          return oldMantissa*1e308*powersOf10[(exponent-308)+indexOf0InPowersOf10];
-      }
-      return oldMantissa*powersOf10[exponent+indexOf0InPowersOf10];
-  }
-  else
-  {
-      if (exponent < -308)
-      {
-          return oldMantissa*powersOf10[exponent+indexOf0InPowersOf10];
-      }
-      return oldMantissa/powersOf10[-exponent+indexOf0InPowersOf10];
-  }
-}*/
-
+  /**
+   * When mantissa is very denormalized, use this to normalize much faster.
+   */
   normalize() {
-    //When mantissa is very denormalized, use this to normalize much faster.
-
     //TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
-    if (this.mantissa == 0) {
+    if (this.mantissa === 0) {
       this.mantissa = 0;
       this.exponent = 0;
       return;
@@ -80,19 +51,23 @@ export default class Decimal {
   }
 
   fromMantissaExponent(mantissa: number, exponent: number) {
-    //SAFETY: don't let in non-numbers
+    // SAFETY: don't let in non-numbers
     if (!isFinite(mantissa) || !isFinite(exponent)) {
       mantissa = Number.NaN;
       exponent = Number.NaN;
+      return this;
     }
     this.mantissa = mantissa;
     this.exponent = exponent;
-    this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
+    // Non-normalized mantissas can easily get here, so this is mandatory.
+    this.normalize();
     return this;
   }
 
+  /**
+   * Well, you know what you're doing!
+   */
   fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
-    //Well, you know what you're doing!
     this.mantissa = mantissa;
     this.exponent = exponent;
     return this;
@@ -105,7 +80,7 @@ export default class Decimal {
   }
 
   fromNumber(value: number) {
-    //SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
+    // SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
     if (isNaN(value)) {
       this.mantissa = Number.NaN;
       this.exponent = Number.NaN;
@@ -120,13 +95,14 @@ export default class Decimal {
       this.exponent = 0;
     } else {
       this.exponent = Math.floor(Math.log10(Math.abs(value)));
-      //SAFETY: handle 5e-324, -5e-324 separately
+      // SAFETY: handle 5e-324, -5e-324 separately
       if (this.exponent == NUMBER_EXP_MIN) {
         this.mantissa = (value * 10) / 1e-323;
       } else {
         this.mantissa = value / powersOf10[this.exponent + indexOf0InPowersOf10];
       }
-      this.normalize(); //SAFETY: Prevent weirdness.
+      // SAFETY: Prevent weirdness.
+      this.normalize();
     }
     return this;
   }
@@ -136,7 +112,8 @@ export default class Decimal {
       const parts = value.split("e");
       this.mantissa = parseFloat(parts[0]);
       this.exponent = parseFloat(parts[1]);
-      this.normalize(); //Non-normalized mantissas can easily get here, so this is mandatory.
+      // Non-normalized mantissas can easily get here, so this is mandatory.
+      this.normalize();
     } else if (value == "NaN") {
       this.mantissa = Number.NaN;
       this.exponent = Number.NaN;
@@ -204,10 +181,14 @@ export default class Decimal {
   }
 
   toNumber() {
-    //Problem: new Decimal(116).toNumber() returns 115.99999999999999.
-    //TODO: How to fix in general case? It's clear that if toNumber() is VERY close to an integer, we want exactly the integer. But it's not clear how to specifically write that. So I'll just settle with 'exponent >= 0 and difference between rounded and not rounded < 1e-9' as a quick fix.
+    // Problem: new Decimal(116).toNumber() returns 115.99999999999999.
+    // TODO: How to fix in general case? It's clear that if toNumber() is
+    //  VERY close to an integer, we want exactly the integer.
+    //  But it's not clear how to specifically write that.
+    //  So I'll just settle with 'exponent >= 0 and difference between rounded
+    //  and not rounded < 1e-9' as a quick fix.
 
-    //var result = this.mantissa*Math.pow(10, this.exponent);
+    // var result = this.mantissa*Math.pow(10, this.exponent);
 
     if (!isFinite(this.exponent)) {
       return Number.NaN;
@@ -218,7 +199,7 @@ export default class Decimal {
     if (this.exponent < NUMBER_EXP_MIN) {
       return 0;
     }
-    //SAFETY: again, handle 5e-324, -5e-324 separately
+    // SAFETY: again, handle 5e-324, -5e-324 separately
     if (this.exponent == NUMBER_EXP_MIN) {
       return this.mantissa > 0 ? 5e-324 : -5e-324;
     }
@@ -227,8 +208,8 @@ export default class Decimal {
     if (!isFinite(result) || this.exponent < 0) {
       return result;
     }
-    const resultrounded = Math.round(result);
-    if (Math.abs(resultrounded - result) < 1e-10) return resultrounded;
+    const resultRounded = Math.round(result);
+    if (Math.abs(resultRounded - result) < 1e-10) return resultRounded;
     return result;
   }
 
@@ -265,12 +246,13 @@ export default class Decimal {
   toExponential(places: number) {
     // https://stackoverflow.com/a/37425022
 
-    //TODO: Some unfixed cases:
-    //new Decimal("1.2345e-999").toExponential()
-    //"1.23450000000000015e-999"
-    //new Decimal("1e-999").toExponential()
-    //"1.000000000000000000e-999"
-    //TBH I'm tempted to just say it's a feature. If you're doing pretty formatting then why don't you know how many decimal places you want...?
+    // TODO: Some unfixed cases:
+    //  new Decimal("1.2345e-999").toExponential()
+    //  "1.23450000000000015e-999"
+    //  new Decimal("1e-999").toExponential()
+    //  "1.000000000000000000e-999"
+    // TBH I'm tempted to just say it's a feature.
+    // If you're doing pretty formatting then why don't you know how many decimal places you want...?
 
     if (isNaN(this.mantissa) || isNaN(this.exponent)) {
       return "NaN";
@@ -497,7 +479,8 @@ export default class Decimal {
   }
 
   add(value: DecimalSource) {
-    //figure out which is bigger, shrink the mantissa of the smaller by the difference in exponents, add mantissas, normalize and return
+    //figure out which is bigger, shrink the mantissa of the smaller
+    // by the difference in exponents, add mantissas, normalize and return
 
     //TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
 
@@ -522,8 +505,8 @@ export default class Decimal {
     if (biggerDecimal.exponent - smallerDecimal.exponent > MAX_SIGNIFICANT_DIGITS) {
       return biggerDecimal;
     } else {
-      //have to do this because adding numbers that were once integers but scaled down is imprecise.
-      //Example: 299 + 18
+      // Have to do this because adding numbers that were once integers but scaled down is imprecise.
+      // Example: 299 + 18
       return Decimal.fromMantissaExponent(
         Math.round(1e14 * biggerDecimal.mantissa + 1e14 * smallerDecimal.mantissa * powersOf10[(smallerDecimal.exponent - biggerDecimal.exponent) + indexOf0InPowersOf10]),
         biggerDecimal.exponent - 14);
@@ -579,10 +562,9 @@ export default class Decimal {
   }
 
   mul(value: DecimalSource) {
-    /*
-    a_1*10^b_1 * a_2*10^b_2
-    = a_1*a_2*10^(b_1+b_2)
-    */
+
+    // a_1*10^b_1 * a_2*10^b_2
+    // = a_1*a_2*10^(b_1+b_2)
 
     value = Decimal.fromValue(value);
 
@@ -675,11 +657,13 @@ export default class Decimal {
     return value.reciprocate();
   }
 
-  //-1 for less than value, 0 for equals value, 1 for greater than value
+  /**
+   * -1 for less than value, 0 for equals value, 1 for greater than value
+   */
   cmp(value: DecimalSource) {
     value = Decimal.fromValue(value);
 
-    //TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
+    // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 
     /*
     from smallest to largest:
@@ -941,12 +925,16 @@ export default class Decimal {
     return value.cmp_tolerance(other, tolerance);
   }
 
-  //tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments. For example, if you put in 1e-9, then any number closer to the larger number than (larger number)*1e-9 will be considered equal.
+  /**
+   * Tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments.
+   * For example, if you put in 1e-9, then any number closer to the
+   * larger number than (larger number)*1e-9 will be considered equal.
+   */
   eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     value = Decimal.fromValue(value);
 
     // https://stackoverflow.com/a/33024979
-    //return abs(a-b) <= tolerance * max(abs(a), abs(b))
+    // return abs(a-b) <= tolerance * max(abs(a), abs(b))
 
     return Decimal.lte(
       this.sub(value).abs(),
@@ -1059,7 +1047,9 @@ export default class Decimal {
   }
 
   log(base: number) {
-    //UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a Decimal, and don't do any other kind of error checking.
+    // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
+    // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
     return (Math.LN10 / Math.log(base)) * this.log10();
   }
 
@@ -1100,35 +1090,39 @@ export default class Decimal {
   }
 
   pow(value: number | Decimal) {
-    //UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
-    //TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1); makes an exponent of -0! Is a negative zero ever a problem?
+    // UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
+    // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
+    //  makes an exponent of -0! Is a negative zero ever a problem?
 
     if (value instanceof Decimal) {
       value = value.toNumber();
     }
 
-    //TODO: Fast track seems about neutral for performance. It might become faster if an integer pow is implemented, or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
+    // TODO: Fast track seems about neutral for performance.
+    //  It might become faster if an integer pow is implemented,
+    //  or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
 
-    //Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
+    // Fast track: If (this.exponent*value) is an integer and mantissa^value
+    // fits in a Number, we can do a very fast method.
     const temp = this.exponent * value;
     if (Number.isSafeInteger(temp)) {
-      var newMantissa = Math.pow(this.mantissa, value);
+      const newMantissa = Math.pow(this.mantissa, value);
       if (isFinite(newMantissa)) {
         return Decimal.fromMantissaExponent(newMantissa, temp);
       }
     }
 
-    //Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
+    // Same speed and usually more accurate.
 
-    const newexponent = Math.trunc(temp);
-    const residue = temp - newexponent;
-    var newMantissa = Math.pow(10, value * Math.log10(this.mantissa) + residue);
+    const newExponent = Math.trunc(temp);
+    const residue = temp - newExponent;
+    const newMantissa = Math.pow(10, value * Math.log10(this.mantissa) + residue);
     if (isFinite(newMantissa)) {
-      return Decimal.fromMantissaExponent(newMantissa, newexponent);
+      return Decimal.fromMantissaExponent(newMantissa, newExponent);
     }
 
-    //return Decimal.exp(value*this.ln());
-    //UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
+    // return Decimal.exp(value*this.ln());
+    // UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
     const result = Decimal.pow10(value * this.abslog10()); //this is 2x faster and gives same values AFAIK
     if (this.sign() == -1 && value % 2 == 1) {
       return result.neg();
@@ -1161,7 +1155,8 @@ export default class Decimal {
   }
 
   factorial() {
-    //Using Stirling's Approximation. https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
+    // Using Stirling's Approximation.
+    // https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
 
     const n = this.toNumber() + 1;
 
@@ -1169,17 +1164,19 @@ export default class Decimal {
   }
 
   exp() {
-    //UN-SAFETY: Assuming this value is between [-2.1e15, 2.1e15]. Accuracy not guaranteed beyond ~9~11 decimal places.
+    // UN-SAFETY: Assuming this value is between [-2.1e15, 2.1e15]. Accuracy not guaranteed beyond ~9~11 decimal places.
 
-    //Fast track: if -706 < this < 709, we can use regular exp.
+    // Fast track: if -706 < this < 709, we can use regular exp.
     let x = this.toNumber();
     if (-706 < x && x < 709) {
       return Decimal.fromNumber(Math.exp(x));
     } else {
-      //This has to be implemented fundamentally, so that pow(value) can be implemented on top of it.
-      //Should be fast and accurate over the range [-2.1e15, 2.1e15]. Outside that it overflows, so we don't care about these cases.
+      // This has to be implemented fundamentally, so that pow(value) can be implemented on top of it.
+      // Should be fast and accurate over the range [-2.1e15, 2.1e15].
+      // Outside that it overflows, so we don't care about these cases.
 
-      // Implementation from SpeedCrunch: https://bitbucket.org/heldercorreia/speedcrunch/src/9cffa7b674890affcb877bfebc81d39c26b20dcc/src/math/floatexp.c?at=master&fileviewer=file-view-default
+      // Implementation from SpeedCrunch:
+      // https://bitbucket.org/heldercorreia/speedcrunch/src/9cffa7b674890affcb877bfebc81d39c26b20dcc/src/math/floatexp.c?at=master&fileviewer=file-view-default
 
       let exp, tmp, expx;
 
@@ -1200,11 +1197,12 @@ export default class Decimal {
         x += Math.LN10;
       }
 
-      //when we get here 0 <= x < ln 10
+      // When we get here 0 <= x < ln 10
       x = Math.exp(x);
 
       if (exp != 0) {
-        expx = Math.floor(exp); //TODO: or round, or even nothing? can it ever be non-integer?
+        // TODO: or round, or even nothing? can it ever be non-integer?
+        expx = Math.floor(exp);
         Decimal.fromMantissaExponent(x, expx);
       }
 
@@ -1235,7 +1233,8 @@ export default class Decimal {
     }
     if (this.exponent % 2 != 0) {
       return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa) * 3.16227766016838, Math.floor(this.exponent / 2));
-    } //mod of a negative number is negative, so != means '1 or -1'
+    }
+    // Mod of a negative number is negative, so != means '1 or -1'
     return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa), Math.floor(this.exponent / 2));
   }
 
@@ -1262,17 +1261,17 @@ export default class Decimal {
       sign = -1;
       mantissa = -mantissa;
     }
-    ;
-    const newmantissa = sign * Math.pow(mantissa, (1 / 3));
+    const newMantissa = sign * Math.pow(mantissa, (1 / 3));
 
     const mod = this.exponent % 3;
     if (mod == 1 || mod == -1) {
-      return Decimal.fromMantissaExponent(newmantissa * 2.1544346900318837, Math.floor(this.exponent / 3));
+      return Decimal.fromMantissaExponent(newMantissa * 2.1544346900318837, Math.floor(this.exponent / 3));
     }
     if (mod != 0) {
-      return Decimal.fromMantissaExponent(newmantissa * 4.6415888336127789, Math.floor(this.exponent / 3));
-    } //mod != 0 at this point means 'mod == 2 || mod == -2'
-    return Decimal.fromMantissaExponent(newmantissa, Math.floor(this.exponent / 3));
+      return Decimal.fromMantissaExponent(newMantissa * 4.6415888336127789, Math.floor(this.exponent / 3));
+    }
+    // mod != 0 at this point means 'mod == 2 || mod == -2'
+    return Decimal.fromMantissaExponent(newMantissa, Math.floor(this.exponent / 3));
   }
 
   static cbrt(value: DecimalSource) {
@@ -1281,7 +1280,7 @@ export default class Decimal {
     return value.cbrt();
   }
 
-  //Some hyperbolic trig functions that happen to be easy
+  // Some hyperbolic trig functions that happen to be easy
   sinh() {
     return this.exp().sub(this.negate().exp()).div(2);
   }
@@ -1307,7 +1306,12 @@ export default class Decimal {
     return Decimal.ln(this.add(1).div(new Decimal(1).sub(this))) / 2;
   }
 
-  //If you're willing to spend 'resourcesAvailable' and want to buy something with exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio, already own currentOwned), how much of it can you buy? Adapted from Trimps source code.
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something
+   * with exponentially increasing cost each purchase (start at priceStart,
+   * multiply by priceRatio, already own currentOwned), how much of it can you buy?
+   * Adapted from Trimps source code.
+   */
   static affordGeometricSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal) {
     resourcesAvailable = Decimal.fromValue(resourcesAvailable);
     priceStart = Decimal.fromValue(priceStart);
@@ -1319,7 +1323,10 @@ export default class Decimal {
     return Decimal.floor(Decimal.log10(((resourcesAvailable.div(actualStart)).mul((priceRatio.sub(1)))).add(1)) / (Decimal.log10(priceRatio)));
   }
 
-  //How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it multiplies by priceRatio each purchase?
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it multiplies by priceRatio each purchase?
+   */
   static sumGeometricSeries(numItems: number | Decimal, priceStart: DecimalSource, priceRatio: DecimalSource, currentOwned: number | Decimal) {
     priceStart = Decimal.fromValue(priceStart);
     priceRatio = Decimal.fromValue(priceRatio);
@@ -1328,7 +1335,11 @@ export default class Decimal {
     return (actualStart.mul(Decimal.sub(1, Decimal.pow(priceRatio, numItems)))).div(Decimal.sub(1, priceRatio));
   }
 
-  //If you're willing to spend 'resourcesAvailable' and want to buy something with additively increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned), how much of it can you buy?
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something with additively
+   * increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned),
+   * how much of it can you buy?
+   */
   static affordArithmeticSeries(resourcesAvailable: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource) {
     resourcesAvailable = Decimal.fromValue(resourcesAvailable);
     priceStart = Decimal.fromValue(priceStart);
@@ -1351,7 +1362,11 @@ export default class Decimal {
     //return Decimal.floor(something);
   }
 
-  //How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it adds priceAdd each purchase? Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it adds priceAdd each purchase?
+   * Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+   */
   static sumArithmeticSeries(numItems: DecimalSource, priceStart: DecimalSource, priceAdd: DecimalSource, currentOwned: DecimalSource) {
     numItems = Decimal.fromValue(numItems);
     priceStart = Decimal.fromValue(priceStart);
@@ -1364,13 +1379,19 @@ export default class Decimal {
     return Decimal.div(numItems, 2).mul(Decimal.mul(2, actualStart).plus(numItems.sub(1).mul(priceAdd)))
   }
 
-  //Joke function from Realm Grinder
+  /**
+   * Joke function from Realm Grinder
+   */
   ascensionPenalty(ascensions: number) {
     if (ascensions == 0) return this;
     return this.pow(Math.pow(10, -ascensions));
   }
 
-  //When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS), the lowest efficiency score is the better one to purchase. From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
+  /**
+   * When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS),
+   * the lowest efficiency score is the better one to purchase.
+   * From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
+   */
   static efficiencyOfPurchase(cost: DecimalSource, current_RpS: DecimalSource, delta_RpS: DecimalSource) {
     cost = Decimal.fromValue(cost);
     current_RpS = Decimal.fromValue(current_RpS);
@@ -1378,12 +1399,13 @@ export default class Decimal {
     return Decimal.add(cost.div(current_RpS), cost.div(delta_RpS));
   }
 
-  //Joke function from Cookie Clicker. It's 'egg'
+  /**
+   * Joke function from Cookie Clicker. It's 'egg'
+   */
   egg() {
     return this.add(9);
   }
 
-  //  Porting some function from Decimal.js
   lessThanOrEqualTo(other: DecimalSource) {
     return this.cmp(other) < 1;
   }
@@ -1399,7 +1421,6 @@ export default class Decimal {
   greaterThan(other: DecimalSource) {
     return this.cmp(other) > 0;
   }
-
 
   static randomDecimalForTesting(absMaxExponent: number) {
     //NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
@@ -1417,23 +1438,23 @@ export default class Decimal {
     return Decimal.fromMantissaExponent(mantissa, exponent);
 
     /*
-Examples:
+      Examples:
 
-randomly test pow:
+      randomly test pow:
 
-var a = Decimal.randomDecimalForTesting(1000);
-var pow = Math.random()*20-10;
-if (Math.random()*2 < 1) { pow = Math.round(pow); }
-var result = Decimal.pow(a, pow);
-["(" + a.toString() + ")^" + pow.toString(), result.toString()]
+      var a = Decimal.randomDecimalForTesting(1000);
+      var pow = Math.random()*20-10;
+      if (Math.random()*2 < 1) { pow = Math.round(pow); }
+      var result = Decimal.pow(a, pow);
+      ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
 
-randomly test add:
+      randomly test add:
 
-var a = Decimal.randomDecimalForTesting(1000);
-var b = Decimal.randomDecimalForTesting(17);
-var c = a.mul(b);
-var result = a.add(c);
-[a.toString() + "+" + c.toString(), result.toString()]
+      var a = Decimal.randomDecimalForTesting(1000);
+      var b = Decimal.randomDecimalForTesting(17);
+      var c = a.mul(b);
+      var result = a.add(c);
+      [a.toString() + "+" + c.toString(), result.toString()]
     */
   }
 }
