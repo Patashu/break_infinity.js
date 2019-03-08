@@ -26,7 +26,7 @@ const powerOf10 = (() => {
   return (power: number) => powersOf10[power + indexOf0InPowersOf10];
 })();
 
-type DecimalSource = Decimal | number | string | undefined | null;
+type DecimalSource = Decimal | number | string;
 
 export default class Decimal {
 
@@ -54,6 +54,7 @@ export default class Decimal {
     if (value === 0) {
       this.e = 0;
       this.m = 0;
+      return;
     }
     if (this.sgn() !== value) {
       this.m = -this.m;
@@ -293,7 +294,7 @@ export default class Decimal {
 
   public static pow(value: DecimalSource, other: number | Decimal) {
     // Fast track: 10^integer
-    if (value === 10 && typeof other === "number" && Number.isInteger(other)) {
+    if (typeof value === "number" && value === 10 && typeof other === "number" && Number.isInteger(other)) {
       return Decimal.fromMantissaExponent_noNormalize(1, other);
     }
 
@@ -460,9 +461,9 @@ export default class Decimal {
   constructor(value?: DecimalSource) {
     if (value instanceof Decimal) {
       this.fromDecimal(value);
-    } else if (typeof (value) === "number") {
+    } else if (typeof value === "number") {
       this.fromNumber(value);
-    } else if (typeof (value) === "string") {
+    } else if (typeof value === "string") {
       this.fromString(value);
     } else {
       this.mantissa = 0;
@@ -566,18 +567,19 @@ export default class Decimal {
     return this;
   }
 
-  public fromValue(value: DecimalSource) {
+  public fromValue(value?: DecimalSource) {
     if (value instanceof Decimal) {
       return this.fromDecimal(value);
-    } else if (typeof (value) === "number") {
-      return this.fromNumber(value);
-    } else if (typeof (value) === "string") {
-      return this.fromString(value);
-    } else {
-      this.mantissa = 0;
-      this.exponent = 0;
-      return this;
     }
+    if (typeof value === "number") {
+      return this.fromNumber(value);
+    }
+    if (typeof value === "string") {
+      return this.fromString(value);
+    }
+    this.mantissa = 0;
+    this.exponent = 0;
+    return this;
   }
 
   public toNumber() {
@@ -1350,7 +1352,7 @@ export default class Decimal {
       sign = -1;
       mantissa = -mantissa;
     }
-    const newMantissa = sign * Math.pow(mantissa, (1 / 3));
+    const newMantissa = sign * Math.pow(mantissa, 1 / 3);
 
     const mod = this.exponent % 3;
     if (mod === 1 || mod === -1) {
