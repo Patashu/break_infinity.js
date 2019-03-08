@@ -1251,48 +1251,47 @@ export default class Decimal {
     let x = this.toNumber();
     if (-706 < x && x < 709) {
       return Decimal.fromNumber(Math.exp(x));
-    } else {
-      // This has to be implemented fundamentally, so that pow(value) can be implemented on top of it.
-      // Should be fast and accurate over the range [-2.1e15, 2.1e15].
-      // Outside that it overflows, so we don't care about these cases.
-
-      // Implementation from SpeedCrunch:
-      // tslint:disable-next-line:max-line-length
-      // https://bitbucket.org/heldercorreia/speedcrunch/src/9cffa7b674890affcb877bfebc81d39c26b20dcc/src/math/floatexp.c?at=master&fileviewer=file-view-default
-
-      let exp;
-      let tmp;
-      let expx;
-
-      exp = 0;
-      expx = this.exponent;
-
-      if (expx >= 0) {
-        exp = Math.trunc(x / Math.LN10);
-        tmp = exp * Math.LN10;
-        x -= tmp;
-        if (x >= Math.LN10) {
-          ++exp;
-          x -= Math.LN10;
-        }
-      }
-      if (x < 0) {
-        --exp;
-        x += Math.LN10;
-      }
-
-      // When we get here 0 <= x < ln 10
-      x = Math.exp(x);
-
-      if (exp !== 0) {
-        // TODO: or round, or even nothing? can it ever be non-integer?
-        expx = Math.floor(exp);
-        Decimal.fromMantissaExponent(x, expx);
-      }
-
-      // FIXME
-      return Decimal.fromNumber(x);
     }
+
+    // This has to be implemented fundamentally, so that pow(value) can be implemented on top of it.
+    // Should be fast and accurate over the range [-2.1e15, 2.1e15].
+    // Outside that it overflows, so we don't care about these cases.
+
+    // Implementation from SpeedCrunch:
+    // tslint:disable-next-line:max-line-length
+    // https://bitbucket.org/heldercorreia/speedcrunch/src/9cffa7b674890affcb877bfebc81d39c26b20dcc/src/math/floatexp.c?at=master&fileviewer=file-view-default
+
+    let exp;
+    let tmp;
+    let expx;
+
+    exp = 0;
+    expx = this.exponent;
+
+    if (expx >= 0) {
+      exp = Math.trunc(x / Math.LN10);
+      tmp = exp * Math.LN10;
+      x -= tmp;
+      if (x >= Math.LN10) {
+        ++exp;
+        x -= Math.LN10;
+      }
+    }
+    if (x < 0) {
+      --exp;
+      x += Math.LN10;
+    }
+
+    // When we get here 0 <= x < ln 10
+    x = Math.exp(x);
+
+    if (exp !== 0) {
+      // TODO: or round, or even nothing? can it ever be non-integer?
+      expx = Math.floor(exp);
+      Decimal.fromMantissaExponent(x, expx);
+    }
+
+    return Decimal.fromNumber(x);
   }
 
   public sqr() {
