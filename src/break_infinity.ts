@@ -13,15 +13,20 @@ const NUMBER_EXP_MAX = 308;
 // The smallest exponent that can appear in a Number, though not all mantissas are valid here.
 const NUMBER_EXP_MIN = -324;
 
-// We need this lookup table because Math.pow(10, exponent)
-// when exponent's absolute value is large is slightly inaccurate.
-// You can fix it with the power of math... or just make a lookup table.
-// Faster AND simpler
-let powersOf10: number[] = [];
-for (let i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
-  powersOf10.push(Number("1e" + i));
-}
-const indexOf0InPowersOf10 = 323;
+const powerOf10 = function() {
+  // We need this lookup table because Math.pow(10, exponent)
+  // when exponent's absolute value is large is slightly inaccurate.
+  // You can fix it with the power of math... or just make a lookup table.
+  // Faster AND simpler
+  let powersOf10: number[] = [];
+  for (let i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
+    powersOf10.push(Number("1e" + i));
+  }
+  const indexOf0InPowersOf10 = 323;
+  return function (power: number) {
+    return powersOf10[power + indexOf0InPowersOf10];
+  }
+}();
 
 type DecimalSource = Decimal | number | string | undefined | null;
 
@@ -44,7 +49,7 @@ export default class Decimal {
     }
 
     const temp_exponent = Math.floor(Math.log10(Math.abs(this.mantissa)));
-    this.mantissa = this.mantissa / powersOf10[temp_exponent + indexOf0InPowersOf10];
+    this.mantissa = this.mantissa / powerOf10(temp_exponent);
     this.exponent += temp_exponent;
 
     return this;
@@ -99,7 +104,7 @@ export default class Decimal {
       if (this.exponent == NUMBER_EXP_MIN) {
         this.mantissa = (value * 10) / 1e-323;
       } else {
-        this.mantissa = value / powersOf10[this.exponent + indexOf0InPowersOf10];
+        this.mantissa = value / powerOf10(this.exponent);
       }
       // SAFETY: Prevent weirdness.
       this.normalize();
@@ -204,7 +209,7 @@ export default class Decimal {
       return this.mantissa > 0 ? 5e-324 : -5e-324;
     }
 
-    const result = this.mantissa * powersOf10[this.exponent + indexOf0InPowersOf10];
+    const result = this.mantissa * powerOf10(this.exponent);
     if (!isFinite(result) || this.exponent < 0) {
       return result;
     }
@@ -508,7 +513,7 @@ export default class Decimal {
       // Have to do this because adding numbers that were once integers but scaled down is imprecise.
       // Example: 299 + 18
       return Decimal.fromMantissaExponent(
-        Math.round(1e14 * biggerDecimal.mantissa + 1e14 * smallerDecimal.mantissa * powersOf10[(smallerDecimal.exponent - biggerDecimal.exponent) + indexOf0InPowersOf10]),
+        Math.round(1e14 * biggerDecimal.mantissa + 1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)),
         biggerDecimal.exponent - 14);
     }
   }
