@@ -38,13 +38,14 @@ export default class Decimal {
    * When mantissa is very denormalized, use this to normalize much faster.
    */
   normalize() {
+    if (this.mantissa >= 1 && this.mantissa < 10) {
+      return;
+    }
+
     //TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
     if (this.mantissa === 0) {
       this.mantissa = 0;
       this.exponent = 0;
-      return;
-    }
-    if (this.mantissa >= 1 && this.mantissa < 10) {
       return;
     }
 
