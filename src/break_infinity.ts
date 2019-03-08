@@ -347,7 +347,7 @@ export default class Decimal {
   }
 
   abs() {
-    return Decimal.fromMantissaExponent(Math.abs(this.mantissa), this.exponent);
+    return Decimal.fromMantissaExponent_noNormalize(Math.abs(this.mantissa), this.exponent);
   }
 
   static abs(value: DecimalSource) {
@@ -357,7 +357,7 @@ export default class Decimal {
   }
 
   neg() {
-    return Decimal.fromMantissaExponent(-this.mantissa, this.exponent);
+    return Decimal.fromMantissaExponent_noNormalize(-this.mantissa, this.exponent);
   }
 
   static neg(value: DecimalSource) {
@@ -535,7 +535,7 @@ export default class Decimal {
   sub(value: DecimalSource) {
     value = Decimal.fromValue(value);
 
-    return this.add(Decimal.fromMantissaExponent(-value.mantissa, value.exponent));
+    return this.add(Decimal.fromMantissaExponent_noNormalize(-value.mantissa, value.exponent));
   }
 
   static sub(value: DecimalSource, other: DecimalSource) {
@@ -1149,7 +1149,7 @@ export default class Decimal {
   static pow(value: DecimalSource, other: number | Decimal) {
     //Fast track: 10^integer
     if (value === 10 && typeof other === "number" && Number.isInteger(other)) {
-      return Decimal.fromMantissaExponent(1, other);
+      return Decimal.fromMantissaExponent_noNormalize(1, other);
     }
 
     value = Decimal.fromValue(value);
@@ -1429,7 +1429,7 @@ export default class Decimal {
     //NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
     //5% of the time, have a mantissa of 0
     if (Math.random() * 20 < 1) {
-      return Decimal.fromMantissaExponent(0, 0);
+      return Decimal.fromMantissaExponent_noNormalize(0, 0);
     }
     let mantissa = Math.random() * 10;
     //10% of the time, have a simple mantissa
