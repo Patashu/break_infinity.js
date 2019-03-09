@@ -31,6 +31,18 @@ var powerOf10 = function () {
   };
 }();
 
+var D = function D(value) {
+  return Decimal.fromValue_noAlloc(value);
+};
+
+var ME = function ME(mantissa, exponent) {
+  return Decimal.fromMantissaExponent(mantissa, exponent);
+};
+
+var ME_NN = function ME_NN(mantissa, exponent) {
+  return Decimal.fromMantissaExponent_noNormalize(mantissa, exponent);
+};
+
 var Decimal =
 /** @class */
 function () {
@@ -118,240 +130,240 @@ function () {
   };
 
   Decimal.abs = function (value) {
-    return Decimal.fromValue_noAlloc(value).abs();
+    return D(value).abs();
   };
 
   Decimal.neg = function (value) {
-    return Decimal.fromValue_noAlloc(value).neg();
+    return D(value).neg();
   };
 
   Decimal.negate = function (value) {
-    return Decimal.fromValue_noAlloc(value).neg();
+    return D(value).neg();
   };
 
   Decimal.negated = function (value) {
-    return Decimal.fromValue_noAlloc(value).neg();
+    return D(value).neg();
   };
 
   Decimal.sign = function (value) {
-    return Decimal.fromValue_noAlloc(value).sign();
+    return D(value).sign();
   };
 
   Decimal.sgn = function (value) {
-    return Decimal.fromValue_noAlloc(value).sign();
+    return D(value).sign();
   };
 
   Decimal.round = function (value) {
-    return Decimal.fromValue_noAlloc(value).round();
+    return D(value).round();
   };
 
   Decimal.floor = function (value) {
-    return Decimal.fromValue_noAlloc(value).floor();
+    return D(value).floor();
   };
 
   Decimal.ceil = function (value) {
-    return Decimal.fromValue_noAlloc(value).ceil();
+    return D(value).ceil();
   };
 
   Decimal.trunc = function (value) {
-    return Decimal.fromValue_noAlloc(value).trunc();
+    return D(value).trunc();
   };
 
   Decimal.add = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).add(other);
+    return D(value).add(other);
   };
 
   Decimal.plus = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).add(other);
+    return D(value).add(other);
   };
 
   Decimal.sub = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).sub(other);
+    return D(value).sub(other);
   };
 
   Decimal.subtract = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).sub(other);
+    return D(value).sub(other);
   };
 
   Decimal.minus = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).sub(other);
+    return D(value).sub(other);
   };
 
   Decimal.mul = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).mul(other);
+    return D(value).mul(other);
   };
 
   Decimal.multiply = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).mul(other);
+    return D(value).mul(other);
   };
 
   Decimal.times = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).mul(other);
+    return D(value).mul(other);
   };
 
   Decimal.div = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).div(other);
+    return D(value).div(other);
   };
 
   Decimal.divide = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).div(other);
+    return D(value).div(other);
   };
 
   Decimal.recip = function (value) {
-    return Decimal.fromValue_noAlloc(value).recip();
+    return D(value).recip();
   };
 
   Decimal.reciprocal = function (value) {
-    return Decimal.fromValue_noAlloc(value).recip();
+    return D(value).recip();
   };
 
   Decimal.reciprocate = function (value) {
-    return Decimal.fromValue_noAlloc(value).reciprocate();
+    return D(value).reciprocate();
   };
 
   Decimal.cmp = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).cmp(other);
+    return D(value).cmp(other);
   };
 
   Decimal.compare = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).cmp(other);
+    return D(value).cmp(other);
   };
 
   Decimal.eq = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).eq(other);
+    return D(value).eq(other);
   };
 
   Decimal.equals = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).eq(other);
+    return D(value).eq(other);
   };
 
   Decimal.neq = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).neq(other);
+    return D(value).neq(other);
   };
 
   Decimal.notEquals = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).notEquals(other);
+    return D(value).notEquals(other);
   };
 
   Decimal.lt = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).lt(other);
+    return D(value).lt(other);
   };
 
   Decimal.lte = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).lte(other);
+    return D(value).lte(other);
   };
 
   Decimal.gt = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).gt(other);
+    return D(value).gt(other);
   };
 
   Decimal.gte = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).gte(other);
+    return D(value).gte(other);
   };
 
   Decimal.max = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).max(other);
+    return D(value).max(other);
   };
 
   Decimal.min = function (value, other) {
-    return Decimal.fromValue_noAlloc(value).min(other);
+    return D(value).min(other);
   };
 
   Decimal.cmp_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).cmp_tolerance(other, tolerance);
+    return D(value).cmp_tolerance(other, tolerance);
   };
 
   Decimal.compare_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).cmp_tolerance(other, tolerance);
+    return D(value).cmp_tolerance(other, tolerance);
   };
 
   Decimal.eq_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).eq_tolerance(other, tolerance);
+    return D(value).eq_tolerance(other, tolerance);
   };
 
   Decimal.equals_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).eq_tolerance(other, tolerance);
+    return D(value).eq_tolerance(other, tolerance);
   };
 
   Decimal.neq_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).neq_tolerance(other, tolerance);
+    return D(value).neq_tolerance(other, tolerance);
   };
 
   Decimal.notEquals_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).notEquals_tolerance(other, tolerance);
+    return D(value).notEquals_tolerance(other, tolerance);
   };
 
   Decimal.lt_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).lt_tolerance(other, tolerance);
+    return D(value).lt_tolerance(other, tolerance);
   };
 
   Decimal.lte_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).lte_tolerance(other, tolerance);
+    return D(value).lte_tolerance(other, tolerance);
   };
 
   Decimal.gt_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).gt_tolerance(other, tolerance);
+    return D(value).gt_tolerance(other, tolerance);
   };
 
   Decimal.gte_tolerance = function (value, other, tolerance) {
-    return Decimal.fromValue_noAlloc(value).gte_tolerance(other, tolerance);
+    return D(value).gte_tolerance(other, tolerance);
   };
 
   Decimal.log10 = function (value) {
-    return Decimal.fromValue_noAlloc(value).log10();
+    return D(value).log10();
   };
 
   Decimal.log = function (value, base) {
-    return Decimal.fromValue_noAlloc(value).log(base);
+    return D(value).log(base);
   };
 
   Decimal.log2 = function (value) {
-    return Decimal.fromValue_noAlloc(value).log2();
+    return D(value).log2();
   };
 
   Decimal.ln = function (value) {
-    return Decimal.fromValue_noAlloc(value).ln();
+    return D(value).ln();
   };
 
   Decimal.logarithm = function (value, base) {
-    return Decimal.fromValue_noAlloc(value).logarithm(base);
+    return D(value).logarithm(base);
   };
 
   Decimal.pow10 = function (value) {
     if (Number.isInteger(value)) {
-      return Decimal.fromMantissaExponent_noNormalize(1, value);
+      return ME_NN(1, value);
     }
 
-    return Decimal.fromMantissaExponent(Math.pow(10, value % 1), Math.trunc(value));
+    return ME(Math.pow(10, value % 1), Math.trunc(value));
   };
 
   Decimal.pow = function (value, other) {
     // Fast track: 10^integer
     if (typeof value === "number" && value === 10 && typeof other === "number" && Number.isInteger(other)) {
-      return Decimal.fromMantissaExponent_noNormalize(1, other);
+      return ME_NN(1, other);
     }
 
-    return Decimal.fromValue_noAlloc(value).pow(other);
+    return D(value).pow(other);
   };
 
   Decimal.exp = function (value) {
-    return Decimal.fromValue_noAlloc(value).exp();
+    return D(value).exp();
   };
 
   Decimal.sqr = function (value) {
-    return Decimal.fromValue_noAlloc(value).sqr();
+    return D(value).sqr();
   };
 
   Decimal.sqrt = function (value) {
-    return Decimal.fromValue_noAlloc(value).sqrt();
+    return D(value).sqrt();
   };
 
   Decimal.cube = function (value) {
-    return Decimal.fromValue_noAlloc(value).cube();
+    return D(value).cube();
   };
 
   Decimal.cbrt = function (value) {
-    return Decimal.fromValue_noAlloc(value).cbrt();
+    return D(value).cbrt();
   };
   /**
    * If you're willing to spend 'resourcesAvailable' and want to buy something
@@ -362,7 +374,7 @@ function () {
 
 
   Decimal.affordGeometricSeries = function (resourcesAvailable, priceStart, priceRatio, currentOwned) {
-    return this.affordGeometricSeries_core(Decimal.fromValue_noAlloc(resourcesAvailable), Decimal.fromValue_noAlloc(priceStart), Decimal.fromValue_noAlloc(priceRatio), currentOwned);
+    return this.affordGeometricSeries_core(D(resourcesAvailable), D(priceStart), D(priceRatio), currentOwned);
   };
   /**
    * How much resource would it cost to buy (numItems) items if you already have currentOwned,
@@ -371,7 +383,7 @@ function () {
 
 
   Decimal.sumGeometricSeries = function (numItems, priceStart, priceRatio, currentOwned) {
-    return this.sumGeometricSeries_core(numItems, Decimal.fromValue_noAlloc(priceStart), Decimal.fromValue_noAlloc(priceRatio), currentOwned);
+    return this.sumGeometricSeries_core(numItems, D(priceStart), D(priceRatio), currentOwned);
   };
   /**
    * If you're willing to spend 'resourcesAvailable' and want to buy something with additively
@@ -381,7 +393,7 @@ function () {
 
 
   Decimal.affordArithmeticSeries = function (resourcesAvailable, priceStart, priceAdd, currentOwned) {
-    return this.affordArithmeticSeries_core(Decimal.fromValue_noAlloc(resourcesAvailable), Decimal.fromValue_noAlloc(priceStart), Decimal.fromValue_noAlloc(priceAdd), Decimal.fromValue_noAlloc(currentOwned));
+    return this.affordArithmeticSeries_core(D(resourcesAvailable), D(priceStart), D(priceAdd), D(currentOwned));
   };
   /**
    * How much resource would it cost to buy (numItems) items if you already have currentOwned,
@@ -391,7 +403,7 @@ function () {
 
 
   Decimal.sumArithmeticSeries = function (numItems, priceStart, priceAdd, currentOwned) {
-    return this.sumArithmeticSeries_core(Decimal.fromValue_noAlloc(numItems), Decimal.fromValue_noAlloc(priceStart), Decimal.fromValue_noAlloc(priceAdd), Decimal.fromValue_noAlloc(currentOwned));
+    return this.sumArithmeticSeries_core(D(numItems), D(priceStart), D(priceAdd), D(currentOwned));
   };
   /**
    * When comparing two purchases that cost (resource) and increase your resource/sec by (deltaRpS),
@@ -402,14 +414,14 @@ function () {
 
 
   Decimal.efficiencyOfPurchase = function (cost, currentRpS, deltaRpS) {
-    return this.efficiencyOfPurchase_core(Decimal.fromValue_noAlloc(cost), Decimal.fromValue_noAlloc(currentRpS), Decimal.fromValue_noAlloc(deltaRpS));
+    return this.efficiencyOfPurchase_core(D(cost), D(currentRpS), D(deltaRpS));
   };
 
   Decimal.randomDecimalForTesting = function (absMaxExponent) {
     // NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
     // 5% of the time, have a mantissa of 0
     if (Math.random() * 20 < 1) {
-      return Decimal.fromMantissaExponent_noNormalize(0, 0);
+      return ME_NN(0, 0);
     }
 
     var mantissa = Math.random() * 10; // 10% of the time, have a simple mantissa
@@ -420,7 +432,7 @@ function () {
 
     mantissa *= Math.sign(Math.random() * 2 - 1);
     var exponent = Math.floor(Math.random() * absMaxExponent * 2) - absMaxExponent;
-    return Decimal.fromMantissaExponent(mantissa, exponent);
+    return ME(mantissa, exponent);
     /*
       Examples:
             randomly test pow:
@@ -746,11 +758,11 @@ function () {
   };
 
   Decimal.prototype.abs = function () {
-    return Decimal.fromMantissaExponent_noNormalize(Math.abs(this.mantissa), this.exponent);
+    return ME_NN(Math.abs(this.mantissa), this.exponent);
   };
 
   Decimal.prototype.neg = function () {
-    return Decimal.fromMantissaExponent_noNormalize(-this.mantissa, this.exponent);
+    return ME_NN(-this.mantissa, this.exponent);
   };
 
   Decimal.prototype.negate = function () {
@@ -815,7 +827,7 @@ function () {
     // figure out which is bigger, shrink the mantissa of the smaller
     // by the difference in exponents, add mantissas, normalize and return
     // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
 
     if (this.mantissa === 0) {
       return decimal;
@@ -841,7 +853,7 @@ function () {
     } else {
       // Have to do this because adding numbers that were once integers but scaled down is imprecise.
       // Example: 299 + 18
-      return Decimal.fromMantissaExponent(Math.round(1e14 * biggerDecimal.mantissa + 1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)), biggerDecimal.exponent - 14);
+      return ME(Math.round(1e14 * biggerDecimal.mantissa + 1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)), biggerDecimal.exponent - 14);
     }
   };
 
@@ -850,7 +862,7 @@ function () {
   };
 
   Decimal.prototype.sub = function (value) {
-    return this.add(Decimal.fromValue_noAlloc(value).neg());
+    return this.add(D(value).neg());
   };
 
   Decimal.prototype.subtract = function (value) {
@@ -864,8 +876,8 @@ function () {
   Decimal.prototype.mul = function (value) {
     // a_1*10^b_1 * a_2*10^b_2
     // = a_1*a_2*10^(b_1+b_2)
-    var decimal = Decimal.fromValue_noAlloc(value);
-    return Decimal.fromMantissaExponent(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
+    var decimal = D(value);
+    return ME(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
   };
 
   Decimal.prototype.multiply = function (value) {
@@ -877,7 +889,7 @@ function () {
   };
 
   Decimal.prototype.div = function (value) {
-    return this.mul(Decimal.fromValue_noAlloc(value).recip());
+    return this.mul(D(value).recip());
   };
 
   Decimal.prototype.divide = function (value) {
@@ -893,7 +905,7 @@ function () {
   };
 
   Decimal.prototype.recip = function () {
-    return Decimal.fromMantissaExponent(1 / this.mantissa, -this.exponent);
+    return ME(1 / this.mantissa, -this.exponent);
   };
 
   Decimal.prototype.reciprocal = function () {
@@ -909,7 +921,7 @@ function () {
 
 
   Decimal.prototype.cmp = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value); // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
+    var decimal = D(value); // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
 
     /*
     from smallest to largest:
@@ -1016,7 +1028,7 @@ function () {
   };
 
   Decimal.prototype.eq = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.exponent === decimal.exponent && this.mantissa === decimal.mantissa;
   };
 
@@ -1033,7 +1045,7 @@ function () {
   };
 
   Decimal.prototype.lt = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
 
     if (this.mantissa === 0) {
       return decimal.mantissa > 0;
@@ -1059,7 +1071,7 @@ function () {
   };
 
   Decimal.prototype.gt = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
 
     if (this.mantissa === 0) {
       return decimal.mantissa < 0;
@@ -1085,17 +1097,17 @@ function () {
   };
 
   Decimal.prototype.max = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.lt(decimal) ? decimal : this;
   };
 
   Decimal.prototype.min = function (value) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.gt(decimal) ? decimal : this;
   };
 
   Decimal.prototype.cmp_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
   };
 
@@ -1110,7 +1122,7 @@ function () {
 
 
   Decimal.prototype.eq_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value); // https://stackoverflow.com/a/33024979
+    var decimal = D(value); // https://stackoverflow.com/a/33024979
     // return abs(a-b) <= tolerance * max(abs(a), abs(b))
 
     return Decimal.lte(this.sub(decimal).abs(), Decimal.max(this.abs(), decimal.abs()).mul(tolerance));
@@ -1129,22 +1141,22 @@ function () {
   };
 
   Decimal.prototype.lt_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return !this.eq_tolerance(decimal, tolerance) && this.lt(decimal);
   };
 
   Decimal.prototype.lte_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) || this.lt(decimal);
   };
 
   Decimal.prototype.gt_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return !this.eq_tolerance(decimal, tolerance) && this.gt(decimal);
   };
 
   Decimal.prototype.gte_tolerance = function (value, tolerance) {
-    var decimal = Decimal.fromValue_noAlloc(value);
+    var decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
   };
 
@@ -1191,7 +1203,7 @@ function () {
       newMantissa = Math.pow(this.mantissa, numberValue);
 
       if (isFinite(newMantissa)) {
-        return Decimal.fromMantissaExponent(newMantissa, temp);
+        return ME(newMantissa, temp);
       }
     } // Same speed and usually more accurate.
 
@@ -1201,7 +1213,7 @@ function () {
     newMantissa = Math.pow(10, numberValue * Math.log10(this.mantissa) + residue);
 
     if (isFinite(newMantissa)) {
-      return Decimal.fromMantissaExponent(newMantissa, newExponent);
+      return ME(newMantissa, newExponent);
     } // return Decimal.exp(value*this.ln());
     // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
 
@@ -1216,7 +1228,7 @@ function () {
   };
 
   Decimal.prototype.pow_base = function (value) {
-    return Decimal.fromValue_noAlloc(value).pow(this);
+    return D(value).pow(this);
   };
 
   Decimal.prototype.factorial = function () {
@@ -1269,14 +1281,13 @@ function () {
     if (exp !== 0) {
       // TODO: or round, or even nothing? can it ever be non-integer?
       expx = Math.floor(exp);
-      Decimal.fromMantissaExponent(x, expx);
     }
 
     return Decimal.fromNumber(x);
   };
 
   Decimal.prototype.sqr = function () {
-    return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 2), this.exponent * 2);
+    return ME(Math.pow(this.mantissa, 2), this.exponent * 2);
   };
 
   Decimal.prototype.sqrt = function () {
@@ -1285,15 +1296,15 @@ function () {
     }
 
     if (this.exponent % 2 !== 0) {
-      return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa) * 3.16227766016838, Math.floor(this.exponent / 2));
+      return ME(Math.sqrt(this.mantissa) * 3.16227766016838, Math.floor(this.exponent / 2));
     } // Mod of a negative number is negative, so != means '1 or -1'
 
 
-    return Decimal.fromMantissaExponent(Math.sqrt(this.mantissa), Math.floor(this.exponent / 2));
+    return ME(Math.sqrt(this.mantissa), Math.floor(this.exponent / 2));
   };
 
   Decimal.prototype.cube = function () {
-    return Decimal.fromMantissaExponent(Math.pow(this.mantissa, 3), this.exponent * 3);
+    return ME(Math.pow(this.mantissa, 3), this.exponent * 3);
   };
 
   Decimal.prototype.cbrt = function () {
@@ -1309,15 +1320,15 @@ function () {
     var mod = this.exponent % 3;
 
     if (mod === 1 || mod === -1) {
-      return Decimal.fromMantissaExponent(newMantissa * 2.1544346900318837, Math.floor(this.exponent / 3));
+      return ME(newMantissa * 2.1544346900318837, Math.floor(this.exponent / 3));
     }
 
     if (mod !== 0) {
-      return Decimal.fromMantissaExponent(newMantissa * 4.6415888336127789, Math.floor(this.exponent / 3));
+      return ME(newMantissa * 4.6415888336127789, Math.floor(this.exponent / 3));
     } // mod != 0 at this point means 'mod == 2 || mod == -2'
 
 
-    return Decimal.fromMantissaExponent(newMantissa, Math.floor(this.exponent / 3));
+    return ME(newMantissa, Math.floor(this.exponent / 3));
   }; // Some hyperbolic trig functions that happen to be easy
 
 
