@@ -1198,7 +1198,7 @@ function () {
     if (Number.isSafeInteger(temp)) {
       newMantissa = Math.pow(this.mantissa, numberValue);
 
-      if (isFinite(newMantissa)) {
+      if (isFinite(newMantissa) && newMantissa != 0) {
         return ME(newMantissa, temp);
       }
     } // Same speed and usually more accurate.
@@ -1208,7 +1208,7 @@ function () {
     var residue = temp - newExponent;
     newMantissa = Math.pow(10, numberValue * Math.log10(this.mantissa) + residue);
 
-    if (isFinite(newMantissa)) {
+    if (isFinite(newMantissa) && newMantissa != 0) {
       return ME(newMantissa, newExponent);
     } // return Decimal.exp(value*this.ln());
     // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
