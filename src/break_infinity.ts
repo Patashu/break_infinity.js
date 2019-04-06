@@ -26,9 +26,12 @@ const powerOf10 = (() => {
   return (power: number) => powersOf10[power + indexOf0InPowersOf10];
 })();
 
-const D = (value: DecimalSource) => Decimal.fromValue_noAlloc(value);
-const ME = (mantissa: number, exponent: number) => Decimal.fromMantissaExponent(mantissa, exponent);
-const ME_NN = (mantissa: number, exponent: number) => Decimal.fromMantissaExponent_noNormalize(mantissa, exponent);
+const D = (value: DecimalSource) =>
+  value instanceof Decimal ? value : new Decimal(value);
+const ME = (mantissa: number, exponent: number) =>
+  new Decimal().fromMantissaExponent(mantissa, exponent);
+const ME_NN = (mantissa: number, exponent: number) =>
+  new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
 
 type DecimalSource = Decimal | number | string;
 
@@ -233,6 +236,18 @@ export default class Decimal {
     return D(value).min(other);
   }
 
+  public static clamp(value: DecimalSource, min: DecimalSource, max: DecimalSource) {
+    return D(value).clamp(min, max);
+  }
+
+  public static clampMin(value: DecimalSource, min: DecimalSource) {
+    return D(value).clampMin(min);
+  }
+
+  public static clampMax(value: DecimalSource, max: DecimalSource) {
+    return D(value).clampMax(max);
+  }
+
   public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).cmp_tolerance(other, tolerance);
   }
@@ -275,6 +290,14 @@ export default class Decimal {
 
   public static log10(value: DecimalSource) {
     return D(value).log10();
+  }
+
+  public static absLog10(value: DecimalSource) {
+    return D(value).absLog10();
+  }
+
+  public static pLog10(value: DecimalSource) {
+    return D(value).pLog10();
   }
 
   public static log(value: DecimalSource, base: number) {
@@ -502,15 +525,15 @@ export default class Decimal {
   public exponent = NaN;
 
   constructor(value?: DecimalSource) {
-    if (value instanceof Decimal) {
+    if (value === undefined) {
+      this.mantissa = 0;
+      this.exponent = 0;
+    } else if (value instanceof Decimal) {
       this.fromDecimal(value);
     } else if (typeof value === "number") {
       this.fromNumber(value);
-    } else if (typeof value === "string") {
-      this.fromString(value);
     } else {
-      this.mantissa = 0;
-      this.exponent = 0;
+      this.fromString(value);
     }
   }
 
@@ -752,9 +775,8 @@ export default class Decimal {
       return this.mantissa.toString()
         .replace(".", "")
         .padEnd(this.exponent + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
-    } else {
-      return this.toNumber().toFixed(places + 1);
     }
+    return this.toNumber().toFixed(places + 1);
   }
 
   public toPrecision(places: number) {
@@ -806,7 +828,8 @@ export default class Decimal {
   public round() {
     if (this.exponent < -1) {
       return new Decimal(0);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.round(this.toNumber()));
     }
     return this;
@@ -815,7 +838,8 @@ export default class Decimal {
   public floor() {
     if (this.exponent < -1) {
       return Math.sign(this.mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.floor(this.toNumber()));
     }
     return this;
@@ -834,7 +858,8 @@ export default class Decimal {
   public trunc() {
     if (this.exponent < 0) {
       return new Decimal(0);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.trunc(this.toNumber()));
     }
     return this;
@@ -867,14 +892,14 @@ export default class Decimal {
 
     if (biggerDecimal.exponent - smallerDecimal.exponent > MAX_SIGNIFICANT_DIGITS) {
       return biggerDecimal;
-    } else {
-      // Have to do this because adding numbers that were once integers but scaled down is imprecise.
-      // Example: 299 + 18
-      return ME(Math.round(
-          1e14 * biggerDecimal.mantissa +
-          1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)),
-        biggerDecimal.exponent - 14);
     }
+
+    // Have to do this because adding numbers that were once integers but scaled down is imprecise.
+    // Example: 299 + 18
+    return ME(Math.round(
+      1e14 * biggerDecimal.mantissa +
+      1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)),
+      biggerDecimal.exponent - 14);
   }
 
   public plus(value: DecimalSource) {
@@ -894,11 +919,17 @@ export default class Decimal {
   }
 
   public mul(value: DecimalSource) {
-
-    // a_1*10^b_1 * a_2*10^b_2
-    // = a_1*a_2*10^(b_1+b_2)
-
-    const decimal = D(value);
+    // This version avoids an extra conversion to Decimal, if possible. Since the
+    // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
+    if (typeof value === "number") {
+      if (value < 1e307 && value > -1e307) {
+        return ME(this.mantissa * value, this.exponent);
+      }
+      // If the value is larger than 1e307, we can divide that out of mantissa (since it's
+      // greater than 1, it won't underflow)
+      return ME(this.mantissa * 1e-307 * value, this.exponent + 307);
+    }
+    const decimal = typeof value === "string" ? new Decimal(value) : value;
     return ME(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
   }
 
@@ -1108,6 +1139,18 @@ export default class Decimal {
     return this.gt(decimal) ? decimal : this;
   }
 
+  public clamp(min: DecimalSource, max: DecimalSource) {
+    return this.max(min).min(max);
+  }
+
+  public clampMin(min: DecimalSource) {
+    return this.max(min);
+  }
+
+  public clampMax(max: DecimalSource) {
+    return this.min(max);
+  }
+
   public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
     const decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
@@ -1165,12 +1208,16 @@ export default class Decimal {
     return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
   }
 
-  public abslog10() {
+  public log10() {
+    return this.exponent + Math.log10(this.mantissa);
+  }
+
+  public absLog10() {
     return this.exponent + Math.log10(Math.abs(this.mantissa));
   }
 
-  public log10() {
-    return this.exponent + Math.log10(this.mantissa);
+  public pLog10() {
+    return this.mantissa <= 0 || this.exponent < 0 ? 0 : this.log10();
   }
 
   public log(base: number) {
@@ -1209,7 +1256,7 @@ export default class Decimal {
     let newMantissa;
     if (Number.isSafeInteger(temp)) {
       newMantissa = Math.pow(this.mantissa, numberValue);
-      if (isFinite(newMantissa) && newMantissa != 0) {
+      if (isFinite(newMantissa) && newMantissa !== 0) {
         return ME(newMantissa, temp);
       }
     }
@@ -1219,13 +1266,13 @@ export default class Decimal {
     const newExponent = Math.trunc(temp);
     const residue = temp - newExponent;
     newMantissa = Math.pow(10, numberValue * Math.log10(this.mantissa) + residue);
-    if (isFinite(newMantissa) && newMantissa != 0) {
+    if (isFinite(newMantissa) && newMantissa !== 0) {
       return ME(newMantissa, newExponent);
     }
 
     // return Decimal.exp(value*this.ln());
     // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
-    const result = Decimal.pow10(numberValue * this.abslog10()); // this is 2x faster and gives same values AFAIK
+    const result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
     if (this.sign() === -1 && numberValue % 2 === 1) {
       return result.neg();
     }
