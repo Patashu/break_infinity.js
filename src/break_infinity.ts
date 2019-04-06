@@ -775,9 +775,8 @@ export default class Decimal {
       return this.mantissa.toString()
         .replace(".", "")
         .padEnd(this.exponent + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
-    } else {
-      return this.toNumber().toFixed(places + 1);
     }
+    return this.toNumber().toFixed(places + 1);
   }
 
   public toPrecision(places: number) {
@@ -829,7 +828,8 @@ export default class Decimal {
   public round() {
     if (this.exponent < -1) {
       return new Decimal(0);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.round(this.toNumber()));
     }
     return this;
@@ -838,7 +838,8 @@ export default class Decimal {
   public floor() {
     if (this.exponent < -1) {
       return Math.sign(this.mantissa) >= 0 ? new Decimal(0) : new Decimal(-1);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.floor(this.toNumber()));
     }
     return this;
@@ -857,7 +858,8 @@ export default class Decimal {
   public trunc() {
     if (this.exponent < 0) {
       return new Decimal(0);
-    } else if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
+    }
+    if (this.exponent < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.trunc(this.toNumber()));
     }
     return this;
@@ -890,14 +892,14 @@ export default class Decimal {
 
     if (biggerDecimal.exponent - smallerDecimal.exponent > MAX_SIGNIFICANT_DIGITS) {
       return biggerDecimal;
-    } else {
-      // Have to do this because adding numbers that were once integers but scaled down is imprecise.
-      // Example: 299 + 18
-      return ME(Math.round(
-          1e14 * biggerDecimal.mantissa +
-          1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)),
-        biggerDecimal.exponent - 14);
     }
+
+    // Have to do this because adding numbers that were once integers but scaled down is imprecise.
+    // Example: 299 + 18
+    return ME(Math.round(
+      1e14 * biggerDecimal.mantissa +
+      1e14 * smallerDecimal.mantissa * powerOf10(smallerDecimal.exponent - biggerDecimal.exponent)),
+      biggerDecimal.exponent - 14);
   }
 
   public plus(value: DecimalSource) {
