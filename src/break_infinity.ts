@@ -277,6 +277,14 @@ export default class Decimal {
     return D(value).log10();
   }
 
+  public static absLog10(value: DecimalSource) {
+    return D(value).absLog10();
+  }
+
+  public static pLog10(value: DecimalSource) {
+    return D(value).pLog10();
+  }
+
   public static log(value: DecimalSource, base: number) {
     return D(value).log(base);
   }
@@ -1171,12 +1179,16 @@ export default class Decimal {
     return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
   }
 
-  public abslog10() {
+  public log10() {
+    return this.exponent + Math.log10(this.mantissa);
+  }
+
+  public absLog10() {
     return this.exponent + Math.log10(Math.abs(this.mantissa));
   }
 
-  public log10() {
-    return this.exponent + Math.log10(this.mantissa);
+  public pLog10() {
+    return this.mantissa <= 0 || this.exponent < 0 ? 0 : this.log10();
   }
 
   public log(base: number) {
@@ -1215,7 +1227,7 @@ export default class Decimal {
     let newMantissa;
     if (Number.isSafeInteger(temp)) {
       newMantissa = Math.pow(this.mantissa, numberValue);
-      if (isFinite(newMantissa) && newMantissa != 0) {
+      if (isFinite(newMantissa) && newMantissa !== 0) {
         return ME(newMantissa, temp);
       }
     }
@@ -1225,13 +1237,13 @@ export default class Decimal {
     const newExponent = Math.trunc(temp);
     const residue = temp - newExponent;
     newMantissa = Math.pow(10, numberValue * Math.log10(this.mantissa) + residue);
-    if (isFinite(newMantissa) && newMantissa != 0) {
+    if (isFinite(newMantissa) && newMantissa !== 0) {
       return ME(newMantissa, newExponent);
     }
 
     // return Decimal.exp(value*this.ln());
     // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
-    const result = Decimal.pow10(numberValue * this.abslog10()); // this is 2x faster and gives same values AFAIK
+    const result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
     if (this.sign() === -1 && numberValue % 2 === 1) {
       return result.neg();
     }
