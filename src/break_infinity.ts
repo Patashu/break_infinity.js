@@ -26,9 +26,12 @@ const powerOf10 = (() => {
   return (power: number) => powersOf10[power + indexOf0InPowersOf10];
 })();
 
-const D = (value: DecimalSource) => Decimal.fromValue_noAlloc(value);
-const ME = (mantissa: number, exponent: number) => Decimal.fromMantissaExponent(mantissa, exponent);
-const ME_NN = (mantissa: number, exponent: number) => Decimal.fromMantissaExponent_noNormalize(mantissa, exponent);
+const D = (value: DecimalSource) =>
+  value instanceof Decimal ? value : new Decimal(value);
+const ME = (mantissa: number, exponent: number) =>
+  new Decimal().fromMantissaExponent(mantissa, exponent);
+const ME_NN = (mantissa: number, exponent: number) =>
+  new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
 
 type DecimalSource = Decimal | number | string;
 
@@ -522,15 +525,15 @@ export default class Decimal {
   public exponent = NaN;
 
   constructor(value?: DecimalSource) {
-    if (value instanceof Decimal) {
+    if (value === undefined) {
+      this.mantissa = 0;
+      this.exponent = 0;
+    } else if (value instanceof Decimal) {
       this.fromDecimal(value);
     } else if (typeof value === "number") {
       this.fromNumber(value);
-    } else if (typeof value === "string") {
-      this.fromString(value);
     } else {
-      this.mantissa = 0;
-      this.exponent = 0;
+      this.fromString(value);
     }
   }
 
