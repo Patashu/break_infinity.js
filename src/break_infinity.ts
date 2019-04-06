@@ -894,11 +894,17 @@ export default class Decimal {
   }
 
   public mul(value: DecimalSource) {
-
-    // a_1*10^b_1 * a_2*10^b_2
-    // = a_1*a_2*10^(b_1+b_2)
-
-    const decimal = D(value);
+    // This version avoids an extra conversion to Decimal, if possible. Since the
+    // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
+    if (typeof value === "number") {
+      if (value < 1e307 && value > -1e307) {
+        return ME(this.mantissa * value, this.exponent);
+      }
+      // If the value is larger than 1e307, we can divide that out of mantissa (since it's
+      // greater than 1, it won't underflow)
+      return ME(this.mantissa * 1e-307 * value, this.exponent + 307);
+    }
+    const decimal = typeof value === "string" ? new Decimal(value) : value;
     return ME(this.mantissa * decimal.mantissa, this.exponent + decimal.exponent);
   }
 
