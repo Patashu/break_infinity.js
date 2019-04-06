@@ -233,6 +233,18 @@ export default class Decimal {
     return D(value).min(other);
   }
 
+  public static clamp(value: DecimalSource, min: DecimalSource, max: DecimalSource) {
+    return D(value).clamp(min, max);
+  }
+
+  public static clampMin(value: DecimalSource, min: DecimalSource) {
+    return D(value).clampMin(min);
+  }
+
+  public static clampMax(value: DecimalSource, max: DecimalSource) {
+    return D(value).clampMax(max);
+  }
+
   public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).cmp_tolerance(other, tolerance);
   }
@@ -1120,6 +1132,18 @@ export default class Decimal {
   public min(value: DecimalSource) {
     const decimal = D(value);
     return this.gt(decimal) ? decimal : this;
+  }
+
+  public clamp(min: DecimalSource, max: DecimalSource) {
+    return this.max(min).min(max);
+  }
+
+  public clampMin(min: DecimalSource) {
+    return this.max(min);
+  }
+
+  public clampMax(max: DecimalSource) {
+    return this.min(max);
   }
 
   public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
