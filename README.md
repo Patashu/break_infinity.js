@@ -10,6 +10,8 @@ By Patashu.
 
 NEW: C# port BreakInfinity.js / BigDouble.cs, for your C#/Unity incremental games: https://github.com/Razenpok/BreakInfinity.cs
 
+NEW: break_eternity.js, the sequel to break_infinity.js that goes to 10^^3, 10^^4, 10^^5 and far beyond: https://github.com/Patashu/break_eternity.js
+
 ---
 
 Decimal has only two fields:
@@ -132,8 +134,3 @@ And then run build command which will build all targets to the dist directory.
 npm run build
 ```
 
----
-
-Need something even bigger? Take a look at SpectralFlame's WIP HugeNumber.java. It can reach up to 10 ↑↑ 100000000 and may give you some ideas.
-
-https://github.com/cyip92/HugeNumber/blob/master/HugeNumber.java
