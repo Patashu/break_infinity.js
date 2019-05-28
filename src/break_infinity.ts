@@ -35,6 +35,9 @@ const ME_NN = (mantissa: number, exponent: number) =>
 
 type DecimalSource = Decimal | number | string;
 
+/**
+ * The Decimal's value is simply mantissa * 10^exponent.
+ */
 export default class Decimal {
 
   get m() {
@@ -521,7 +524,19 @@ export default class Decimal {
     return cost.div(currentRpS).add(cost.div(deltaRpS));
   }
 
+  /**
+   * A number (double) with absolute value between [1, 10) OR exactly 0.
+   * If mantissa is ever 10 or greater, it should be normalized
+   * (divide by 10 and add 1 to exponent until it is less than 10,
+   * or multiply by 10 and subtract 1 from exponent until it is 1 or greater).
+   * Infinity/-Infinity/NaN will cause bad things to happen.
+   */
   public mantissa = NaN;
+
+  /**
+   * A number (integer) between -EXP_LIMIT and EXP_LIMIT.
+   * Non-integral/out of bounds will cause bad things to happen.
+   */
   public exponent = NaN;
 
   constructor(value?: DecimalSource) {
