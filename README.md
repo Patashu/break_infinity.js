@@ -84,7 +84,7 @@ This could be your incremental game:
 
 ![image](https://user-images.githubusercontent.com/666597/33364256-b0dfb7da-d537-11e7-9469-b2857568a468.png)
 
-# Build
+## Build
 
 First, clone the repo
 ```
