@@ -85,7 +85,7 @@ function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Deci
   return cost.div(currentRpS).add(cost.div(deltaRpS));
 }
 
-type DecimalSource = Decimal | number | string;
+export type DecimalSource = Decimal | number | string;
 
 /**
  * The Decimal's value is simply mantissa * 10^exponent.
