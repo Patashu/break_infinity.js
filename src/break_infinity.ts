@@ -33,6 +33,58 @@ const ME = (mantissa: number, exponent: number) =>
 const ME_NN = (mantissa: number, exponent: number) =>
   new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
 
+function affordGeometricSeries(
+  resourcesAvailable: Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal,
+) {
+  const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
+
+  return Decimal.floor(
+    resourcesAvailable.div(actualStart).mul(priceRatio.sub(1)).add(1).log10()
+    / priceRatio.log10());
+}
+
+function sumGeometricSeries(
+  numItems: number | Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal,
+) {
+  return priceStart
+    .mul(priceRatio.pow(currentOwned))
+    .mul(Decimal.sub(1, priceRatio.pow(numItems)))
+    .div(Decimal.sub(1, priceRatio));
+}
+
+function affordArithmeticSeries(
+  resourcesAvailable: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal,
+) {
+  // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
+  // where a is actualStart, d is priceAdd and S is resourcesAvailable
+  // then floor it and you're done!
+
+  const actualStart = priceStart.add(currentOwned.mul(priceAdd));
+  const b = actualStart.sub(priceAdd.div(2));
+  const b2 = b.pow(2);
+
+  return b.neg()
+    .add(b2.add(priceAdd.mul(resourcesAvailable).mul(2)).sqrt())
+    .div(priceAdd)
+    .floor();
+}
+
+function sumArithmeticSeries(
+  numItems: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal,
+) {
+
+  const actualStart = priceStart.add(currentOwned.mul(priceAdd));
+
+  // (n/2)*(2*a+(n-1)*d)
+  return numItems
+    .div(2)
+    .mul(actualStart.mul(2).plus(numItems.sub(1).mul(priceAdd)));
+}
+
+function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Decimal) {
+  return cost.div(currentRpS).add(cost.div(deltaRpS));
+}
+
 type DecimalSource = Decimal | number | string;
 
 /**
@@ -365,7 +417,7 @@ export default class Decimal {
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
     priceRatio: DecimalSource, currentOwned: number | Decimal) {
 
-    return this.affordGeometricSeries_core(
+    return affordGeometricSeries(
       D(resourcesAvailable),
       D(priceStart),
       D(priceRatio),
@@ -381,7 +433,7 @@ export default class Decimal {
     numItems: number | Decimal, priceStart: DecimalSource,
     priceRatio: DecimalSource, currentOwned: number | Decimal) {
 
-    return this.sumGeometricSeries_core(
+    return sumGeometricSeries(
       numItems,
       D(priceStart),
       D(priceRatio),
@@ -398,7 +450,7 @@ export default class Decimal {
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
-    return this.affordArithmeticSeries_core(
+    return affordArithmeticSeries(
       D(resourcesAvailable),
       D(priceStart),
       D(priceAdd),
@@ -415,7 +467,7 @@ export default class Decimal {
     numItems: DecimalSource, priceStart: DecimalSource,
     priceAdd: DecimalSource, currentOwned: DecimalSource) {
 
-    return this.sumArithmeticSeries_core(
+    return sumArithmeticSeries(
       D(numItems),
       D(priceStart),
       D(priceAdd),
@@ -430,7 +482,7 @@ export default class Decimal {
    * http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
    */
   public static efficiencyOfPurchase(cost: DecimalSource, currentRpS: DecimalSource, deltaRpS: DecimalSource) {
-    return this.efficiencyOfPurchase_core(
+    return efficiencyOfPurchase(
       D(cost),
       D(currentRpS),
       D(deltaRpS),
@@ -471,57 +523,6 @@ export default class Decimal {
       var result = a.add(c);
       [a.toString() + "+" + c.toString(), result.toString()]
     */
-  }
-
-  private static affordGeometricSeries_core(
-    resourcesAvailable: Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal) {
-
-    const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
-
-    return Decimal.floor(
-      resourcesAvailable.div(actualStart).mul(priceRatio.sub(1)).add(1).log10()
-      / priceRatio.log10());
-  }
-
-  private static sumGeometricSeries_core(
-    numItems: number | Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal) {
-
-    return priceStart
-      .mul(priceRatio.pow(currentOwned))
-      .mul(Decimal.sub(1, priceRatio.pow(numItems)))
-      .div(Decimal.sub(1, priceRatio));
-  }
-
-  private static affordArithmeticSeries_core(
-    resourcesAvailable: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal) {
-
-    // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
-    // where a is actualStart, d is priceAdd and S is resourcesAvailable
-    // then floor it and you're done!
-
-    const actualStart = priceStart.add(currentOwned.mul(priceAdd));
-    const b = actualStart.sub(priceAdd.div(2));
-    const b2 = b.pow(2);
-
-    return b.neg()
-      .add(b2.add(priceAdd.mul(resourcesAvailable).mul(2)).sqrt())
-      .div(priceAdd)
-      .floor();
-  }
-
-  private static sumArithmeticSeries_core(
-    numItems: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal) {
-
-    const actualStart = priceStart.add(currentOwned.mul(priceAdd));
-
-    // (n/2)*(2*a+(n-1)*d)
-    return numItems
-      .div(2)
-      .mul(actualStart.mul(2).plus(numItems.sub(1).mul(priceAdd)));
-  }
-
-  private static efficiencyOfPurchase_core(cost: Decimal, currentRpS: Decimal, deltaRpS: Decimal) {
-    return cost.div(currentRpS).add(cost.div(deltaRpS));
   }
 
   /**
