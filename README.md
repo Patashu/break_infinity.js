@@ -13,7 +13,7 @@ NEW:
 ## Load
 
 The library is a single JavaScript file *break_infinity.js* (or minified, *break_infinity.min.js*)
-which can be found in https://github.com/Patashu/break_infinity.js/tree/master/dist directory.
+which can be found on https://github.com/Patashu/break_infinity.js/releases page.
 
 It can be loaded using a script tag in an HTML document for the browser
 
