@@ -805,7 +805,7 @@
         return this.m.toString().replace(".", "").padEnd(this.e + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
       }
 
-      return this.toNumber().toFixed(places + 1);
+      return this.toNumber().toFixed(places);
     };
 
     Decimal.prototype.toPrecision = function (places) {
