@@ -1,3 +1,5 @@
+[![NPM](https://img.shields.io/npm/v/break_infinity.js.svg)](https://www.npmjs.com/package/break_infinity.js)
+
 A replacement for https://github.com/MikeMcl/decimal.js/ for incremental games which need
 to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e9e15)
 and want to prioritize speed over accuracy.
