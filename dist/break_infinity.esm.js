@@ -1422,7 +1422,39 @@ function () {
     return this.cmp(other) > 0;
   };
 
+  Object.defineProperty(Decimal, "MAX_VALUE", {
+    get: function get() {
+      return MAX_VALUE;
+    },
+    enumerable: true,
+    configurable: true
+  });
+  Object.defineProperty(Decimal, "MIN_VALUE", {
+    get: function get() {
+      return MIN_VALUE;
+    },
+    enumerable: true,
+    configurable: true
+  });
+  Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
+    get: function get() {
+      return NUMBER_MAX_VALUE;
+    },
+    enumerable: true,
+    configurable: true
+  });
+  Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
+    get: function get() {
+      return NUMBER_MIN_VALUE;
+    },
+    enumerable: true,
+    configurable: true
+  });
   return Decimal;
 }();
+var MAX_VALUE = ME_NN(1, EXP_LIMIT);
+var MIN_VALUE = ME_NN(1, -EXP_LIMIT);
+var NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
+var NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
 
 export default Decimal;

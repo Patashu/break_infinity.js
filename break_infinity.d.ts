@@ -234,4 +234,8 @@ export default class Decimal {
     lessThan(other: DecimalSource): boolean;
     greaterThanOrEqualTo(other: DecimalSource): boolean;
     greaterThan(other: DecimalSource): boolean;
+    static readonly MAX_VALUE: Decimal;
+    static readonly MIN_VALUE: Decimal;
+    static readonly NUMBER_MAX_VALUE: Decimal;
+    static readonly NUMBER_MIN_VALUE: Decimal;
 }
