@@ -1418,4 +1418,25 @@ export default class Decimal {
   public greaterThan(other: DecimalSource) {
     return this.cmp(other) > 0;
   }
+
+  public static get MAX_VALUE() {
+    return MAX_VALUE;
+  }
+
+  public static get MIN_VALUE() {
+    return MIN_VALUE;
+  }
+
+  public static get NUMBER_MAX_VALUE() {
+    return NUMBER_MAX_VALUE;
+  }
+
+  public static get NUMBER_MIN_VALUE() {
+    return NUMBER_MIN_VALUE;
+  }
 }
+
+const MAX_VALUE = ME_NN(1, EXP_LIMIT);
+const MIN_VALUE = ME_NN(1, -EXP_LIMIT);
+const NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
+const NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
