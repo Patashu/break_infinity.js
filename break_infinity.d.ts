@@ -124,7 +124,7 @@ export default class Decimal {
     /**
      * When mantissa is very denormalized, use this to normalize much faster.
      */
-    normalize(): this | undefined;
+    normalize(): this;
     fromMantissaExponent(mantissa: number, exponent: number): this;
     /**
      * Well, you know what you're doing!

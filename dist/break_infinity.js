@@ -560,18 +560,24 @@
 
     Decimal.prototype.normalize = function () {
       if (this.m >= 1 && this.m < 10) {
-        return;
+        return this;
       } // TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
 
 
       if (this.m === 0) {
         this.m = 0;
         this.e = 0;
-        return;
+        return this;
       }
 
       var tempExponent = Math.floor(Math.log10(Math.abs(this.m)));
-      this.m = this.m / powerOf10(tempExponent);
+
+      if (tempExponent === NUMBER_EXP_MIN) {
+        this.m = this.m * 10 / 1e-323;
+      } else {
+        this.m = this.m / powerOf10(tempExponent);
+      }
+
       this.e += tempExponent;
       return this;
     };
