@@ -75,6 +75,8 @@ export default class Decimal {
     static sqrt(value: DecimalSource): Decimal;
     static cube(value: DecimalSource): Decimal;
     static cbrt(value: DecimalSource): Decimal;
+    static dp(value: DecimalSource): number;
+    static decimalPlaces(value: DecimalSource): number;
     /**
      * If you're willing to spend 'resourcesAvailable' and want to buy something
      * with exponentially increasing cost each purchase (start at priceStart,
@@ -234,6 +236,8 @@ export default class Decimal {
     lessThan(other: DecimalSource): boolean;
     greaterThanOrEqualTo(other: DecimalSource): boolean;
     greaterThan(other: DecimalSource): boolean;
+    decimalPlaces(): number;
+    dp(): number;
     static readonly MAX_VALUE: Decimal;
     static readonly MIN_VALUE: Decimal;
     static readonly NUMBER_MAX_VALUE: Decimal;

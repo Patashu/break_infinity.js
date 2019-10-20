@@ -13,6 +13,9 @@ const NUMBER_EXP_MAX = 308;
 // The smallest exponent that can appear in a Number, though not all mantissas are valid here.
 const NUMBER_EXP_MIN = -324;
 
+// Tolerance which is used for Number conversion to compensate floating-point error.
+const ROUND_TOLERANCE = 1e-10;
+
 const powerOf10 = (() => {
   // We need this lookup table because Math.pow(10, exponent)
   // when exponent's absolute value is large is slightly inaccurate.
@@ -407,6 +410,14 @@ export default class Decimal {
     return D(value).cbrt();
   }
 
+  public static dp(value: DecimalSource) {
+    return D(value).dp();
+  }
+
+  public static decimalPlaces(value: DecimalSource) {
+    return D(value).dp();
+  }
+
   /**
    * If you're willing to spend 'resourcesAvailable' and want to buy something
    * with exponentially increasing cost each purchase (start at priceStart,
@@ -569,11 +580,9 @@ export default class Decimal {
     }
 
     const tempExponent = Math.floor(Math.log10(Math.abs(this.m)));
-    if (tempExponent === NUMBER_EXP_MIN) {
-        this.m = (this.m * 10) / 1e-323;
-    } else {
-        this.m = this.m / powerOf10(tempExponent);
-    }
+    this.m = tempExponent === NUMBER_EXP_MIN ?
+        this.m * 10 / 1e-323 :
+        this.m / powerOf10(tempExponent);
     this.e += tempExponent;
     return this;
   }
@@ -696,7 +705,7 @@ export default class Decimal {
       return result;
     }
     const resultRounded = Math.round(result);
-    if (Math.abs(resultRounded - result) < 1e-10) {
+    if (Math.abs(resultRounded - result) < ROUND_TOLERANCE) {
       return resultRounded;
     }
     return result;
@@ -1421,6 +1430,28 @@ export default class Decimal {
 
   public greaterThan(other: DecimalSource) {
     return this.cmp(other) > 0;
+  }
+
+  public decimalPlaces() {
+    return this.dp();
+  }
+
+  public dp() {
+    if (!isFinite(this.mantissa)) {
+      return NaN;
+    }
+    if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
+      return 0;
+    }
+
+    const mantissa = this.mantissa;
+    let places = -this.exponent;
+    let e = 1;
+    while (Math.abs(Math.round(mantissa * e) / e - mantissa) > ROUND_TOLERANCE) {
+      e *= 10;
+      places++;
+    }
+    return places > 0 ? places : 0;
   }
 
   public static get MAX_VALUE() {

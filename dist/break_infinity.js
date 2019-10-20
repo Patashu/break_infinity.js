@@ -51,7 +51,9 @@
 
   var NUMBER_EXP_MAX = 308; // The smallest exponent that can appear in a Number, though not all mantissas are valid here.
 
-  var NUMBER_EXP_MIN = -324;
+  var NUMBER_EXP_MIN = -324; // Tolerance which is used for Number conversion to compensate floating-point error.
+
+  var ROUND_TOLERANCE = 1e-10;
 
   var powerOf10 = function () {
     // We need this lookup table because Math.pow(10, exponent)
@@ -469,6 +471,14 @@
     Decimal.cbrt = function (value) {
       return D(value).cbrt();
     };
+
+    Decimal.dp = function (value) {
+      return D(value).dp();
+    };
+
+    Decimal.decimalPlaces = function (value) {
+      return D(value).dp();
+    };
     /**
      * If you're willing to spend 'resourcesAvailable' and want to buy something
      * with exponentially increasing cost each purchase (start at priceStart,
@@ -571,13 +581,7 @@
       }
 
       var tempExponent = Math.floor(Math.log10(Math.abs(this.m)));
-
-      if (tempExponent === NUMBER_EXP_MIN) {
-        this.m = this.m * 10 / 1e-323;
-      } else {
-        this.m = this.m / powerOf10(tempExponent);
-      }
-
+      this.m = tempExponent === NUMBER_EXP_MIN ? this.m * 10 / 1e-323 : this.m / powerOf10(tempExponent);
       this.e += tempExponent;
       return this;
     };
@@ -710,7 +714,7 @@
 
       var resultRounded = Math.round(result);
 
-      if (Math.abs(resultRounded - result) < 1e-10) {
+      if (Math.abs(resultRounded - result) < ROUND_TOLERANCE) {
         return resultRounded;
       }
 
@@ -1469,6 +1473,31 @@
 
     Decimal.prototype.greaterThan = function (other) {
       return this.cmp(other) > 0;
+    };
+
+    Decimal.prototype.decimalPlaces = function () {
+      return this.dp();
+    };
+
+    Decimal.prototype.dp = function () {
+      if (!isFinite(this.mantissa)) {
+        return NaN;
+      }
+
+      if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
+        return 0;
+      }
+
+      var mantissa = this.mantissa;
+      var places = -this.exponent;
+      var e = 1;
+
+      while (Math.abs(Math.round(mantissa * e) / e - mantissa) > ROUND_TOLERANCE) {
+        e *= 10;
+        places++;
+      }
+
+      return places > 0 ? places : 0;
     };
 
     Object.defineProperty(Decimal, "MAX_VALUE", {
