@@ -5,6 +5,7 @@
   "main": "dist/break_infinity.js",
   "module": "dist/break_infinity.esm.js",
   "unpkg": "dist/break_infinity.min.js",
+  "types": "break_infinity.d.ts",
   "scripts": {
     "build": "npm run dist && npm run docs",
     "dist": "bili",
