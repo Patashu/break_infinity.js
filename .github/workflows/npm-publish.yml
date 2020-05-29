@@ -1,6 +1,8 @@
 name: Build & Publish to npm
 
-on: [release]
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
