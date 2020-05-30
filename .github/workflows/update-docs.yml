@@ -1,0 +1,28 @@
+name: Update Docs
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  update-docs:
+
+    runs-on: ubuntu-latest    
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Install and Build Docs 🔧
+        run: |
+          npm install
+          npm run docs
+
+      - name: Deploy GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs
