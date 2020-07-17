@@ -2,8 +2,3 @@
 /node_modules
 .rpt2_cache
 .idea
-
-# Welp, I'm too lazy to properly setup d.ts generation
-bili.config.d.ts
-src/break_infinity.d.ts
-typedoc.d.ts

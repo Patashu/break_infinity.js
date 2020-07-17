@@ -1,7 +1,7 @@
-import { Config } from "bili"
+import { Config } from "bili";
 
 const config: Config = {
-    input: "src/break_infinity.ts",
+    input: "src/index.ts",
     output: {
         format: ["umd", "umd-min", "esm", "cjs"],
         moduleName: "Decimal",
@@ -21,4 +21,4 @@ const config: Config = {
     }
 };
 
-export default config
+export default config;
