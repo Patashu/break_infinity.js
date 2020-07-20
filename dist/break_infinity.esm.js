@@ -112,7 +112,7 @@ function () {
     set: function set(value) {
       this.mantissa = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "e", {
@@ -122,7 +122,7 @@ function () {
     set: function set(value) {
       this.exponent = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "s", {
@@ -140,7 +140,7 @@ function () {
         this.m = -this.m;
       }
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
 
@@ -506,14 +506,14 @@ function () {
     return ME(mantissa, exponent);
     /*
       Examples:
-            randomly test pow:
-            var a = Decimal.randomDecimalForTesting(1000);
+           randomly test pow:
+           var a = Decimal.randomDecimalForTesting(1000);
       var pow = Math.random()*20-10;
       if (Math.random()*2 < 1) { pow = Math.round(pow); }
       var result = Decimal.pow(a, pow);
       ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
-            randomly test add:
-            var a = Decimal.randomDecimalForTesting(1000);
+           randomly test add:
+           var a = Decimal.randomDecimalForTesting(1000);
       var b = Decimal.randomDecimalForTesting(17);
       var c = a.mul(b);
       var result = a.add(c);
@@ -983,7 +983,7 @@ function () {
 
     /*
     from smallest to largest:
-          -3e100
+         -3e100
     -1e100
     -3e99
     -1e99
@@ -1004,7 +1004,7 @@ function () {
     3e99
     1e100
     3e100
-          */
+         */
 
     if (this.m === 0) {
       if (decimal.m === 0) {
@@ -1245,6 +1245,7 @@ function () {
   Decimal.prototype.log = function (base) {
     // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
     // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
     return Math.LN10 / Math.log(base) * this.log10();
   };
 
@@ -1461,28 +1462,28 @@ function () {
     get: function get() {
       return MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "MIN_VALUE", {
     get: function get() {
       return MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
     get: function get() {
       return NUMBER_MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
     get: function get() {
       return NUMBER_MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   return Decimal;

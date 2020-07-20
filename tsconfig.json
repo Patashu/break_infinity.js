@@ -1,8 +1,16 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "module": "commonjs",
+    "declaration": true,
     "strict": true,
     "esModuleInterop": true,
-    "declaration": false
-  }
+    "typeRoots": [
+      "types",
+      "node_modules/@types"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

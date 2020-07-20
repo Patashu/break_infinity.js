@@ -1,47 +1,10 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.Decimal = factory());
-}(this, function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('pad-end')) :
+  typeof define === 'function' && define.amd ? define(['pad-end'], factory) :
+  (global = global || self, global.Decimal = factory(global.padEnd));
+}(this, (function (padEnd) { 'use strict';
 
-  var padEnd = function (string, maxLength, fillString) {
-
-    if (string == null || maxLength == null) {
-      return string;
-    }
-
-    var result    = String(string);
-    var targetLen = typeof maxLength === 'number'
-      ? maxLength
-      : parseInt(maxLength, 10);
-
-    if (isNaN(targetLen) || !isFinite(targetLen)) {
-      return result;
-    }
-
-
-    var length = result.length;
-    if (length >= targetLen) {
-      return result;
-    }
-
-
-    var filled = fillString == null ? '' : String(fillString);
-    if (filled === '') {
-      filled = ' ';
-    }
-
-
-    var fillLen = targetLen - length;
-
-    while (filled.length < fillLen) {
-      filled += filled;
-    }
-
-    var truncated = filled.length > fillLen ? filled.substr(0, fillLen) : filled;
-
-    return result + truncated;
-  };
+  padEnd = padEnd && Object.prototype.hasOwnProperty.call(padEnd, 'default') ? padEnd['default'] : padEnd;
 
   // consider adding them together pointless, just return the larger one
 
@@ -155,7 +118,7 @@
       set: function set(value) {
         this.mantissa = value;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     Object.defineProperty(Decimal.prototype, "e", {
@@ -165,7 +128,7 @@
       set: function set(value) {
         this.exponent = value;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     Object.defineProperty(Decimal.prototype, "s", {
@@ -183,7 +146,7 @@
           this.m = -this.m;
         }
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
 
@@ -549,14 +512,14 @@
       return ME(mantissa, exponent);
       /*
         Examples:
-              randomly test pow:
-              var a = Decimal.randomDecimalForTesting(1000);
+             randomly test pow:
+             var a = Decimal.randomDecimalForTesting(1000);
         var pow = Math.random()*20-10;
         if (Math.random()*2 < 1) { pow = Math.round(pow); }
         var result = Decimal.pow(a, pow);
         ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
-              randomly test add:
-              var a = Decimal.randomDecimalForTesting(1000);
+             randomly test add:
+             var a = Decimal.randomDecimalForTesting(1000);
         var b = Decimal.randomDecimalForTesting(17);
         var c = a.mul(b);
         var result = a.add(c);
@@ -1026,7 +989,7 @@
 
       /*
       from smallest to largest:
-            -3e100
+           -3e100
       -1e100
       -3e99
       -1e99
@@ -1047,7 +1010,7 @@
       3e99
       1e100
       3e100
-            */
+           */
 
       if (this.m === 0) {
         if (decimal.m === 0) {
@@ -1288,6 +1251,7 @@
     Decimal.prototype.log = function (base) {
       // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
       // We assume this to be true and thus only need to return a number, not a Decimal,
+      // and don't do any other kind of error checking.
       return Math.LN10 / Math.log(base) * this.log10();
     };
 
@@ -1504,28 +1468,28 @@
       get: function get() {
         return MAX_VALUE;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     Object.defineProperty(Decimal, "MIN_VALUE", {
       get: function get() {
         return MIN_VALUE;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
       get: function get() {
         return NUMBER_MAX_VALUE;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
       get: function get() {
         return NUMBER_MIN_VALUE;
       },
-      enumerable: true,
+      enumerable: false,
       configurable: true
     });
     return Decimal;
@@ -1537,4 +1501,4 @@
 
   return Decimal;
 
-}));
+})));
