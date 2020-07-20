@@ -112,7 +112,7 @@ function () {
     set: function set(value) {
       this.mantissa = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "e", {
@@ -122,7 +122,7 @@ function () {
     set: function set(value) {
       this.exponent = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "s", {
@@ -140,7 +140,7 @@ function () {
         this.m = -this.m;
       }
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
 
@@ -1245,6 +1245,7 @@ function () {
   Decimal.prototype.log = function (base) {
     // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
     // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
     return Math.LN10 / Math.log(base) * this.log10();
   };
 
@@ -1461,28 +1462,28 @@ function () {
     get: function get() {
       return MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "MIN_VALUE", {
     get: function get() {
       return MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
     get: function get() {
       return NUMBER_MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
     get: function get() {
       return NUMBER_MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   return Decimal;
@@ -1492,4 +1493,4 @@ var MIN_VALUE = ME_NN(1, -EXP_LIMIT);
 var NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
 var NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
 
-// This file contains export definitions for the default entry-point.
+export default Decimal;
