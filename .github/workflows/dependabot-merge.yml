@@ -1,0 +1,16 @@
+name: Merge Dependabot PR
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  merge-me:
+    name: Merge Dependabot PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge Dependabot PR
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
