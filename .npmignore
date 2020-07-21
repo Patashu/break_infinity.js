@@ -1,0 +1,14 @@
+# From .gitignore
+.rpt2_cache
+.idea
+
+# Project folders
+.github
+types
+
+# Project files
+.gitattributes
+bili.config.ts
+tsconfig.json
+tslint.json
+typedoc.ts
