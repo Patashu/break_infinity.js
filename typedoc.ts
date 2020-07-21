@@ -2,7 +2,7 @@ module.exports = {
   excludeNotExported: true,
   excludePrivate: true,
   mode: "file",
-  module: "umd",
+  module: "commonjs",
   out: "docs",
   theme: "minimal",
 };
