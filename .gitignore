@@ -1,17 +1,4 @@
 .DS_Store
-
-# Dependency directories
-node_modules/
-
-# Rollup typescript plugin cache
+/node_modules
 .rpt2_cache
-
-# IDE project-specific settings files
 .idea
-.vscode
-
-# Output of 'npm pack'
-*.tgz
-
-# Generated output
-dist
