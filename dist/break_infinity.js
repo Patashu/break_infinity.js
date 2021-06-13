@@ -1337,7 +1337,7 @@
 
       var result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
 
-      if (this.sign() === -1 && numberValue % 2 === 1) {
+      if (this.sign() === -1 && Math.abs(numberValue % 2) === 1) {
         return result.neg();
       }
 
