@@ -18,6 +18,12 @@ const config: Config = {
                     return defaultFileName;
             }
         }
+    },
+    extendConfig: (config) => {
+        return {
+            ...config,
+            externals: []
+        };
     }
 };
 
