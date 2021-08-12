@@ -23,13 +23,19 @@ It can be loaded using a script tag in an HTML document for the browser
     <script src="path/to/break_infinity.js"></script>
 ```
 
+or as a JS module using import
+
+```javascript
+    import Decimal from "break_infinity.js";
+```
+
 or as a Node.js module using require.
 
 ```javascript
     var Decimal = require("break_infinity.js");
 ```
 
-For Node, the library is available from the npm registry
+For the module approaches, the library is available from the npm registry
 
 ```bash
     $ npm install --save break_infinity.js
