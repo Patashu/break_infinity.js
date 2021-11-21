@@ -1,10 +1,15 @@
 {
   "name": "break_infinity.js",
   "version": "1.3.0",
-  "description": "A replacement for decimal.js for incremental games who want to deal with very large numbers (bigger in magnitude than 1e308, up to as much as 1e(9e15) ) and want to prioritize speed over accuracy.",
-  "main": "dist/break_infinity.js",
+  "description": "Performance-oriented decimal.js replacement for incremental games.",
+  "main": "dist/break_infinity.common.js",
   "module": "dist/break_infinity.esm.js",
   "unpkg": "dist/break_infinity.min.js",
+  "jsdelivr": "dist/break_infinity.min.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm run build:prepare && npm run build:dist && npm run build:docs",
     "docs": "npm run build:prepare && npm run build:docs",
@@ -33,7 +38,7 @@
   "bugs": {
     "url": "https://github.com/Patashu/break_infinity.js/issues"
   },
-  "homepage": "https://github.com/Patashu/break_infinity.js",
+  "homepage": "https://github.com/Patashu/break_infinity.js#readme",
   "dependencies": {
     "pad-end": "^1.0.2"
   },

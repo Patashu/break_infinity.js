@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Decimal = factory());
-})(this, (function () { 'use strict';
+  (global = global || self, global.Decimal = factory());
+}(this, (function () { 'use strict';
 
   var padEnd = function (string, maxLength, fillString) {
 
@@ -688,7 +688,14 @@
       //  But it's not clear how to specifically write that.
       //  So I'll just settle with 'exponent >= 0 and difference between rounded
       //  and not rounded < 1e-9' as a quick fix.
-      // UN-SAFETY: It still eventually fails. Since there's no way to know for sure we started with an integer, all we can do is decide what tradeoff we want between 'yeah I think this used to be an integer' and 'pfft, who needs THAT many decimal places tracked' by changing ROUND_TOLERANCE. https://github.com/Patashu/break_infinity.js/issues/52 Currently starts failing at 800002. Workaround is to do .Round() AFTER toNumber() if you are confident you started with an integer.
+      // UN-SAFETY: It still eventually fails.
+      // Since there's no way to know for sure we started with an integer,
+      // all we can do is decide what tradeoff we want between 'yeah I think
+      // this used to be an integer' and 'pfft, who needs THAT many decimal
+      // places tracked' by changing ROUND_TOLERANCE.
+      // https://github.com/Patashu/break_infinity.js/issues/52
+      // Currently starts failing at 800002. Workaround is to do .Round()
+      // AFTER toNumber() if you are confident you started with an integer.
       // var result = this.m*Math.pow(10, this.e);
       if (!isFinite(this.e)) {
         return Number.NaN;
@@ -946,7 +953,8 @@
       // Example: 299 + 18
 
 
-      return ME(Math.round(1e14 * biggerDecimal.m + 1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e)), biggerDecimal.e - 14);
+      var mantissa = Math.round(1e14 * biggerDecimal.m + 1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e));
+      return ME(mantissa, biggerDecimal.e - 14);
     };
 
     Decimal.prototype.plus = function (value) {
@@ -1294,11 +1302,11 @@
     };
 
     Decimal.prototype.log2 = function () {
-      return 3.32192809488736234787 * this.log10();
+      return 3.321928094887362 * this.log10();
     };
 
     Decimal.prototype.ln = function () {
-      return 2.30258509299404568402 * this.log10();
+      return 2.302585092994045 * this.log10();
     };
 
     Decimal.prototype.logarithm = function (base) {
@@ -1406,11 +1414,11 @@
       var mod = this.e % 3;
 
       if (mod === 1 || mod === -1) {
-        return ME(newMantissa * 2.1544346900318837, Math.floor(this.e / 3));
+        return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
       }
 
       if (mod !== 0) {
-        return ME(newMantissa * 4.6415888336127789, Math.floor(this.e / 3));
+        return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
       } // mod != 0 at this point means 'mod == 2 || mod == -2'
 
 
@@ -1544,4 +1552,4 @@
 
   return Decimal;
 
-}));
+})));
