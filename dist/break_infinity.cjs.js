@@ -651,6 +651,7 @@ function () {
     //  But it's not clear how to specifically write that.
     //  So I'll just settle with 'exponent >= 0 and difference between rounded
     //  and not rounded < 1e-9' as a quick fix.
+    // UN-SAFETY: It still eventually fails. Since there's no way to know for sure we started with an integer, all we can do is decide what tradeoff we want between 'yeah I think this used to be an integer' and 'pfft, who needs THAT many decimal places tracked' by changing ROUND_TOLERANCE. https://github.com/Patashu/break_infinity.js/issues/52 Currently starts failing at 800002. Workaround is to do .Round() AFTER toNumber() if you are confident you started with an integer.
     // var result = this.m*Math.pow(10, this.e);
     if (!isFinite(this.e)) {
       return Number.NaN;
