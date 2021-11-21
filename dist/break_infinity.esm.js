@@ -112,7 +112,7 @@ function () {
     set: function set(value) {
       this.mantissa = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "e", {
@@ -122,7 +122,7 @@ function () {
     set: function set(value) {
       this.exponent = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "s", {
@@ -140,7 +140,7 @@ function () {
         this.m = -this.m;
       }
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
 
@@ -1245,6 +1245,7 @@ function () {
   Decimal.prototype.log = function (base) {
     // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
     // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
     return Math.LN10 / Math.log(base) * this.log10();
   };
 
@@ -1289,13 +1290,18 @@ function () {
     if (isFinite(newMantissa) && newMantissa !== 0) {
       return ME(newMantissa, newExponent);
     } // return Decimal.exp(value*this.ln());
-    // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
 
 
     var result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
 
-    if (this.sign() === -1 && Math.abs(numberValue % 2) === 1) {
-      return result.neg();
+    if (this.sign() === -1) {
+      if (Math.abs(numberValue % 2) === 1) {
+        return result.neg();
+      } else if (Math.abs(numberValue % 2) === 0) {
+        return result;
+      }
+
+      return new Decimal(Number.NaN);
     }
 
     return result;
@@ -1461,28 +1467,28 @@ function () {
     get: function get() {
       return MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "MIN_VALUE", {
     get: function get() {
       return MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
     get: function get() {
       return NUMBER_MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
     get: function get() {
       return NUMBER_MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   return Decimal;
@@ -1492,4 +1498,4 @@ var MIN_VALUE = ME_NN(1, -EXP_LIMIT);
 var NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
 var NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
 
-export default Decimal;
+export { Decimal as default };

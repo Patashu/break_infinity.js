@@ -3,9 +3,12 @@ export declare type DecimalSource = Decimal | number | string;
  * The Decimal's value is simply mantissa * 10^exponent.
  */
 export default class Decimal {
-    m: number;
-    e: number;
-    s: number;
+    get m(): number;
+    set m(value: number);
+    get e(): number;
+    set e(value: number);
+    get s(): number;
+    set s(value: number);
     static fromMantissaExponent(mantissa: number, exponent: number): Decimal;
     static fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal;
     static fromDecimal(value: Decimal): Decimal;
@@ -238,8 +241,8 @@ export default class Decimal {
     greaterThan(other: DecimalSource): boolean;
     decimalPlaces(): number;
     dp(): number;
-    static readonly MAX_VALUE: Decimal;
-    static readonly MIN_VALUE: Decimal;
-    static readonly NUMBER_MAX_VALUE: Decimal;
-    static readonly NUMBER_MIN_VALUE: Decimal;
+    static get MAX_VALUE(): Decimal;
+    static get MIN_VALUE(): Decimal;
+    static get NUMBER_MAX_VALUE(): Decimal;
+    static get NUMBER_MIN_VALUE(): Decimal;
 }

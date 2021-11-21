@@ -1,8 +1,10 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+var padEnd = require('pad-end');
 
-var padEnd = _interopDefault(require('pad-end'));
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var padEnd__default = /*#__PURE__*/_interopDefaultLegacy(padEnd);
 
 // consider adding them together pointless, just return the larger one
 
@@ -116,7 +118,7 @@ function () {
     set: function set(value) {
       this.mantissa = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "e", {
@@ -126,7 +128,7 @@ function () {
     set: function set(value) {
       this.exponent = value;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal.prototype, "s", {
@@ -144,7 +146,7 @@ function () {
         this.m = -this.m;
       }
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
 
@@ -736,7 +738,7 @@ function () {
     }
 
     if (this.e <= -EXP_LIMIT || this.m === 0) {
-      return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "") + "e+0";
+      return "0" + (places > 0 ? padEnd__default["default"](".", places + 1, "0") : "") + "e+0";
     } // two cases:
     // 1) exponent is < 308 and > -324: use basic toFixed
     // 2) everything else: we have to do it ourselves!
@@ -766,14 +768,14 @@ function () {
     }
 
     if (this.e <= -EXP_LIMIT || this.m === 0) {
-      return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "");
+      return "0" + (places > 0 ? padEnd__default["default"](".", places + 1, "0") : "");
     } // two cases:
     // 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
     // 2) exponent is 16 or less: use basic toFixed
 
 
     if (this.e >= MAX_SIGNIFICANT_DIGITS) {
-      return this.m.toString().replace(".", "").padEnd(this.e + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
+      return this.m.toString().replace(".", "").padEnd(this.e + 1, "0") + (places > 0 ? padEnd__default["default"](".", places + 1, "0") : "");
     }
 
     return this.toNumber().toFixed(places);
@@ -1249,6 +1251,7 @@ function () {
   Decimal.prototype.log = function (base) {
     // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
     // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
     return Math.LN10 / Math.log(base) * this.log10();
   };
 
@@ -1293,13 +1296,18 @@ function () {
     if (isFinite(newMantissa) && newMantissa !== 0) {
       return ME(newMantissa, newExponent);
     } // return Decimal.exp(value*this.ln());
-    // UN-SAFETY: This should return NaN when mantissa is negative and value is non-integer.
 
 
     var result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
 
-    if (this.sign() === -1 && Math.abs(numberValue % 2) === 1) {
-      return result.neg();
+    if (this.sign() === -1) {
+      if (Math.abs(numberValue % 2) === 1) {
+        return result.neg();
+      } else if (Math.abs(numberValue % 2) === 0) {
+        return result;
+      }
+
+      return new Decimal(Number.NaN);
     }
 
     return result;
@@ -1465,28 +1473,28 @@ function () {
     get: function get() {
       return MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "MIN_VALUE", {
     get: function get() {
       return MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
     get: function get() {
       return NUMBER_MAX_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   Object.defineProperty(Decimal, "NUMBER_MIN_VALUE", {
     get: function get() {
       return NUMBER_MIN_VALUE;
     },
-    enumerable: true,
+    enumerable: false,
     configurable: true
   });
   return Decimal;
