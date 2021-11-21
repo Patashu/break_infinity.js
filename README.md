@@ -20,7 +20,11 @@ which can be found on https://github.com/Patashu/break_infinity.js/releases page
 It can be loaded using a script tag in an HTML document for the browser
 
 ```html
+    <!-- You can load it as a local file... -->
     <script src="path/to/break_infinity.js"></script>
+
+    <!-- ...or from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js"></script>
 ```
 
 or as a JS module using import
