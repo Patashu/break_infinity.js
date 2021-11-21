@@ -1,6 +1,6 @@
 {
   "name": "break_infinity.js",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "Performance-oriented decimal.js replacement for incremental games.",
   "main": "dist/break_infinity.common.js",
   "module": "dist/break_infinity.esm.js",
