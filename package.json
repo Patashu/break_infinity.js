@@ -5,11 +5,17 @@
   "main": "dist/break_infinity.js",
   "module": "dist/break_infinity.esm.js",
   "unpkg": "dist/break_infinity.min.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npm run dist && npm run docs",
-    "dist": "bili",
-    "docs": "typedoc --options typedoc.ts"
+    "build": "npm run build:prepare && npm run build:dist && npm run build:docs",
+    "docs": "npm run build:prepare && npm run build:docs",
+    "build:prepare": "husky install",
+    "build:dist": "bili",
+    "build:docs": "typedoc --options typedoc.ts"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix"
+    ]
   },
   "repository": {
     "type": "git",
@@ -36,6 +42,8 @@
     "@typescript-eslint/parser": "^5.4.0",
     "bili": "^5.0.5",
     "eslint": "^8.3.0",
+    "husky": "^7.0.0",
+    "lint-staged": "^12.0.3",
     "rollup-plugin-typescript2": "^0.31.0",
     "typedoc": "^0.22.9",
     "typedoc-plugin-rename-defaults": "^0.4.0",
