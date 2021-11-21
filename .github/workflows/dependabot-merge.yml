@@ -6,12 +6,11 @@ on:
       - master
 
 jobs:
-  merge-me:
-    name: Merge Dependabot PR
+  auto-merge:
     runs-on: ubuntu-latest
     steps:
-      - name: Merge Dependabot PR
-        uses: ridedott/merge-me-action@master
+      - uses: actions/checkout@v2
+      - uses: ahmadnassri/action-dependabot-auto-merge@v2
         with:
-          GITHUB_LOGIN: dependabot[bot]
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          target: minor
+          github-token: ${{ secrets.GITHUB_TOKEN }}
