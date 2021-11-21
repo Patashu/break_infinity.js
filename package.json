@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm run dist && npm run docs",
     "dist": "bili",
-    "docs": "typedoc --options typedoc.ts src"
+    "docs": "typedoc --options typedoc.ts"
   },
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "rollup-plugin-typescript2": "^0.31.0",
     "tslint": "^6.1.2",
     "typedoc": "^0.22.9",
+    "typedoc-plugin-rename-defaults": "^0.4.0",
     "typescript": "^4.0.2"
   }
 }

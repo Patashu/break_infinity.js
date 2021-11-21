@@ -1,8 +1,6 @@
 module.exports = {
-  excludeNotExported: true,
-  excludePrivate: true,
-  mode: "file",
-  module: "commonjs",
+  entryPoints: ["./src/index.ts"],
+  entryPointStrategy: "expand",
   out: "docs",
-  theme: "minimal",
+  theme: "default",
 };
