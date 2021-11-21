@@ -14,4 +14,4 @@ node_modules/
 *.tgz
 
 # Generated output
-dist
+docs
