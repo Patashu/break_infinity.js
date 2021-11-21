@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: '14'
       - run: npm ci
-      - run: npm run build
+      - run: npm run docs
       - uses: JamesIves/github-pages-deploy-action@4.1.3
         with:
           branch: gh-pages
