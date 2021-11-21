@@ -581,8 +581,8 @@ export default class Decimal {
 
     const tempExponent = Math.floor(Math.log10(Math.abs(this.m)));
     this.m = tempExponent === NUMBER_EXP_MIN ?
-        this.m * 10 / 1e-323 :
-        this.m / powerOf10(tempExponent);
+      this.m * 10 / 1e-323 :
+      this.m / powerOf10(tempExponent);
     this.e += tempExponent;
     return this;
   }
@@ -683,8 +683,15 @@ export default class Decimal {
     //  But it's not clear how to specifically write that.
     //  So I'll just settle with 'exponent >= 0 and difference between rounded
     //  and not rounded < 1e-9' as a quick fix.
-	
-	// UN-SAFETY: It still eventually fails. Since there's no way to know for sure we started with an integer, all we can do is decide what tradeoff we want between 'yeah I think this used to be an integer' and 'pfft, who needs THAT many decimal places tracked' by changing ROUND_TOLERANCE. https://github.com/Patashu/break_infinity.js/issues/52 Currently starts failing at 800002. Workaround is to do .Round() AFTER toNumber() if you are confident you started with an integer.
+
+    // UN-SAFETY: It still eventually fails.
+    // Since there's no way to know for sure we started with an integer,
+    // all we can do is decide what tradeoff we want between 'yeah I think
+    // this used to be an integer' and 'pfft, who needs THAT many decimal
+    // places tracked' by changing ROUND_TOLERANCE.
+    // https://github.com/Patashu/break_infinity.js/issues/52
+    // Currently starts failing at 800002. Workaround is to do .Round()
+    // AFTER toNumber() if you are confident you started with an integer.
 
     // var result = this.m*Math.pow(10, this.e);
 
@@ -927,10 +934,9 @@ export default class Decimal {
 
     // Have to do this because adding numbers that were once integers but scaled down is imprecise.
     // Example: 299 + 18
-    return ME(Math.round(
-      1e14 * biggerDecimal.m +
-      1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e)),
-      biggerDecimal.e - 14);
+    const mantissa = Math.round(1e14 * biggerDecimal.m +
+      1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e));
+    return ME(mantissa, biggerDecimal.e - 14);
   }
 
   public plus(value: DecimalSource) {
@@ -1259,11 +1265,11 @@ export default class Decimal {
   }
 
   public log2() {
-    return 3.32192809488736234787 * this.log10();
+    return 3.321928094887362 * this.log10();
   }
 
   public ln() {
-    return 2.30258509299404568402 * this.log10();
+    return 2.302585092994045 * this.log10();
   }
 
   public logarithm(base: number) {
@@ -1303,17 +1309,13 @@ export default class Decimal {
 
     // return Decimal.exp(value*this.ln());
     const result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
-    if (this.sign() === -1)
-	{
-		if (Math.abs(numberValue % 2) === 1)
-		{
-			return result.neg();
-		}
-		else if (Math.abs(numberValue % 2) === 0)
-		{
-			return result;
-		}
-		return new Decimal(Number.NaN);
+    if (this.sign() === -1) {
+      if (Math.abs(numberValue % 2) === 1) {
+        return result.neg();
+      } else if (Math.abs(numberValue % 2) === 0) {
+        return result;
+      }
+      return new Decimal(Number.NaN);
     }
     return result;
   }
@@ -1372,10 +1374,10 @@ export default class Decimal {
 
     const mod = this.e % 3;
     if (mod === 1 || mod === -1) {
-      return ME(newMantissa * 2.1544346900318837, Math.floor(this.e / 3));
+      return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
     }
     if (mod !== 0) {
-      return ME(newMantissa * 4.6415888336127789, Math.floor(this.e / 3));
+      return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
     }
     // mod != 0 at this point means 'mod == 2 || mod == -2'
     return ME(newMantissa, Math.floor(this.e / 3));
