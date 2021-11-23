@@ -15,7 +15,8 @@
     "docs": "npm run build:prepare && npm run build:docs",
     "build:prepare": "husky install",
     "build:dist": "bili",
-    "build:docs": "typedoc --options typedoc.ts"
+    "build:docs": "typedoc --options typedoc.ts",
+    "test": "jest"
   },
   "lint-staged": {
     "*.ts": [
