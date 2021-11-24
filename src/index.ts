@@ -89,18 +89,6 @@ function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Deci
 }
 
 function cmp(left: Decimal, right: Decimal) {
-  if (left.isNaN()) {
-    if (right.isNaN()) {
-      return 0;
-    }
-
-    return -1;
-  }
-
-  if (right.isNaN()) {
-    return 1;
-  }
-
   // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
   if (left.m === 0) {
     if (right.m === 0) {
@@ -1086,7 +1074,20 @@ export default class Decimal {
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
   public cmp(value: DecimalSource) {
-    return cmp(this, D(value));
+    const decimal = D(value);
+    if (this.isNaN()) {
+      if (decimal.isNaN()) {
+        return 0;
+      }
+
+      return -1;
+    }
+
+    if (decimal.isNaN()) {
+      return 1;
+    }
+
+    return cmp(this, decimal);
   }
 
   public compare(value: DecimalSource) {
