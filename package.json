@@ -16,7 +16,8 @@
     "build:prepare": "husky install",
     "build:dist": "bili",
     "build:docs": "typedoc --options typedoc.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --collectCoverage"
   },
   "lint-staged": {
     "*.ts": [

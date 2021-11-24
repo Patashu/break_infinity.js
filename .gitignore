@@ -15,5 +15,6 @@ node_modules/
 
 # Generated output
 docs
+coverage
 
 test-report.html
