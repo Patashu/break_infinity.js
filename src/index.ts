@@ -590,9 +590,7 @@ export default class Decimal {
   public fromMantissaExponent(mantissa: number, exponent: number) {
     // SAFETY: don't let in non-numbers
     if (!isFinite(mantissa) || !isFinite(exponent)) {
-      mantissa = Number.NaN;
-      exponent = Number.NaN;
-      return this;
+      return this.fromDecimal(DECIMAL_NaN);
     }
     this.m = mantissa;
     this.e = exponent;
@@ -617,28 +615,23 @@ export default class Decimal {
   }
 
   public fromNumber(value: number) {
-    // SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
-    if (isNaN(value)) {
-      this.m = Number.NaN;
-      this.e = Number.NaN;
-    } else if (value === Number.POSITIVE_INFINITY) {
-      this.m = 1;
-      this.e = EXP_LIMIT;
-    } else if (value === Number.NEGATIVE_INFINITY) {
-      this.m = -1;
-      this.e = EXP_LIMIT;
-    } else if (value === 0) {
+    if (!isFinite(value)) {
+      return this.fromMantissaExponent_noNormalize(value, value);
+    }
+
+    if (value === 0) {
       this.m = 0;
       this.e = 0;
-    } else {
-      this.e = Math.floor(Math.log10(Math.abs(value)));
-      // SAFETY: handle 5e-324, -5e-324 separately
-      this.m = this.e === NUMBER_EXP_MIN ?
-        value * 10 / 1e-323 :
-        value / powerOf10(this.e);
-      // SAFETY: Prevent weirdness.
-      this.normalize();
+      return this;
     }
+
+    this.e = Math.floor(Math.log10(Math.abs(value)));
+    // SAFETY: handle 5e-324, -5e-324 separately
+    this.m = this.e === NUMBER_EXP_MIN ?
+      value * 10 / 1e-323 :
+      value / powerOf10(this.e);
+    // SAFETY: Prevent weirdness.
+    this.normalize();
     return this;
   }
 
@@ -647,16 +640,16 @@ export default class Decimal {
       const parts = value.split("e");
       this.m = parseFloat(parts[0]);
       this.e = parseFloat(parts[1]);
-      // Non-normalized mantissas can easily get here, so this is mandatory.
-      this.normalize();
-    } else if (value === "NaN") {
-      this.m = Number.NaN;
-      this.e = Number.NaN;
-    } else {
-      this.fromNumber(parseFloat(value));
-      if (isNaN(this.m)) {
-        throw Error("[DecimalError] Invalid argument: " + value);
-      }
+      return this.normalize();
+    }
+
+    if (value === "NaN") {
+      return this.fromDecimal(DECIMAL_NaN);
+    }
+
+    this.fromNumber(parseFloat(value));
+    if (this.isNaN()) {
+      throw Error("[DecimalError] Invalid argument: " + value);
     }
     return this;
   }
@@ -695,9 +688,10 @@ export default class Decimal {
 
     // var result = this.m*Math.pow(10, this.e);
 
-    if (!isFinite(this.e)) {
-      return Number.NaN;
+    if (!this.isFinite()) {
+      return this.mantissa;
     }
+
     if (this.e > NUMBER_EXP_MAX) {
       return this.m > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
     }
@@ -721,15 +715,15 @@ export default class Decimal {
   }
 
   public mantissaWithDecimalPlaces(places: number) {
-    // https://stackoverflow.com/a/37425022
-
-    if (isNaN(this.m) || isNaN(this.e)) {
-      return Number.NaN;
+    if (!this.isFinite()) {
+      return this.mantissa;
     }
+
     if (this.m === 0) {
       return 0;
     }
 
+    // https://stackoverflow.com/a/37425022
     const len = places + 1;
     const numDigits = Math.ceil(Math.log10(Math.abs(this.m)));
     const rounded = Math.round(this.m * Math.pow(10, len - numDigits)) * Math.pow(10, numDigits - len);
@@ -737,11 +731,8 @@ export default class Decimal {
   }
 
   public toString() {
-    if (isNaN(this.m) || isNaN(this.e)) {
-      return "NaN";
-    }
-    if (this.e >= EXP_LIMIT) {
-      return this.m > 0 ? "Infinity" : "-Infinity";
+    if (!this.isFinite()) {
+      return this.mantissa.toString();
     }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0";
@@ -765,11 +756,8 @@ export default class Decimal {
     // TBH I'm tempted to just say it's a feature.
     // If you're doing pretty formatting then why don't you know how many decimal places you want...?
 
-    if (isNaN(this.m) || isNaN(this.e)) {
-      return "NaN";
-    }
-    if (this.e >= EXP_LIMIT) {
-      return this.m > 0 ? "Infinity" : "-Infinity";
+    if (!this.isFinite()) {
+      return this.mantissa.toString();
     }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "") + "e+0";
@@ -795,11 +783,8 @@ export default class Decimal {
   }
 
   public toFixed(places: number) {
-    if (isNaN(this.m) || isNaN(this.e)) {
-      return "NaN";
-    }
-    if (this.e >= EXP_LIMIT) {
-      return this.m > 0 ? "Infinity" : "-Infinity";
+    if (!this.isFinite()) {
+      return this.mantissa.toString();
     }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "");
@@ -1315,7 +1300,7 @@ export default class Decimal {
       } else if (Math.abs(numberValue % 2) === 0) {
         return result;
       }
-      return new Decimal(Number.NaN);
+      return DECIMAL_NaN;
     }
     return result;
   }
@@ -1350,7 +1335,7 @@ export default class Decimal {
 
   public sqrt() {
     if (this.m < 0) {
-      return new Decimal(Number.NaN);
+      return DECIMAL_NaN;
     }
     if (this.e % 2 !== 0) {
       return ME(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
@@ -1449,7 +1434,7 @@ export default class Decimal {
   }
 
   public dp() {
-    if (!isFinite(this.mantissa)) {
+    if (!this.isFinite()) {
       return NaN;
     }
     if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
@@ -1464,6 +1449,22 @@ export default class Decimal {
       places++;
     }
     return places > 0 ? places : 0;
+  }
+
+  public isFinite() {
+    return isFinite(this.mantissa);
+  }
+
+  public isNaN() {
+    return this.mantissa === DECIMAL_NaN.mantissa;
+  }
+
+  public isPositiveInfinity() {
+    return this.mantissa === POSITIVE_INFINITY.mantissa;
+  }
+
+  public isNegativeInfinity() {
+    return this.mantissa === NEGATIVE_INFINITY.mantissa;
   }
 
   public static get MAX_VALUE() {
@@ -1481,9 +1482,24 @@ export default class Decimal {
   public static get NUMBER_MIN_VALUE() {
     return NUMBER_MIN_VALUE;
   }
+
+  public static get NaN() {
+    return DECIMAL_NaN;
+  }
+
+  public static get POSITIVE_INFINITY() {
+    return POSITIVE_INFINITY;
+  }
+
+  public static get NEGATIVE_INFINITY() {
+    return NEGATIVE_INFINITY;
+  }
 }
 
 const MAX_VALUE = ME_NN(1, EXP_LIMIT);
 const MIN_VALUE = ME_NN(1, -EXP_LIMIT);
 const NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
 const NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
+const DECIMAL_NaN = ME_NN(Number.NaN, Number.NaN);
+const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
+const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
