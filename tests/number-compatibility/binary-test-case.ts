@@ -26,7 +26,7 @@ export class BinaryTestCase {
   ) {
     const numberResult = numberOperation(this.left.number, this.right.number);
     const decimalResult = decimalOperation(this.left.decimal, this.right.decimal);
-    expect(numberResult).toEqual(decimalResult);
+    expect(decimalResult).toEqual(numberResult);
   }
 
   toString() {

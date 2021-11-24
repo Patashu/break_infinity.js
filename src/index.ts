@@ -88,6 +88,82 @@ function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Deci
   return cost.div(currentRpS).add(cost.div(deltaRpS));
 }
 
+function cmp(left: Decimal, right: Decimal) {
+  if (left.isNaN()) {
+    if (right.isNaN()) {
+      return 0;
+    }
+
+    return -1;
+  }
+
+  if (right.isNaN()) {
+    return 1;
+  }
+
+  // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
+  if (left.m === 0) {
+    if (right.m === 0) {
+      return 0;
+    }
+    if (right.m < 0) {
+      return 1;
+    }
+    if (right.m > 0) {
+      return -1;
+    }
+  }
+
+  if (right.m === 0) {
+    if (left.m < 0) {
+      return -1;
+    }
+    if (left.m > 0) {
+      return 1;
+    }
+  }
+
+  if (left.m > 0) {
+    if (right.m < 0) {
+      return 1;
+    }
+    if (left.e > right.e) {
+      return 1;
+    }
+    if (left.e < right.e) {
+      return -1;
+    }
+    if (left.m > right.m) {
+      return 1;
+    }
+    if (left.m < right.m) {
+      return -1;
+    }
+    return 0;
+  }
+
+  if (left.m < 0) {
+    if (right.m > 0) {
+      return -1;
+    }
+    if (left.e > right.e) {
+      return -1;
+    }
+    if (left.e < right.e) {
+      return 1;
+    }
+    if (left.m > right.m) {
+      return 1;
+    }
+    if (left.m < right.m) {
+      return -1;
+    }
+    return 0;
+  }
+
+  throw Error("Unreachable code");
+}
+
 export type DecimalSource = Decimal | number | string;
 
 /**
@@ -616,7 +692,7 @@ export default class Decimal {
 
   public fromNumber(value: number) {
     if (!isFinite(value)) {
-      return this.fromMantissaExponent_noNormalize(value, value);
+      return this.fromMantissaExponent_noNormalize(value, 0);
     }
 
     if (value === 0) {
@@ -859,12 +935,18 @@ export default class Decimal {
   }
 
   public floor() {
+    if (!this.isFinite()) {
+      return this;
+    }
+
     if (this.e < -1) {
       return Math.sign(this.m) >= 0 ? new Decimal(0) : new Decimal(-1);
     }
+
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
       return new Decimal(Math.floor(this.toNumber()));
     }
+
     return this;
   }
 
@@ -894,11 +976,20 @@ export default class Decimal {
 
     // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
 
+    if (!this.isFinite()) {
+      return this;
+    }
+
     const decimal = D(value);
+
+    if (!decimal.isFinite()) {
+      return decimal;
+    }
 
     if (this.m === 0) {
       return decimal;
     }
+
     if (decimal.m === 0) {
       return this;
     }
@@ -995,97 +1086,7 @@ export default class Decimal {
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
   public cmp(value: DecimalSource) {
-    const decimal = D(value);
-
-    // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
-
-    /*
-    from smallest to largest:
-
-    -3e100
-    -1e100
-    -3e99
-    -1e99
-    -3e0
-    -1e0
-    -3e-99
-    -1e-99
-    -3e-100
-    -1e-100
-    0
-    1e-100
-    3e-100
-    1e-99
-    3e-99
-    1e0
-    3e0
-    1e99
-    3e99
-    1e100
-    3e100
-
-    */
-
-    if (this.m === 0) {
-      if (decimal.m === 0) {
-        return 0;
-      }
-      if (decimal.m < 0) {
-        return 1;
-      }
-      if (decimal.m > 0) {
-        return -1;
-      }
-    }
-
-    if (decimal.m === 0) {
-      if (this.m < 0) {
-        return -1;
-      }
-      if (this.m > 0) {
-        return 1;
-      }
-    }
-
-    if (this.m > 0) {
-      if (decimal.m < 0) {
-        return 1;
-      }
-      if (this.e > decimal.e) {
-        return 1;
-      }
-      if (this.e < decimal.e) {
-        return -1;
-      }
-      if (this.m > decimal.m) {
-        return 1;
-      }
-      if (this.m < decimal.m) {
-        return -1;
-      }
-      return 0;
-    }
-
-    if (this.m < 0) {
-      if (decimal.m > 0) {
-        return -1;
-      }
-      if (this.e > decimal.e) {
-        return -1;
-      }
-      if (this.e < decimal.e) {
-        return 1;
-      }
-      if (this.m > decimal.m) {
-        return 1;
-      }
-      if (this.m < decimal.m) {
-        return -1;
-      }
-      return 0;
-    }
-
-    throw Error("Unreachable code");
+    return cmp(this, D(value));
   }
 
   public compare(value: DecimalSource) {
@@ -1414,19 +1415,55 @@ export default class Decimal {
   }
 
   public lessThanOrEqualTo(other: DecimalSource) {
-    return this.cmp(other) < 1;
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) < 1;
   }
 
   public lessThan(other: DecimalSource) {
-    return this.cmp(other) < 0;
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) < 0;
   }
 
   public greaterThanOrEqualTo(other: DecimalSource) {
-    return this.cmp(other) > -1;
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) > -1;
   }
 
   public greaterThan(other: DecimalSource) {
-    return this.cmp(other) > 0;
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) > 0;
   }
 
   public decimalPlaces() {
@@ -1456,7 +1493,8 @@ export default class Decimal {
   }
 
   public isNaN() {
-    return this.mantissa === DECIMAL_NaN.mantissa;
+    // NaN is the only value to be not equal to self.
+    return this.mantissa !== this.mantissa;
   }
 
   public isPositiveInfinity() {
@@ -1500,6 +1538,6 @@ const MAX_VALUE = ME_NN(1, EXP_LIMIT);
 const MIN_VALUE = ME_NN(1, -EXP_LIMIT);
 const NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
 const NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
-const DECIMAL_NaN = ME_NN(Number.NaN, Number.NaN);
-const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
-const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
+const DECIMAL_NaN = ME_NN(Number.NaN, 0);
+const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, 0);
+const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, 0);
