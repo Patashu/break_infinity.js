@@ -39,7 +39,11 @@ export function assertEqual(decimalResult: Decimal | number, numberResult : numb
   let number = 1;
   if (typeof decimalResult === "number") {
     if (typeof numberResult === "number") {
-      expect(decimalResult).toEqual(numberResult);
+      if (isFinite(decimalResult) && isFinite(number)) {
+        expect(decimalResult).toBeCloseTo(numberResult, 10);
+      } else {
+        expect(decimalResult).toEqual(numberResult);
+      }
       return;
     }
     decimal = numberResult;
