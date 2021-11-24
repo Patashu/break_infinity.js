@@ -15,3 +15,5 @@ node_modules/
 
 # Generated output
 docs
+
+test-report.html
