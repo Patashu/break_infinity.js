@@ -1,6 +1,27 @@
-import Decimal from "../../src";
+import Decimal, { DecimalSource } from "../../src";
+import "./expect-to-equal-decimal";
 
 const ROUND_TOLERANCE = 1e-10;
+
+expect.extend({
+  toBeEqualDecimal(received: Decimal, expected: DecimalSource) {
+    const pass = received.equals_tolerance(expected, ROUND_TOLERANCE);
+    let message = "expect(received).toBeEqualDecimal(expected)\n\n";
+    message += `Expected: ${expected.toString()}\n`;
+    message += `Received: ${received.toString()}`;
+    if (pass) {
+      return {
+        message: () => message,
+        pass: true,
+      };
+    } else {
+      return {
+        message: () => message,
+        pass: false,
+      };
+    }
+  },
+});
 
 export function isOutsideNumberRange(decimal: Decimal) {
   if (isNaN(decimal.mantissa) || !isFinite(decimal.mantissa)) {
@@ -26,7 +47,7 @@ export function assertEqual(decimalResult: Decimal | number, numberResult : Deci
   }
   if (decimalResult instanceof Decimal) {
     if (numberResult instanceof Decimal) {
-      expect(decimalResult.equals_tolerance(numberResult, ROUND_TOLERANCE)).toBe(true);
+      expect(decimalResult).toBeEqualDecimal(numberResult);
       return;
     }
     decimal = decimalResult;
@@ -40,5 +61,5 @@ export function assertEqual(decimalResult: Decimal | number, numberResult : Deci
     return;
   }
 
-  expect(decimal.equals_tolerance(number, ROUND_TOLERANCE)).toBe(true);
+  expect(decimalResult).toBeEqualDecimal(numberResult);
 }
