@@ -34,7 +34,7 @@ export function isOutsideNumberRange(decimal: Decimal) {
   );
 }
 
-export function assertEqual(decimalResult: Decimal | number, numberResult : Decimal | number) {
+export function assertEqual(decimalResult: Decimal | number, numberResult : number) {
   let decimal = new Decimal(-1);
   let number = 1;
   if (typeof decimalResult === "number") {
@@ -46,10 +46,6 @@ export function assertEqual(decimalResult: Decimal | number, numberResult : Deci
     number = decimalResult;
   }
   if (decimalResult instanceof Decimal) {
-    if (numberResult instanceof Decimal) {
-      expect(decimalResult).toBeEqualDecimal(numberResult);
-      return;
-    }
     decimal = decimalResult;
     number = numberResult;
   }

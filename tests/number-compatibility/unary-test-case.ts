@@ -10,7 +10,7 @@ export class UnaryTestCase {
   }
 
   assertEqual(
-    numberOperation: (value: number) => Decimal | number,
+    numberOperation: (value: number) => number,
     decimalOperation: (value: Decimal) => Decimal | number
   ) {
     const numberResult = numberOperation(this.value.number);

@@ -3,7 +3,7 @@ import { binaryTestCases, unaryTestCases } from "./test-cases";
 
 type UnaryOperationTestSuite = [
   string,
-  (value: number) => Decimal | number,
+  (value: number) => number,
   (value: Decimal) => Decimal | number
 ]
 
