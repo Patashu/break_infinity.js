@@ -1,4 +1,4 @@
-import Decimal from "../../src";
+import Decimal from "../../../src";
 
 export class TestValue {
   name: string;
