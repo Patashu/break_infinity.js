@@ -14,7 +14,7 @@
     "build": "npm run build:prepare && npm run build:dist && npm run build:docs",
     "docs": "npm run build:prepare && npm run build:docs",
     "build:prepare": "husky install",
-    "build:dist": "bili",
+    "build:dist": "bili && node build/post-build.js",
     "build:docs": "typedoc --options typedoc.ts",
     "test": "jest",
     "test:coverage": "jest --collectCoverage"
@@ -41,9 +41,6 @@
     "url": "https://github.com/Patashu/break_infinity.js/issues"
   },
   "homepage": "https://github.com/Patashu/break_infinity.js#readme",
-  "dependencies": {
-    "pad-end": "^1.0.2"
-  },
   "devDependencies": {
     "@types/jest": "^27.0.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",

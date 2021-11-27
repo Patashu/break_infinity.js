@@ -1,4 +1,4 @@
-import padEnd from "pad-end";
+import { repeatZeroes, trailZeroes } from "./repeat-zeroes";
 
 // For example: if two exponents are more than 17 apart,
 // consider adding them together pointless, just return the larger one
@@ -824,7 +824,7 @@ export default class Decimal {
       return this.mantissa.toString();
     }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
-      return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "") + "e+0";
+      return "0" + trailZeroes(places) + "e+0";
     }
 
     // two cases:
@@ -851,7 +851,7 @@ export default class Decimal {
       return this.mantissa.toString();
     }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
-      return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "");
+      return "0" + trailZeroes(places);
     }
 
     // two cases:
@@ -859,9 +859,9 @@ export default class Decimal {
     // 2) exponent is 16 or less: use basic toFixed
 
     if (this.e >= MAX_SIGNIFICANT_DIGITS) {
-      return this.m.toString()
-        .replace(".", "")
-        .padEnd(this.e + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
+      const mantissa = this.m.toString().replace(".", "");//, this.e + 1, "0");
+      const mantissaZeroes = repeatZeroes(this.e - mantissa.length + 1);
+      return mantissa + mantissaZeroes + trailZeroes(places);
     }
     return this.toNumber().toFixed(places);
   }
