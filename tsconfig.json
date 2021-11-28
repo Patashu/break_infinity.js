@@ -3,7 +3,8 @@
     "target": "es5",
     "declaration": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "stripInternal": true
   },
   "include": [
     "src"

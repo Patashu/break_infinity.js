@@ -1,4 +1,4 @@
-import Decimal, { DecimalSource } from "../../src";
+import { Decimal, DecimalSource } from "../../src/internal";
 import "./expect-to-equal-decimal";
 
 const ROUND_TOLERANCE = 1e-10;

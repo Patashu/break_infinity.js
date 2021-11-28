@@ -1,8 +1,8 @@
-export declare type DecimalSource = Decimal | number | string;
 /**
  * The Decimal's value is simply mantissa * 10^exponent.
+ * @public
  */
-export default class Decimal {
+declare class Decimal {
     get m(): number;
     set m(value: number);
     get e(): number;
@@ -10,6 +10,9 @@ export default class Decimal {
     get s(): number;
     set s(value: number);
     static fromMantissaExponent(mantissa: number, exponent: number): Decimal;
+    /**
+     * Well, you know what you're doing!
+     */
     static fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal;
     static fromDecimal(value: Decimal): Decimal;
     static fromNumber(value: number): Decimal;
@@ -130,15 +133,6 @@ export default class Decimal {
      * When mantissa is very denormalized, use this to normalize much faster.
      */
     normalize(): this;
-    fromMantissaExponent(mantissa: number, exponent: number): this;
-    /**
-     * Well, you know what you're doing!
-     */
-    fromMantissaExponent_noNormalize(mantissa: number, exponent: number): this;
-    fromDecimal(value: Decimal): this;
-    fromNumber(value: number): this;
-    fromString(value: string): this;
-    fromValue(value?: DecimalSource): this;
     toNumber(): number;
     mantissaWithDecimalPlaces(places: number): number;
     toString(): string;
@@ -241,8 +235,27 @@ export default class Decimal {
     greaterThan(other: DecimalSource): boolean;
     decimalPlaces(): number;
     dp(): number;
-    static get MAX_VALUE(): Decimal;
-    static get MIN_VALUE(): Decimal;
+    isZero(): boolean;
+    isFinite(): boolean;
+    isNaN(): boolean;
+    isPositiveInfinity(): boolean;
+    isNegativeInfinity(): boolean;
     static get NUMBER_MAX_VALUE(): Decimal;
     static get NUMBER_MIN_VALUE(): Decimal;
+    static get NaN(): Decimal;
+    static get POSITIVE_INFINITY(): Decimal;
+    static get NEGATIVE_INFINITY(): Decimal;
+    static get MAX_VALUE(): Decimal;
+    static get MIN_VALUE(): Decimal;
+    static get ZERO(): Decimal;
+    static get ONE(): Decimal;
+    static get MINUS_ONE(): Decimal;
 }
+export default Decimal;
+
+/**
+ * @public
+ */
+export declare type DecimalSource = Decimal | number | string;
+
+export { }

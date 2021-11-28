@@ -1,4 +1,4 @@
-import Decimal from "../../src";
+import { Decimal } from "../../src/internal";
 import { assertEqual } from "./assert";
 import { TestValue } from "./test-value";
 

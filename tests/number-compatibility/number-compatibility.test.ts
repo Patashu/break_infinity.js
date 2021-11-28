@@ -1,4 +1,4 @@
-import Decimal from "../../src";
+import { Decimal } from "../../src/internal";
 import { binaryTestCases, unaryTestCases } from "./test-cases";
 
 type UnaryOperationTestSuite = [

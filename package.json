@@ -6,7 +6,7 @@
   "module": "dist/break_infinity.esm.js",
   "unpkg": "dist/break_infinity.min.js",
   "jsdelivr": "dist/break_infinity.min.js",
-  "typings": "dist/index.d.ts",
+  "typings": "dist/break_infinity.js.d.ts",
   "files": [
     "dist"
   ],
@@ -14,7 +14,7 @@
     "build": "npm run build:prepare && npm run build:dist && npm run build:docs",
     "docs": "npm run build:prepare && npm run build:docs",
     "build:prepare": "husky install",
-    "build:dist": "bili && node build/post-build.js",
+    "build:dist": "bili && api-extractor run --local --verbose && node build/post-build.js",
     "build:docs": "typedoc --options typedoc.ts",
     "test": "jest",
     "test:coverage": "jest --collectCoverage"
@@ -42,6 +42,7 @@
   },
   "homepage": "https://github.com/Patashu/break_infinity.js#readme",
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.18.19",
     "@types/jest": "^27.0.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",

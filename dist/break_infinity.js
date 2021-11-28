@@ -4,47 +4,8 @@
   (global = global || self, global.Decimal = factory());
 }(this, (function () { 'use strict';
 
-  var padEnd = function (string, maxLength, fillString) {
-
-    if (string == null || maxLength == null) {
-      return string;
-    }
-
-    var result    = String(string);
-    var targetLen = typeof maxLength === 'number'
-      ? maxLength
-      : parseInt(maxLength, 10);
-
-    if (isNaN(targetLen) || !isFinite(targetLen)) {
-      return result;
-    }
-
-
-    var length = result.length;
-    if (length >= targetLen) {
-      return result;
-    }
-
-
-    var filled = fillString == null ? '' : String(fillString);
-    if (filled === '') {
-      filled = ' ';
-    }
-
-
-    var fillLen = targetLen - length;
-
-    while (filled.length < fillLen) {
-      filled += filled;
-    }
-
-    var truncated = filled.length > fillLen ? filled.substr(0, fillLen) : filled;
-
-    return result + truncated;
-  };
-
+  // For example: if two exponents are more than 17 apart,
   // consider adding them together pointless, just return the larger one
-
   var MAX_SIGNIFICANT_DIGITS = 17; // Highest value you can safely put here is Number.MAX_SAFE_INTEGER-MAX_SIGNIFICANT_DIGITS
 
   var EXP_LIMIT = 9e15; // The largest exponent that can appear in a Number, though not all mantissas are valid here.
@@ -55,34 +16,677 @@
 
   var ROUND_TOLERANCE = 1e-10;
 
-  var powerOf10 = function () {
-    // We need this lookup table because Math.pow(10, exponent)
-    // when exponent's absolute value is large is slightly inaccurate.
-    // You can fix it with the power of math... or just make a lookup table.
-    // Faster AND simpler
-    var powersOf10 = [];
+  // when exponent's absolute value is large is slightly inaccurate.
+  // You can fix it with the power of math... or just make a lookup table.
+  // Faster AND simpler
 
-    for (var i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
-      powersOf10.push(Number("1e" + i));
+  var powersOf10 = [];
+
+  for (var i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
+    powersOf10.push(Number("1e" + i));
+  }
+
+  var indexOf0InPowersOf10 = 323;
+  function powerOf10(power) {
+    return powersOf10[power + indexOf0InPowersOf10];
+  }
+
+  function assignFromMantissaExponent(target, mantissa, exponent) {
+    // SAFETY: don't let in non-numbers
+    if (!isFinite(mantissa) || !isFinite(exponent)) {
+      assignFromDecimal(target, Decimal.NaN);
+      return;
     }
 
-    var indexOf0InPowersOf10 = 323;
-    return function (power) {
-      return powersOf10[power + indexOf0InPowersOf10];
-    };
-  }();
+    target.__set__(mantissa, exponent);
 
-  var D = function D(value) {
+    target.normalize();
+  }
+  function assignFromDecimal(target, source) {
+    target.__set__(source.m, source.e);
+  }
+  function assignFromNumber(target, source) {
+    if (!isFinite(source)) {
+      target.__set__(source, 0);
+
+      return;
+    }
+
+    if (source === 0) {
+      target.__set__(0, 0);
+
+      return;
+    }
+
+    var e = Math.floor(Math.log10(Math.abs(source))); // SAFETY: handle 5e-324, -5e-324 separately
+
+    var m = e === NUMBER_EXP_MIN ? source * 10 / 1e-323 : source / powerOf10(e);
+    assignFromMantissaExponent(target, m, e);
+  }
+  function assignFromString(target, source) {
+    if (source.indexOf("e") !== -1) {
+      var parts = source.split("e");
+      var m = parseFloat(parts[0]);
+      var e = parseFloat(parts[1]);
+      assignFromMantissaExponent(target, m, e);
+      return;
+    }
+
+    if (source === "NaN") {
+      assignFromDecimal(target, Decimal.NaN);
+      return;
+    }
+
+    var number = parseFloat(source);
+
+    if (isNaN(number)) {
+      throw Error("[DecimalError] Invalid argument: " + source);
+    }
+
+    assignFromNumber(target, number);
+  }
+  function assignFromValue(target, value) {
+    if (value === undefined) {
+      target.__set__(0, 0);
+    } else if (value instanceof Decimal) {
+      assignFromDecimal(target, value);
+    } else if (typeof value === "number") {
+      assignFromNumber(target, value);
+    } else if (typeof value === "string") {
+      assignFromString(target, value);
+    }
+  }
+
+  function fromRawMantissaExponent(mantissa, exponent) {
+    var decimal = new Decimal();
+
+    decimal.__set__(mantissa, exponent);
+
+    return decimal;
+  }
+  function fromMantissaExponent(mantissa, exponent) {
+    var decimal = new Decimal();
+    assignFromMantissaExponent(decimal, mantissa, exponent);
+    return decimal;
+  }
+  function fromDecimal(value) {
+    var decimal = new Decimal();
+    assignFromDecimal(decimal, value);
+    return decimal;
+  }
+  function fromNumber(value) {
+    var decimal = new Decimal();
+    assignFromNumber(decimal, value);
+    return decimal;
+  }
+  function fromString(value) {
+    var decimal = new Decimal();
+    assignFromString(decimal, value);
+    return decimal;
+  }
+  function fromValue(value) {
+    var decimal = new Decimal();
+    assignFromValue(decimal, value);
+    return decimal;
+  }
+  function fromValueNoAlloc(value) {
     return value instanceof Decimal ? value : new Decimal(value);
-  };
+  }
 
-  var ME = function ME(mantissa, exponent) {
-    return new Decimal().fromMantissaExponent(mantissa, exponent);
-  };
+  function isZero(decimal) {
+    return decimal.m === 0;
+  }
+  function isFinite$1(decimal) {
+    return Number.isFinite(decimal.m);
+  }
+  function isNaN$1(decimal) {
+    return Number.isNaN(decimal.m);
+  }
 
-  var ME_NN = function ME_NN(mantissa, exponent) {
-    return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
-  };
+  function negate_S(value) {
+    var decimal = new Decimal(value);
+    decimal.m = -decimal.m;
+    return decimal;
+  }
+  function negate_D(value) {
+    return fromRawMantissaExponent(-value.m, value.e);
+  }
+
+  function reciprocate_S(value) {
+    var decimal = new Decimal(value);
+
+    decimal.__set__(1 / decimal.m, -decimal.e);
+
+    return decimal;
+  }
+  function reciprocate_D(value) {
+    return fromMantissaExponent(1 / value.m, -value.e);
+  }
+
+  function abs_S(value) {
+    var decimal = new Decimal(value);
+    decimal.m = Math.abs(decimal.m);
+    return decimal;
+  }
+  function abs_D(value) {
+    return fromRawMantissaExponent(Math.abs(value.m), value.e);
+  }
+
+  function sign_S(value) {
+    if (typeof value === "number") {
+      return Math.sign(value);
+    }
+
+    var decimal = fromValueNoAlloc(value);
+    return sign_D(decimal);
+  }
+  function sign_D(value) {
+    return Math.sign(value.m);
+  }
+
+  function round_S(value) {
+    if (typeof value === "number") {
+      return fromNumber(Math.round(value));
+    }
+
+    var decimal = fromValueNoAlloc(value);
+    return round_D(decimal);
+  }
+  function round_D(value) {
+    if (!isFinite$1(value)) {
+      return value;
+    }
+
+    if (value.e < -1) {
+      return Decimal.ZERO;
+    }
+
+    if (value.e < MAX_SIGNIFICANT_DIGITS) {
+      return fromNumber(Math.round(value.toNumber()));
+    }
+
+    return value;
+  }
+
+  function floor_S(value) {
+    if (typeof value === "number") {
+      return fromNumber(Math.floor(value));
+    }
+
+    var decimal = fromValueNoAlloc(value);
+    return floor_D(decimal);
+  }
+  function floor_D(value) {
+    if (!isFinite$1(value)) {
+      return value;
+    }
+
+    if (value.e < -1) {
+      return Math.sign(value.m) >= 0 ? Decimal.ZERO : Decimal.MINUS_ONE;
+    }
+
+    if (value.e < MAX_SIGNIFICANT_DIGITS) {
+      return fromNumber(Math.floor(value.toNumber()));
+    }
+
+    return value;
+  }
+
+  function ceil_S(value) {
+    if (typeof value === "number") {
+      return fromNumber(Math.ceil(value));
+    }
+
+    var decimal = fromValueNoAlloc(value);
+    return ceil_D(decimal);
+  }
+  function ceil_D(value) {
+    if (!isFinite$1(value)) {
+      return value;
+    }
+
+    if (value.e < -1) {
+      return Math.sign(value.m) > 0 ? Decimal.ONE : Decimal.ZERO;
+    }
+
+    if (value.e < MAX_SIGNIFICANT_DIGITS) {
+      return fromNumber(Math.ceil(value.toNumber()));
+    }
+
+    return value;
+  }
+
+  function trunc_S(value) {
+    if (typeof value === "number") {
+      return fromNumber(Math.trunc(value));
+    }
+
+    var decimal = fromValueNoAlloc(value);
+    return trunc_D(decimal);
+  }
+  function trunc_D(value) {
+    if (!isFinite$1(value)) {
+      return value;
+    }
+
+    if (value.e < 0) {
+      return Decimal.ZERO;
+    }
+
+    if (value.e < MAX_SIGNIFICANT_DIGITS) {
+      return fromNumber(Math.trunc(value.toNumber()));
+    }
+
+    return value;
+  }
+
+  function add_SS(left, right) {
+    return add_DS(fromValueNoAlloc(left), right);
+  }
+  function add_DS(left, right) {
+    if (!isFinite$1(left)) {
+      return left;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (!isFinite$1(decimal)) {
+      return decimal;
+    }
+
+    return add_DD(left, decimal);
+  }
+  function add_DD(left, right) {
+    // figure out which is bigger, shrink the mantissa of the smaller
+    // by the difference in exponents, add mantissas, normalize and return
+    // TODO: Optimizations and simplification may be possible
+    // see https://github.com/Patashu/break_infinity.js/issues/8
+    if (isZero(left)) {
+      return right;
+    }
+
+    if (isZero(right)) {
+      return left;
+    }
+
+    var bigger;
+    var smaller;
+
+    if (left.e >= right.e) {
+      bigger = left;
+      smaller = right;
+    } else {
+      bigger = right;
+      smaller = left;
+    }
+
+    if (bigger.e - smaller.e > MAX_SIGNIFICANT_DIGITS) {
+      return bigger;
+    } // Have to do this because adding numbers that were once integers but scaled down is imprecise.
+    // Example: 299 + 18
+
+
+    var mantissa = Math.round(1e14 * bigger.m + 1e14 * smaller.m * powerOf10(smaller.e - bigger.e));
+    return fromMantissaExponent(mantissa, bigger.e - 14);
+  }
+
+  function subtract_SS(left, right) {
+    return subtract_DS(fromValueNoAlloc(left), right);
+  }
+  function subtract_DS(left, right) {
+    if (!isFinite$1(left)) {
+      return left;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (!isFinite$1(decimal)) {
+      return decimal;
+    }
+
+    return subtract_DD(left, decimal);
+  }
+
+  function subtract_DD(left, right) {
+    return add_DD(left, negate_D(right));
+  }
+
+  function multiply_SS(left, right) {
+    return multiply_DS(fromValueNoAlloc(left), right);
+  }
+  function multiply_DS(left, right) {
+    if (!isFinite$1(left)) {
+      return left;
+    } // This version avoids an extra conversion to Decimal, if possible. Since the
+    // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
+
+
+    if (typeof right === "number") {
+      if (right < 1e307 && right > -1e307) {
+        return fromMantissaExponent(left.m * right, left.e);
+      } // If the value is larger than 1e307, we can divide that out of mantissa (since it's
+      // greater than 1, it won't underflow)
+
+
+      return fromMantissaExponent(left.m * 1e-307 * right, left.e + 307);
+    }
+
+    var decimal = typeof right === "string" ? fromString(right) : right;
+
+    if (!isFinite$1(decimal)) {
+      return decimal;
+    }
+
+    return multiply_DD(left, decimal);
+  }
+  function multiply_DD(left, right) {
+    return fromMantissaExponent(left.m * right.m, left.e + right.e);
+  }
+
+  function divide_SS(left, right) {
+    return divide_DS(fromValueNoAlloc(left), right);
+  }
+  function divide_DS(left, right) {
+    if (!isFinite$1(left)) {
+      return left;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (!isFinite$1(decimal)) {
+      return decimal;
+    }
+
+    return divide_DD(left, decimal);
+  }
+
+  function divide_DD(left, right) {
+    return multiply_DD(left, reciprocate_D(right));
+  }
+
+  function compare_SS(left, right) {
+    return compare_DS(fromValueNoAlloc(left), right);
+  }
+  function compare_DS(left, right) {
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(left)) {
+      if (isNaN$1(decimal)) {
+        return 0;
+      }
+
+      return -1;
+    }
+
+    if (isNaN$1(decimal)) {
+      return 1;
+    }
+
+    return compare_DD(left, decimal);
+  }
+  function compare_DD(left, right) {
+    // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
+    if (left.m === 0) {
+      if (right.m === 0) {
+        return 0;
+      }
+
+      if (right.m < 0) {
+        return 1;
+      }
+
+      if (right.m > 0) {
+        return -1;
+      }
+    }
+
+    if (right.m === 0) {
+      if (left.m < 0) {
+        return -1;
+      }
+
+      if (left.m > 0) {
+        return 1;
+      }
+    }
+
+    if (left.m > 0) {
+      if (right.m < 0) {
+        return 1;
+      }
+
+      if (left.e > right.e) {
+        return 1;
+      }
+
+      if (left.e < right.e) {
+        return -1;
+      }
+
+      if (left.m > right.m) {
+        return 1;
+      }
+
+      if (left.m < right.m) {
+        return -1;
+      }
+
+      return 0;
+    }
+
+    if (left.m < 0) {
+      if (right.m > 0) {
+        return -1;
+      }
+
+      if (left.e > right.e) {
+        return -1;
+      }
+
+      if (left.e < right.e) {
+        return 1;
+      }
+
+      if (left.m > right.m) {
+        return 1;
+      }
+
+      if (left.m < right.m) {
+        return -1;
+      }
+
+      return 0;
+    }
+
+    throw Error("Unreachable code");
+  }
+
+  function equals_SS(left, right) {
+    return equals_DS(fromValueNoAlloc(left), right);
+  }
+  function equals_DS(left, right) {
+    if (isNaN$1(left)) {
+      return false;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return false;
+    }
+
+    return equals_DD(left, decimal);
+  }
+  function equals_DD(left, right) {
+    return left.e === right.e && left.m === right.m;
+  }
+
+  function notEquals_SS(left, right) {
+    return notEquals_DS(fromValueNoAlloc(left), right);
+  }
+  function notEquals_DS(left, right) {
+    if (isNaN$1(left)) {
+      return true;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return true;
+    }
+
+    return notEquals_DD(left, decimal);
+  }
+
+  function notEquals_DD(left, right) {
+    return !equals_DD(left, right);
+  }
+
+  function lessThan_SS(left, right) {
+    return lessThan_DS(fromValueNoAlloc(left), right);
+  }
+  function lessThan_DS(left, right) {
+    if (isNaN$1(left)) {
+      return false;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return true;
+    }
+
+    return lessThan_DD(left, decimal);
+  }
+  function lessThan_DD(left, right) {
+    if (left.m === 0) {
+      return right.m > 0;
+    }
+
+    if (right.m === 0) {
+      return left.m <= 0;
+    }
+
+    if (left.e === right.e) {
+      return left.m < right.m;
+    }
+
+    if (left.m > 0) {
+      return right.m > 0 && left.e < right.e;
+    }
+
+    return right.m > 0 || left.e > right.e;
+  }
+
+  function greaterThan_SS(left, right) {
+    return greaterThan_DS(fromValueNoAlloc(left), right);
+  }
+  function greaterThan_DS(left, right) {
+    if (isNaN$1(left)) {
+      return false;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return true;
+    }
+
+    return greaterThan_DD(left, decimal);
+  }
+  function greaterThan_DD(left, right) {
+    if (left.m === 0) {
+      return right.m < 0;
+    }
+
+    if (right.m === 0) {
+      return left.m > 0;
+    }
+
+    if (left.e === right.e) {
+      return left.m > right.m;
+    }
+
+    if (left.m > 0) {
+      return right.m < 0 || left.e > right.e;
+    }
+
+    return right.m < 0 && left.e < right.e;
+  }
+
+  function lessThanOrEquals_SS(left, right) {
+    return lessThanOrEquals_DS(fromValueNoAlloc(left), right);
+  }
+  function lessThanOrEquals_DS(left, right) {
+    if (isNaN$1(left)) {
+      return false;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return true;
+    }
+
+    return lessThanOrEquals_DD(left, decimal);
+  }
+
+  function lessThanOrEquals_DD(left, right) {
+    return !greaterThan_DD(left, right);
+  }
+
+  function greaterThanOrEquals_SS(left, right) {
+    return greaterThanOrEquals_DS(fromValueNoAlloc(left), right);
+  }
+  function greaterThanOrEquals_DS(left, right) {
+    if (isNaN$1(left)) {
+      return false;
+    }
+
+    var decimal = fromValueNoAlloc(right);
+
+    if (isNaN$1(decimal)) {
+      return true;
+    }
+
+    return greaterThanOrEquals_DD(left, decimal);
+  }
+
+  function greaterThanOrEquals_DD(left, right) {
+    return !lessThan_DD(left, right);
+  }
+
+  function createZeroes(count) {
+    var result = "";
+
+    while (result.length < count) {
+      result += "0";
+    }
+
+    return result;
+  }
+
+  var cache = [];
+  function repeatZeroes(count) {
+    if (count <= 0) {
+      return "";
+    }
+
+    var cached = cache[count];
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    var computed = createZeroes(count);
+    cache[count] = computed;
+    return computed;
+  }
+  function trailZeroes(places) {
+    return places > 0 ? "." + repeatZeroes(places) : "";
+  }
+
+  var D = fromValueNoAlloc;
 
   function affordGeometricSeries(resourcesAvailable, priceStart, priceRatio, currentOwned) {
     var actualStart = priceStart.mul(priceRatio.pow(currentOwned));
@@ -114,6 +718,7 @@
   }
   /**
    * The Decimal's value is simply mantissa * 10^exponent.
+   * @public
    */
 
 
@@ -135,17 +740,7 @@
        */
 
       this.exponent = NaN;
-
-      if (value === undefined) {
-        this.m = 0;
-        this.e = 0;
-      } else if (value instanceof Decimal) {
-        this.fromDecimal(value);
-      } else if (typeof value === "number") {
-        this.fromNumber(value);
-      } else {
-        this.fromString(value);
-      }
+      assignFromValue(this, value);
     }
 
     Object.defineProperty(Decimal.prototype, "m", {
@@ -188,163 +783,167 @@
     });
 
     Decimal.fromMantissaExponent = function (mantissa, exponent) {
-      return new Decimal().fromMantissaExponent(mantissa, exponent);
+      return fromMantissaExponent(mantissa, exponent);
     };
+    /**
+     * Well, you know what you're doing!
+     */
+
 
     Decimal.fromMantissaExponent_noNormalize = function (mantissa, exponent) {
-      return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
+      return fromRawMantissaExponent(mantissa, exponent);
     };
 
     Decimal.fromDecimal = function (value) {
-      return new Decimal().fromDecimal(value);
+      return fromDecimal(value);
     };
 
     Decimal.fromNumber = function (value) {
-      return new Decimal().fromNumber(value);
+      return fromNumber(value);
     };
 
     Decimal.fromString = function (value) {
-      return new Decimal().fromString(value);
+      return fromString(value);
     };
 
     Decimal.fromValue = function (value) {
-      return new Decimal().fromValue(value);
+      return fromValue(value);
     };
 
     Decimal.fromValue_noAlloc = function (value) {
-      return value instanceof Decimal ? value : new Decimal(value);
+      return fromValueNoAlloc(value);
     };
 
     Decimal.abs = function (value) {
-      return D(value).abs();
+      return abs_S(value);
     };
 
     Decimal.neg = function (value) {
-      return D(value).neg();
+      return negate_S(value);
     };
 
     Decimal.negate = function (value) {
-      return D(value).neg();
+      return negate_S(value);
     };
 
     Decimal.negated = function (value) {
-      return D(value).neg();
+      return negate_S(value);
     };
 
     Decimal.sign = function (value) {
-      return D(value).sign();
+      return sign_S(value);
     };
 
     Decimal.sgn = function (value) {
-      return D(value).sign();
+      return sign_S(value);
     };
 
     Decimal.round = function (value) {
-      return D(value).round();
+      return round_S(value);
     };
 
     Decimal.floor = function (value) {
-      return D(value).floor();
+      return floor_S(value);
     };
 
     Decimal.ceil = function (value) {
-      return D(value).ceil();
+      return ceil_S(value);
     };
 
     Decimal.trunc = function (value) {
-      return D(value).trunc();
+      return trunc_S(value);
     };
 
     Decimal.add = function (value, other) {
-      return D(value).add(other);
+      return add_SS(value, other);
     };
 
     Decimal.plus = function (value, other) {
-      return D(value).add(other);
+      return add_SS(value, other);
     };
 
     Decimal.sub = function (value, other) {
-      return D(value).sub(other);
+      return subtract_SS(value, other);
     };
 
     Decimal.subtract = function (value, other) {
-      return D(value).sub(other);
+      return subtract_SS(value, other);
     };
 
     Decimal.minus = function (value, other) {
-      return D(value).sub(other);
+      return subtract_SS(value, other);
     };
 
     Decimal.mul = function (value, other) {
-      return D(value).mul(other);
+      return multiply_SS(value, other);
     };
 
     Decimal.multiply = function (value, other) {
-      return D(value).mul(other);
+      return multiply_SS(value, other);
     };
 
     Decimal.times = function (value, other) {
-      return D(value).mul(other);
+      return multiply_SS(value, other);
     };
 
     Decimal.div = function (value, other) {
-      return D(value).div(other);
+      return divide_SS(value, other);
     };
 
     Decimal.divide = function (value, other) {
-      return D(value).div(other);
+      return divide_SS(value, other);
     };
 
     Decimal.recip = function (value) {
-      return D(value).recip();
+      return reciprocate_S(value);
     };
 
     Decimal.reciprocal = function (value) {
-      return D(value).recip();
+      return reciprocate_S(value);
     };
 
     Decimal.reciprocate = function (value) {
-      return D(value).reciprocate();
+      return reciprocate_S(value);
     };
 
     Decimal.cmp = function (value, other) {
-      return D(value).cmp(other);
+      return compare_SS(value, other);
     };
 
     Decimal.compare = function (value, other) {
-      return D(value).cmp(other);
+      return compare_SS(value, other);
     };
 
     Decimal.eq = function (value, other) {
-      return D(value).eq(other);
+      return equals_SS(value, other);
     };
 
     Decimal.equals = function (value, other) {
-      return D(value).eq(other);
+      return equals_SS(value, other);
     };
 
     Decimal.neq = function (value, other) {
-      return D(value).neq(other);
+      return notEquals_SS(value, other);
     };
 
     Decimal.notEquals = function (value, other) {
-      return D(value).notEquals(other);
+      return notEquals_SS(value, other);
     };
 
     Decimal.lt = function (value, other) {
-      return D(value).lt(other);
+      return lessThan_SS(value, other);
     };
 
     Decimal.lte = function (value, other) {
-      return D(value).lte(other);
+      return lessThanOrEquals_SS(value, other);
     };
 
     Decimal.gt = function (value, other) {
-      return D(value).gt(other);
+      return greaterThan_SS(value, other);
     };
 
     Decimal.gte = function (value, other) {
-      return D(value).gte(other);
+      return greaterThanOrEquals_SS(value, other);
     };
 
     Decimal.max = function (value, other) {
@@ -437,16 +1036,16 @@
 
     Decimal.pow10 = function (value) {
       if (Number.isInteger(value)) {
-        return ME_NN(1, value);
+        return fromRawMantissaExponent(1, value);
       }
 
-      return ME(Math.pow(10, value % 1), Math.trunc(value));
+      return fromMantissaExponent(Math.pow(10, value % 1), Math.trunc(value));
     };
 
     Decimal.pow = function (value, other) {
       // Fast track: 10^integer
       if (typeof value === "number" && value === 10 && typeof other === "number" && Number.isInteger(other)) {
-        return ME_NN(1, other);
+        return fromRawMantissaExponent(1, other);
       }
 
       return D(value).pow(other);
@@ -535,7 +1134,7 @@
       // NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
       // 5% of the time, have a mantissa of 0
       if (Math.random() * 20 < 1) {
-        return ME_NN(0, 0);
+        return fromRawMantissaExponent(0, 0);
       }
 
       var mantissa = Math.random() * 10; // 10% of the time, have a simple mantissa
@@ -546,7 +1145,7 @@
 
       mantissa *= Math.sign(Math.random() * 2 - 1);
       var exponent = Math.floor(Math.random() * absMaxExponent * 2) - absMaxExponent;
-      return ME(mantissa, exponent);
+      return fromMantissaExponent(mantissa, exponent);
       /*
         Examples:
               randomly test pow:
@@ -562,6 +1161,15 @@
         var result = a.add(c);
         [a.toString() + "+" + c.toString(), result.toString()]
       */
+    };
+    /**
+     * @internal
+     */
+
+
+    Decimal.prototype.__set__ = function (mantissa, exponent) {
+      this.m = mantissa;
+      this.e = exponent;
     };
     /**
      * When mantissa is very denormalized, use this to normalize much faster.
@@ -586,101 +1194,6 @@
       return this;
     };
 
-    Decimal.prototype.fromMantissaExponent = function (mantissa, exponent) {
-      // SAFETY: don't let in non-numbers
-      if (!isFinite(mantissa) || !isFinite(exponent)) {
-        mantissa = Number.NaN;
-        exponent = Number.NaN;
-        return this;
-      }
-
-      this.m = mantissa;
-      this.e = exponent; // Non-normalized mantissas can easily get here, so this is mandatory.
-
-      this.normalize();
-      return this;
-    };
-    /**
-     * Well, you know what you're doing!
-     */
-
-
-    Decimal.prototype.fromMantissaExponent_noNormalize = function (mantissa, exponent) {
-      this.m = mantissa;
-      this.e = exponent;
-      return this;
-    };
-
-    Decimal.prototype.fromDecimal = function (value) {
-      this.m = value.m;
-      this.e = value.e;
-      return this;
-    };
-
-    Decimal.prototype.fromNumber = function (value) {
-      // SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
-      if (isNaN(value)) {
-        this.m = Number.NaN;
-        this.e = Number.NaN;
-      } else if (value === Number.POSITIVE_INFINITY) {
-        this.m = 1;
-        this.e = EXP_LIMIT;
-      } else if (value === Number.NEGATIVE_INFINITY) {
-        this.m = -1;
-        this.e = EXP_LIMIT;
-      } else if (value === 0) {
-        this.m = 0;
-        this.e = 0;
-      } else {
-        this.e = Math.floor(Math.log10(Math.abs(value))); // SAFETY: handle 5e-324, -5e-324 separately
-
-        this.m = this.e === NUMBER_EXP_MIN ? value * 10 / 1e-323 : value / powerOf10(this.e); // SAFETY: Prevent weirdness.
-
-        this.normalize();
-      }
-
-      return this;
-    };
-
-    Decimal.prototype.fromString = function (value) {
-      if (value.indexOf("e") !== -1) {
-        var parts = value.split("e");
-        this.m = parseFloat(parts[0]);
-        this.e = parseFloat(parts[1]); // Non-normalized mantissas can easily get here, so this is mandatory.
-
-        this.normalize();
-      } else if (value === "NaN") {
-        this.m = Number.NaN;
-        this.e = Number.NaN;
-      } else {
-        this.fromNumber(parseFloat(value));
-
-        if (isNaN(this.m)) {
-          throw Error("[DecimalError] Invalid argument: " + value);
-        }
-      }
-
-      return this;
-    };
-
-    Decimal.prototype.fromValue = function (value) {
-      if (value instanceof Decimal) {
-        return this.fromDecimal(value);
-      }
-
-      if (typeof value === "number") {
-        return this.fromNumber(value);
-      }
-
-      if (typeof value === "string") {
-        return this.fromString(value);
-      }
-
-      this.m = 0;
-      this.e = 0;
-      return this;
-    };
-
     Decimal.prototype.toNumber = function () {
       // Problem: new Decimal(116).toNumber() returns 115.99999999999999.
       // TODO: How to fix in general case? It's clear that if toNumber() is
@@ -697,8 +1210,8 @@
       // Currently starts failing at 800002. Workaround is to do .Round()
       // AFTER toNumber() if you are confident you started with an integer.
       // var result = this.m*Math.pow(10, this.e);
-      if (!isFinite(this.e)) {
-        return Number.NaN;
+      if (!this.isFinite()) {
+        return this.mantissa;
       }
 
       if (this.e > NUMBER_EXP_MAX) {
@@ -730,14 +1243,14 @@
     };
 
     Decimal.prototype.mantissaWithDecimalPlaces = function (places) {
-      // https://stackoverflow.com/a/37425022
-      if (isNaN(this.m) || isNaN(this.e)) {
-        return Number.NaN;
+      if (!this.isFinite()) {
+        return this.mantissa;
       }
 
       if (this.m === 0) {
         return 0;
-      }
+      } // https://stackoverflow.com/a/37425022
+
 
       var len = places + 1;
       var numDigits = Math.ceil(Math.log10(Math.abs(this.m)));
@@ -746,12 +1259,8 @@
     };
 
     Decimal.prototype.toString = function () {
-      if (isNaN(this.m) || isNaN(this.e)) {
-        return "NaN";
-      }
-
-      if (this.e >= EXP_LIMIT) {
-        return this.m > 0 ? "Infinity" : "-Infinity";
+      if (!this.isFinite()) {
+        return this.mantissa.toString();
       }
 
       if (this.e <= -EXP_LIMIT || this.m === 0) {
@@ -774,16 +1283,12 @@
       //  "1.000000000000000000e-999"
       // TBH I'm tempted to just say it's a feature.
       // If you're doing pretty formatting then why don't you know how many decimal places you want...?
-      if (isNaN(this.m) || isNaN(this.e)) {
-        return "NaN";
-      }
-
-      if (this.e >= EXP_LIMIT) {
-        return this.m > 0 ? "Infinity" : "-Infinity";
+      if (!this.isFinite()) {
+        return this.mantissa.toString();
       }
 
       if (this.e <= -EXP_LIMIT || this.m === 0) {
-        return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "") + "e+0";
+        return "0" + trailZeroes(places) + "e+0";
       } // two cases:
       // 1) exponent is < 308 and > -324: use basic toFixed
       // 2) everything else: we have to do it ourselves!
@@ -804,23 +1309,22 @@
     };
 
     Decimal.prototype.toFixed = function (places) {
-      if (isNaN(this.m) || isNaN(this.e)) {
-        return "NaN";
-      }
-
-      if (this.e >= EXP_LIMIT) {
-        return this.m > 0 ? "Infinity" : "-Infinity";
+      if (!this.isFinite()) {
+        return this.mantissa.toString();
       }
 
       if (this.e <= -EXP_LIMIT || this.m === 0) {
-        return "0" + (places > 0 ? padEnd(".", places + 1, "0") : "");
+        return "0" + trailZeroes(places);
       } // two cases:
       // 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
       // 2) exponent is 16 or less: use basic toFixed
 
 
       if (this.e >= MAX_SIGNIFICANT_DIGITS) {
-        return this.m.toString().replace(".", "").padEnd(this.e + 1, "0") + (places > 0 ? padEnd(".", places + 1, "0") : "");
+        var mantissa = this.m.toString().replace(".", ""); //, this.e + 1, "0");
+
+        var mantissaZeroes = repeatZeroes(this.e - mantissa.length + 1);
+        return mantissa + mantissaZeroes + trailZeroes(places);
       }
 
       return this.toNumber().toFixed(places);
@@ -851,179 +1355,103 @@
     };
 
     Decimal.prototype.abs = function () {
-      return ME_NN(Math.abs(this.m), this.e);
+      return abs_D(this);
     };
 
     Decimal.prototype.neg = function () {
-      return ME_NN(-this.m, this.e);
+      return negate_D(this);
     };
 
     Decimal.prototype.negate = function () {
-      return this.neg();
+      return negate_D(this);
     };
 
     Decimal.prototype.negated = function () {
-      return this.neg();
+      return negate_D(this);
     };
 
     Decimal.prototype.sign = function () {
-      return Math.sign(this.m);
+      return sign_D(this);
     };
 
     Decimal.prototype.sgn = function () {
-      return this.sign();
+      return sign_D(this);
     };
 
     Decimal.prototype.round = function () {
-      if (this.e < -1) {
-        return new Decimal(0);
-      }
-
-      if (this.e < MAX_SIGNIFICANT_DIGITS) {
-        return new Decimal(Math.round(this.toNumber()));
-      }
-
-      return this;
+      return round_D(this);
     };
 
     Decimal.prototype.floor = function () {
-      if (this.e < -1) {
-        return Math.sign(this.m) >= 0 ? new Decimal(0) : new Decimal(-1);
-      }
-
-      if (this.e < MAX_SIGNIFICANT_DIGITS) {
-        return new Decimal(Math.floor(this.toNumber()));
-      }
-
-      return this;
+      return floor_D(this);
     };
 
     Decimal.prototype.ceil = function () {
-      if (this.e < -1) {
-        return Math.sign(this.m) > 0 ? new Decimal(1) : new Decimal(0);
-      }
-
-      if (this.e < MAX_SIGNIFICANT_DIGITS) {
-        return new Decimal(Math.ceil(this.toNumber()));
-      }
-
-      return this;
+      return ceil_D(this);
     };
 
     Decimal.prototype.trunc = function () {
-      if (this.e < 0) {
-        return new Decimal(0);
-      }
-
-      if (this.e < MAX_SIGNIFICANT_DIGITS) {
-        return new Decimal(Math.trunc(this.toNumber()));
-      }
-
-      return this;
+      return trunc_D(this);
     };
 
     Decimal.prototype.add = function (value) {
-      // figure out which is bigger, shrink the mantissa of the smaller
-      // by the difference in exponents, add mantissas, normalize and return
-      // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
-      var decimal = D(value);
-
-      if (this.m === 0) {
-        return decimal;
-      }
-
-      if (decimal.m === 0) {
-        return this;
-      }
-
-      var biggerDecimal;
-      var smallerDecimal;
-
-      if (this.e >= decimal.e) {
-        biggerDecimal = this;
-        smallerDecimal = decimal;
-      } else {
-        biggerDecimal = decimal;
-        smallerDecimal = this;
-      }
-
-      if (biggerDecimal.e - smallerDecimal.e > MAX_SIGNIFICANT_DIGITS) {
-        return biggerDecimal;
-      } // Have to do this because adding numbers that were once integers but scaled down is imprecise.
-      // Example: 299 + 18
-
-
-      var mantissa = Math.round(1e14 * biggerDecimal.m + 1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e));
-      return ME(mantissa, biggerDecimal.e - 14);
+      return add_DS(this, value);
     };
 
     Decimal.prototype.plus = function (value) {
-      return this.add(value);
+      return add_DS(this, value);
     };
 
     Decimal.prototype.sub = function (value) {
-      return this.add(D(value).neg());
+      return subtract_DS(this, value);
     };
 
     Decimal.prototype.subtract = function (value) {
-      return this.sub(value);
+      return subtract_DS(this, value);
     };
 
     Decimal.prototype.minus = function (value) {
-      return this.sub(value);
+      return subtract_DS(this, value);
     };
 
     Decimal.prototype.mul = function (value) {
-      // This version avoids an extra conversion to Decimal, if possible. Since the
-      // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
-      if (typeof value === "number") {
-        if (value < 1e307 && value > -1e307) {
-          return ME(this.m * value, this.e);
-        } // If the value is larger than 1e307, we can divide that out of mantissa (since it's
-        // greater than 1, it won't underflow)
-
-
-        return ME(this.m * 1e-307 * value, this.e + 307);
-      }
-
-      var decimal = typeof value === "string" ? new Decimal(value) : value;
-      return ME(this.m * decimal.m, this.e + decimal.e);
+      return multiply_DS(this, value);
     };
 
     Decimal.prototype.multiply = function (value) {
-      return this.mul(value);
+      return multiply_DS(this, value);
     };
 
     Decimal.prototype.times = function (value) {
-      return this.mul(value);
+      return multiply_DS(this, value);
     };
 
     Decimal.prototype.div = function (value) {
-      return this.mul(D(value).recip());
+      return divide_DS(this, value);
     };
 
     Decimal.prototype.divide = function (value) {
-      return this.div(value);
+      return divide_DS(this, value);
     };
 
     Decimal.prototype.divideBy = function (value) {
-      return this.div(value);
+      return divide_DS(this, value);
     };
 
     Decimal.prototype.dividedBy = function (value) {
-      return this.div(value);
+      return divide_DS(this, value);
     };
 
     Decimal.prototype.recip = function () {
-      return ME(1 / this.m, -this.e);
+      return reciprocate_D(this);
     };
 
     Decimal.prototype.reciprocal = function () {
-      return this.recip();
+      return reciprocate_D(this);
     };
 
     Decimal.prototype.reciprocate = function () {
-      return this.recip();
+      return reciprocate_D(this);
     };
     /**
      * -1 for less than value, 0 for equals value, 1 for greater than value
@@ -1031,179 +1459,43 @@
 
 
     Decimal.prototype.cmp = function (value) {
-      var decimal = D(value); // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
-
-      /*
-      from smallest to largest:
-            -3e100
-      -1e100
-      -3e99
-      -1e99
-      -3e0
-      -1e0
-      -3e-99
-      -1e-99
-      -3e-100
-      -1e-100
-      0
-      1e-100
-      3e-100
-      1e-99
-      3e-99
-      1e0
-      3e0
-      1e99
-      3e99
-      1e100
-      3e100
-            */
-
-      if (this.m === 0) {
-        if (decimal.m === 0) {
-          return 0;
-        }
-
-        if (decimal.m < 0) {
-          return 1;
-        }
-
-        if (decimal.m > 0) {
-          return -1;
-        }
-      }
-
-      if (decimal.m === 0) {
-        if (this.m < 0) {
-          return -1;
-        }
-
-        if (this.m > 0) {
-          return 1;
-        }
-      }
-
-      if (this.m > 0) {
-        if (decimal.m < 0) {
-          return 1;
-        }
-
-        if (this.e > decimal.e) {
-          return 1;
-        }
-
-        if (this.e < decimal.e) {
-          return -1;
-        }
-
-        if (this.m > decimal.m) {
-          return 1;
-        }
-
-        if (this.m < decimal.m) {
-          return -1;
-        }
-
-        return 0;
-      }
-
-      if (this.m < 0) {
-        if (decimal.m > 0) {
-          return -1;
-        }
-
-        if (this.e > decimal.e) {
-          return -1;
-        }
-
-        if (this.e < decimal.e) {
-          return 1;
-        }
-
-        if (this.m > decimal.m) {
-          return 1;
-        }
-
-        if (this.m < decimal.m) {
-          return -1;
-        }
-
-        return 0;
-      }
-
-      throw Error("Unreachable code");
+      return compare_DS(this, value);
     };
 
     Decimal.prototype.compare = function (value) {
-      return this.cmp(value);
+      return compare_DS(this, value);
     };
 
     Decimal.prototype.eq = function (value) {
-      var decimal = D(value);
-      return this.e === decimal.e && this.m === decimal.m;
+      return equals_DS(this, value);
     };
 
     Decimal.prototype.equals = function (value) {
-      return this.eq(value);
+      return equals_DS(this, value);
     };
 
     Decimal.prototype.neq = function (value) {
-      return !this.eq(value);
+      return notEquals_DS(this, value);
     };
 
     Decimal.prototype.notEquals = function (value) {
-      return this.neq(value);
+      return notEquals_DS(this, value);
     };
 
     Decimal.prototype.lt = function (value) {
-      var decimal = D(value);
-
-      if (this.m === 0) {
-        return decimal.m > 0;
-      }
-
-      if (decimal.m === 0) {
-        return this.m <= 0;
-      }
-
-      if (this.e === decimal.e) {
-        return this.m < decimal.m;
-      }
-
-      if (this.m > 0) {
-        return decimal.m > 0 && this.e < decimal.e;
-      }
-
-      return decimal.m > 0 || this.e > decimal.e;
+      return lessThan_DS(this, value);
     };
 
     Decimal.prototype.lte = function (value) {
-      return !this.gt(value);
+      return lessThanOrEquals_DS(this, value);
     };
 
     Decimal.prototype.gt = function (value) {
-      var decimal = D(value);
-
-      if (this.m === 0) {
-        return decimal.m < 0;
-      }
-
-      if (decimal.m === 0) {
-        return this.m > 0;
-      }
-
-      if (this.e === decimal.e) {
-        return this.m > decimal.m;
-      }
-
-      if (this.m > 0) {
-        return decimal.m < 0 || this.e > decimal.e;
-      }
-
-      return decimal.m < 0 && this.e < decimal.e;
+      return greaterThan_DS(this, value);
     };
 
     Decimal.prototype.gte = function (value) {
-      return !this.lt(value);
+      return greaterThanOrEquals_DS(this, value);
     };
 
     Decimal.prototype.max = function (value) {
@@ -1330,7 +1622,7 @@
         newMantissa = Math.pow(this.m, numberValue);
 
         if (isFinite(newMantissa) && newMantissa !== 0) {
-          return ME(newMantissa, temp);
+          return fromMantissaExponent(newMantissa, temp);
         }
       } // Same speed and usually more accurate.
 
@@ -1340,7 +1632,7 @@
       newMantissa = Math.pow(10, numberValue * Math.log10(this.m) + residue);
 
       if (isFinite(newMantissa) && newMantissa !== 0) {
-        return ME(newMantissa, newExponent);
+        return fromMantissaExponent(newMantissa, newExponent);
       } // return Decimal.exp(value*this.ln());
 
 
@@ -1353,7 +1645,7 @@
           return result;
         }
 
-        return new Decimal(Number.NaN);
+        return DECIMAL_NaN;
       }
 
       return result;
@@ -1381,24 +1673,24 @@
     };
 
     Decimal.prototype.sqr = function () {
-      return ME(Math.pow(this.m, 2), this.e * 2);
+      return fromMantissaExponent(Math.pow(this.m, 2), this.e * 2);
     };
 
     Decimal.prototype.sqrt = function () {
       if (this.m < 0) {
-        return new Decimal(Number.NaN);
+        return DECIMAL_NaN;
       }
 
       if (this.e % 2 !== 0) {
-        return ME(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
+        return fromMantissaExponent(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
       } // Mod of a negative number is negative, so != means '1 or -1'
 
 
-      return ME(Math.sqrt(this.m), Math.floor(this.e / 2));
+      return fromMantissaExponent(Math.sqrt(this.m), Math.floor(this.e / 2));
     };
 
     Decimal.prototype.cube = function () {
-      return ME(Math.pow(this.m, 3), this.e * 3);
+      return fromMantissaExponent(Math.pow(this.m, 3), this.e * 3);
     };
 
     Decimal.prototype.cbrt = function () {
@@ -1414,15 +1706,15 @@
       var mod = this.e % 3;
 
       if (mod === 1 || mod === -1) {
-        return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
+        return fromMantissaExponent(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
       }
 
       if (mod !== 0) {
-        return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
+        return fromMantissaExponent(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
       } // mod != 0 at this point means 'mod == 2 || mod == -2'
 
 
-      return ME(newMantissa, Math.floor(this.e / 3));
+      return fromMantissaExponent(newMantissa, Math.floor(this.e / 3));
     }; // Some hyperbolic trig functions that happen to be easy
 
 
@@ -1475,19 +1767,59 @@
     };
 
     Decimal.prototype.lessThanOrEqualTo = function (other) {
-      return this.cmp(other) < 1;
+      if (this.isNaN()) {
+        return false;
+      }
+
+      var decimal = D(other);
+
+      if (decimal.isNaN()) {
+        return false;
+      }
+
+      return compare_DD(this, decimal) < 1;
     };
 
     Decimal.prototype.lessThan = function (other) {
-      return this.cmp(other) < 0;
+      if (this.isNaN()) {
+        return false;
+      }
+
+      var decimal = D(other);
+
+      if (decimal.isNaN()) {
+        return false;
+      }
+
+      return compare_DD(this, decimal) < 0;
     };
 
     Decimal.prototype.greaterThanOrEqualTo = function (other) {
-      return this.cmp(other) > -1;
+      if (this.isNaN()) {
+        return false;
+      }
+
+      var decimal = D(other);
+
+      if (decimal.isNaN()) {
+        return false;
+      }
+
+      return compare_DD(this, decimal) > -1;
     };
 
     Decimal.prototype.greaterThan = function (other) {
-      return this.cmp(other) > 0;
+      if (this.isNaN()) {
+        return false;
+      }
+
+      var decimal = D(other);
+
+      if (decimal.isNaN()) {
+        return false;
+      }
+
+      return compare_DD(this, decimal) > 0;
     };
 
     Decimal.prototype.decimalPlaces = function () {
@@ -1495,7 +1827,7 @@
     };
 
     Decimal.prototype.dp = function () {
-      if (!isFinite(this.mantissa)) {
+      if (!this.isFinite()) {
         return NaN;
       }
 
@@ -1515,20 +1847,26 @@
       return places > 0 ? places : 0;
     };
 
-    Object.defineProperty(Decimal, "MAX_VALUE", {
-      get: function get() {
-        return MAX_VALUE;
-      },
-      enumerable: false,
-      configurable: true
-    });
-    Object.defineProperty(Decimal, "MIN_VALUE", {
-      get: function get() {
-        return MIN_VALUE;
-      },
-      enumerable: false,
-      configurable: true
-    });
+    Decimal.prototype.isZero = function () {
+      return isZero(this);
+    };
+
+    Decimal.prototype.isFinite = function () {
+      return isFinite(this.mantissa);
+    };
+
+    Decimal.prototype.isNaN = function () {
+      return isNaN(this.mantissa);
+    };
+
+    Decimal.prototype.isPositiveInfinity = function () {
+      return this.mantissa === POSITIVE_INFINITY.mantissa;
+    };
+
+    Decimal.prototype.isNegativeInfinity = function () {
+      return this.mantissa === NEGATIVE_INFINITY.mantissa;
+    };
+
     Object.defineProperty(Decimal, "NUMBER_MAX_VALUE", {
       get: function get() {
         return NUMBER_MAX_VALUE;
@@ -1543,12 +1881,94 @@
       enumerable: false,
       configurable: true
     });
+    Object.defineProperty(Decimal, "NaN", {
+      get: function get() {
+        return DECIMAL_NaN;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "POSITIVE_INFINITY", {
+      get: function get() {
+        return POSITIVE_INFINITY;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "NEGATIVE_INFINITY", {
+      get: function get() {
+        return NEGATIVE_INFINITY;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "MAX_VALUE", {
+      get: function get() {
+        return MAX_VALUE;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "MIN_VALUE", {
+      get: function get() {
+        return MIN_VALUE;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "ZERO", {
+      get: function get() {
+        return ZERO;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "ONE", {
+      get: function get() {
+        return ONE;
+      },
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(Decimal, "MINUS_ONE", {
+      get: function get() {
+        return MINUS_ONE;
+      },
+      enumerable: false,
+      configurable: true
+    });
     return Decimal;
   }();
-  var MAX_VALUE = ME_NN(1, EXP_LIMIT);
-  var MIN_VALUE = ME_NN(1, -EXP_LIMIT);
-  var NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
-  var NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
+  // not being able to load ES modules lazily. If you try to use
+  // fromRawMantissaExponent here you will get shit on with the
+  // "Decimal is not a constructor" message and you just go hang yourself
+  // on a ceiling fan because it is such a pain in the ass to debug
+  // this kind of error.
+
+  function ME(mantissa, exponent) {
+    var decimal = new Decimal();
+
+    decimal.__set__(mantissa, exponent);
+
+    return decimal;
+  }
+
+  function FN(value) {
+    var decimal = new Decimal();
+    assignFromNumber(decimal, value);
+    return decimal;
+  }
+
+  var MAX_VALUE = ME(1, EXP_LIMIT);
+  var MIN_VALUE = ME(1, -EXP_LIMIT);
+  var DECIMAL_NaN = ME(NaN, 0);
+  var POSITIVE_INFINITY = ME(Number.POSITIVE_INFINITY, 0);
+  var NEGATIVE_INFINITY = ME(Number.NEGATIVE_INFINITY, 0);
+  var NUMBER_MAX_VALUE = FN(Number.MAX_VALUE);
+  var NUMBER_MIN_VALUE = FN(Number.MIN_VALUE);
+  var ZERO = FN(0);
+  var ONE = FN(1);
+  var MINUS_ONE = FN(-1);
 
   return Decimal;
 

@@ -5,18 +5,16 @@ const path = require("path");
 
 const directory = "dist";
 
-fs.readdir(directory, (err, files) => {
-  if (err) throw err;
+const files = fs.readdirSync(directory);
 
-  for (const file of files) {
-    if (file.endsWith("index.d.ts")) {
-      continue;
-    }
-    if (!file.endsWith("d.ts")) {
-      continue;
-    }
-    fs.unlink(path.join(directory, file), err => {
-      if (err) throw err;
-    });
+for (const file of files) {
+  if (file.endsWith("break_infinity.js.d.ts")) {
+    continue;
   }
-});
+  if (!file.endsWith("d.ts")) {
+    continue;
+  }
+  fs.unlinkSync(path.join(directory, file));
+}
+
+fs.rmdirSync(path.join(directory, "modules"), { recursive: true, force: true });
