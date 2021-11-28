@@ -129,3 +129,10 @@ Special thanks to projects from which I have sourced code or ideas from:
 
 Additional thanks to https://github.com/Razenpok for
 porting the code to TypeScript and cleaning up this README.
+
+## Other Number Libraries
+
+- https://github.com/munrocket/double.js double.js, a wasm/typescript implementation of 128-bit floating point with a focus on performance and accuracy
+- https://github.com/aarextiaokhiao/magna_numerus.js/blob/master/logarithmica_numerus_lite.js logarithmica_numerus_lite.js, an alternate take on break_infinity.js where there's just one field, exponent. Roughly 2x faster but can't represent negative numbers
+- https://github.com/Razenpok/BreakInfinity.cs/blob/master/BreakInfinity.Benchmarks/Quadruple/Quad.cs Quad.cs, a C# implementation of 128-bit floating point with a focus on performance and accuracy
+- https://naruyoko.github.io/ExpantaNum.js/index.html https://github.com/Naruyoko/OmegaNum.js ExpantaNum.js and OmegaNum.js, numerical libraries that have low performance but can represent insanely large googological numbers like {10,9e15,1,2} and 10{1000}9e15
