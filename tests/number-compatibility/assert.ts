@@ -1,5 +1,5 @@
 import Decimal, { DecimalSource } from "../../src";
-import "./expect-to-equal-decimal";
+import "./expect-types";
 
 const ROUND_TOLERANCE = 1e-10;
 

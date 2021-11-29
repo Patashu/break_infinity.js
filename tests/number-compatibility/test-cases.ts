@@ -38,6 +38,7 @@ function createBinaryTestCases(values: TestValue[]) {
   for (const left of values) {
     for (const right of values) {
       testCases.push(new BinaryTestCase(left, right));
+      testCases.push(new BinaryTestCase(right, left));
     }
   }
 
@@ -53,11 +54,9 @@ function createUnaryTestCases(values: TestValue[]) {
   return testCases;
 }
 
-
 export const fundamentalUnaryTestCases = createUnaryTestCases(fundamentalTestValues);
 export const generalUnaryTestCases = createUnaryTestCases(generalTestValues);
 export const unaryTestCases = fundamentalUnaryTestCases.concat(generalUnaryTestCases);
-
 
 export const fundamentalBinaryTestCases = createBinaryTestCases(fundamentalTestValues);
 export const generalBinaryTestCases = createBinaryTestCases(generalTestValues);

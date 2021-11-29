@@ -1,5 +1,3 @@
-import Decimal from "../../src";
-import { assertEqual } from "./assert";
 import { TestValue } from "./test-value";
 
 export class UnaryTestCase {
@@ -7,15 +5,6 @@ export class UnaryTestCase {
 
   constructor(value: TestValue) {
     this.value = value;
-  }
-
-  assertEqual(
-    numberOperation: (value: number) => number,
-    decimalOperation: (value: Decimal) => Decimal | number
-  ) {
-    const numberResult = numberOperation(this.value.number);
-    const decimalResult = decimalOperation(this.value.decimal);
-    assertEqual(decimalResult, numberResult);
   }
 
   toString() {
