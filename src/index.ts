@@ -1,33 +1,9 @@
+import { powerOf10 } from "./power-of-10";
 import { repeatZeroes, trailZeroes } from "./repeat-zeroes";
-
-// For example: if two exponents are more than 17 apart,
-// consider adding them together pointless, just return the larger one
-const MAX_SIGNIFICANT_DIGITS = 17;
-
-// Highest value you can safely put here is Number.MAX_SAFE_INTEGER-MAX_SIGNIFICANT_DIGITS
-const EXP_LIMIT = 9e15;
-
-// The largest exponent that can appear in a Number, though not all mantissas are valid here.
-const NUMBER_EXP_MAX = 308;
-
-// The smallest exponent that can appear in a Number, though not all mantissas are valid here.
-const NUMBER_EXP_MIN = -324;
-
-// Tolerance which is used for Number conversion to compensate floating-point error.
-const ROUND_TOLERANCE = 1e-10;
-
-const powerOf10 = (() => {
-  // We need this lookup table because Math.pow(10, exponent)
-  // when exponent's absolute value is large is slightly inaccurate.
-  // You can fix it with the power of math... or just make a lookup table.
-  // Faster AND simpler
-  const powersOf10: number[] = [];
-  for (let i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
-    powersOf10.push(Number("1e" + i));
-  }
-  const indexOf0InPowersOf10 = 323;
-  return (power: number) => powersOf10[power + indexOf0InPowersOf10];
-})();
+import {
+  MAX_SIGNIFICANT_DIGITS, EXP_LIMIT,
+  NUMBER_EXP_MAX, NUMBER_EXP_MIN, ROUND_TOLERANCE,
+} from "./constants";
 
 const D = (value: DecimalSource) =>
   value instanceof Decimal ? value : new Decimal(value);
@@ -159,6 +135,34 @@ export type DecimalSource = Decimal | number | string;
  */
 export default class Decimal {
 
+  /**
+   * A number (double) with absolute value between [1, 10) OR exactly 0.
+   * If mantissa is ever 10 or greater, it should be normalized
+   * (divide by 10 and add 1 to exponent until it is less than 10,
+   * or multiply by 10 and subtract 1 from exponent until it is 1 or greater).
+   * Infinity/-Infinity/NaN will cause bad things to happen.
+   */
+  public mantissa = NaN;
+
+  /**
+   * A number (integer) between -EXP_LIMIT and EXP_LIMIT.
+   * Non-integral/out of bounds will cause bad things to happen.
+   */
+  public exponent = NaN;
+
+  constructor(value?: DecimalSource) {
+    if (value === undefined) {
+      this.m = 0;
+      this.e = 0;
+    } else if (value instanceof Decimal) {
+      this.fromDecimal(value);
+    } else if (typeof value === "number") {
+      this.fromNumber(value);
+    } else {
+      this.fromString(value);
+    }
+  }
+
   get m() {
     return this.mantissa;
   }
@@ -190,24 +194,128 @@ export default class Decimal {
     }
   }
 
+  //#region fromMantissaExponent
+
+  public fromMantissaExponent(mantissa: number, exponent: number) {
+    // SAFETY: don't let in non-numbers
+    if (!isFinite(mantissa) || !isFinite(exponent)) {
+      return this.fromDecimal(DECIMAL_NaN);
+    }
+    this.m = mantissa;
+    this.e = exponent;
+    // Non-normalized mantissas can easily get here, so this is mandatory.
+    this.normalize();
+    return this;
+  }
+
   public static fromMantissaExponent(mantissa: number, exponent: number) {
     return new Decimal().fromMantissaExponent(mantissa, exponent);
+  }
+
+  //#endregion
+
+  //#region fromMantissaExponent_noNormalize
+
+  /**
+   * Well, you know what you're doing!
+   */
+  public fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
+    this.m = mantissa;
+    this.e = exponent;
+    return this;
   }
 
   public static fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
     return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
   }
 
+  //#endregion
+
+  //#region fromDecimal
+
+  public fromDecimal(value: Decimal) {
+    this.m = value.m;
+    this.e = value.e;
+    return this;
+  }
+
   public static fromDecimal(value: Decimal) {
     return new Decimal().fromDecimal(value);
+  }
+
+  //#endregion
+
+  //#region fromNumber
+
+  public fromNumber(value: number) {
+    if (!isFinite(value)) {
+      return this.fromMantissaExponent_noNormalize(value, 0);
+    }
+
+    if (value === 0) {
+      this.m = 0;
+      this.e = 0;
+      return this;
+    }
+
+    this.e = Math.floor(Math.log10(Math.abs(value)));
+    // SAFETY: handle 5e-324, -5e-324 separately
+    this.m = this.e === NUMBER_EXP_MIN ?
+      value * 10 / 1e-323 :
+      value / powerOf10(this.e);
+    // SAFETY: Prevent weirdness.
+    this.normalize();
+    return this;
   }
 
   public static fromNumber(value: number) {
     return new Decimal().fromNumber(value);
   }
 
+  //#endregion
+
+  //#region fromString
+
+  public fromString(value: string) {
+    if (value.indexOf("e") !== -1) {
+      const parts = value.split("e");
+      this.m = parseFloat(parts[0]);
+      this.e = parseFloat(parts[1]);
+      return this.normalize();
+    }
+
+    if (value === "NaN") {
+      return this.fromDecimal(DECIMAL_NaN);
+    }
+
+    this.fromNumber(parseFloat(value));
+    if (this.isNaN()) {
+      throw Error("[DecimalError] Invalid argument: " + value);
+    }
+    return this;
+  }
+
   public static fromString(value: string) {
     return new Decimal().fromString(value);
+  }
+
+  //#endregion
+
+  //#region fromValue
+
+  public fromValue(value?: DecimalSource) {
+    if (value instanceof Decimal) {
+      return this.fromDecimal(value);
+    }
+    if (typeof value === "number") {
+      return this.fromNumber(value);
+    }
+    if (typeof value === "string") {
+      return this.fromString(value);
+    }
+    this.m = 0;
+    this.e = 0;
+    return this;
   }
 
   public static fromValue(value: DecimalSource) {
@@ -218,56 +326,219 @@ export default class Decimal {
     return value instanceof Decimal ? value : new Decimal(value);
   }
 
+  //#endregion
+
+  //#region abs
+
+  public abs() {
+    return ME_NN(Math.abs(this.m), this.e);
+  }
+
   public static abs(value: DecimalSource) {
     return D(value).abs();
+  }
+
+  //#endregion
+
+  //#region neg
+
+  public neg() {
+    return ME_NN(-this.m, this.e);
   }
 
   public static neg(value: DecimalSource) {
     return D(value).neg();
   }
 
+  public negate() {
+    return this.neg();
+  }
+
   public static negate(value: DecimalSource) {
     return D(value).neg();
+  }
+
+  public negated() {
+    return this.neg();
   }
 
   public static negated(value: DecimalSource) {
     return D(value).neg();
   }
 
-  public static sign(value: DecimalSource) {
-    return D(value).sign();
+  //#endregion
+
+  //#region sgn
+
+  public sgn() {
+    return Math.sign(this.m);
   }
 
   public static sgn(value: DecimalSource) {
-    return D(value).sign();
+    return D(value).sgn();
+  }
+
+  public sign() {
+    return this.sgn();
+  }
+
+  public static sign(value: DecimalSource) {
+    return D(value).sgn();
+  }
+
+  //#endregion
+
+  //#region round
+
+  public round() {
+    if (this.e < -1) {
+      return new Decimal(0);
+    }
+    if (this.e < MAX_SIGNIFICANT_DIGITS) {
+      return new Decimal(Math.round(this.toNumber()));
+    }
+    return this;
   }
 
   public static round(value: DecimalSource) {
     return D(value).round();
   }
 
+  //#endregion
+
+  //#region floor
+
+  public floor() {
+    if (!this.isFinite()) {
+      return this;
+    }
+
+    if (this.e < -1) {
+      return Math.sign(this.m) >= 0 ? new Decimal(0) : new Decimal(-1);
+    }
+
+    if (this.e < MAX_SIGNIFICANT_DIGITS) {
+      return new Decimal(Math.floor(this.toNumber()));
+    }
+
+    return this;
+  }
+
   public static floor(value: DecimalSource) {
     return D(value).floor();
+  }
+
+  //#endregion
+
+  //#region ceil
+
+  public ceil() {
+    if (this.e < -1) {
+      return Math.sign(this.m) > 0 ? new Decimal(1) : new Decimal(0);
+    }
+    if (this.e < MAX_SIGNIFICANT_DIGITS) {
+      return new Decimal(Math.ceil(this.toNumber()));
+    }
+    return this;
   }
 
   public static ceil(value: DecimalSource) {
     return D(value).ceil();
   }
 
+  //#endregion
+
+  //#region trunc
+
+  public trunc() {
+    if (this.e < 0) {
+      return new Decimal(0);
+    }
+    if (this.e < MAX_SIGNIFICANT_DIGITS) {
+      return new Decimal(Math.trunc(this.toNumber()));
+    }
+    return this;
+  }
+
   public static trunc(value: DecimalSource) {
     return D(value).trunc();
+  }
+
+  //#endregion
+
+  //#region add
+
+  public add(value: DecimalSource) {
+    // figure out which is bigger, shrink the mantissa of the smaller
+    // by the difference in exponents, add mantissas, normalize and return
+
+    // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
+
+    if (!this.isFinite()) {
+      return this;
+    }
+
+    const decimal = D(value);
+
+    if (!decimal.isFinite()) {
+      return decimal;
+    }
+
+    if (this.m === 0) {
+      return decimal;
+    }
+
+    if (decimal.m === 0) {
+      return this;
+    }
+
+    let biggerDecimal;
+    let smallerDecimal;
+    if (this.e >= decimal.e) {
+      biggerDecimal = this;
+      smallerDecimal = decimal;
+    } else {
+      biggerDecimal = decimal;
+      smallerDecimal = this;
+    }
+
+    if (biggerDecimal.e - smallerDecimal.e > MAX_SIGNIFICANT_DIGITS) {
+      return biggerDecimal;
+    }
+
+    // Have to do this because adding numbers that were once integers but scaled down is imprecise.
+    // Example: 299 + 18
+    const mantissa = Math.round(1e14 * biggerDecimal.m +
+      1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e));
+    return ME(mantissa, biggerDecimal.e - 14);
   }
 
   public static add(value: DecimalSource, other: DecimalSource) {
     return D(value).add(other);
   }
 
+  public plus(value: DecimalSource) {
+    return this.add(value);
+  }
+
   public static plus(value: DecimalSource, other: DecimalSource) {
     return D(value).add(other);
   }
 
+  //#endregion
+
+  //#region sub
+
+  public sub(value: DecimalSource) {
+    return this.add(D(value).neg());
+  }
+
   public static sub(value: DecimalSource, other: DecimalSource) {
     return D(value).sub(other);
+  }
+
+  public subtract(value: DecimalSource) {
+    return this.sub(value);
   }
 
   public static subtract(value: DecimalSource, other: DecimalSource) {
@@ -278,171 +549,635 @@ export default class Decimal {
     return D(value).sub(other);
   }
 
+  public minus(value: DecimalSource) {
+    return this.sub(value);
+  }
+
+  //#endregion
+
+  //#region mul
+
+  public mul(value: DecimalSource) {
+    // This version avoids an extra conversion to Decimal, if possible. Since the
+    // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
+    if (typeof value === "number") {
+      if (value < 1e307 && value > -1e307) {
+        return ME(this.m * value, this.e);
+      }
+      // If the value is larger than 1e307, we can divide that out of mantissa (since it's
+      // greater than 1, it won't underflow)
+      return ME(this.m * 1e-307 * value, this.e + 307);
+    }
+    const decimal = typeof value === "string" ? new Decimal(value) : value;
+    return ME(this.m * decimal.m, this.e + decimal.e);
+  }
+
   public static mul(value: DecimalSource, other: DecimalSource) {
     return D(value).mul(other);
+  }
+
+  public multiply(value: DecimalSource) {
+    return this.mul(value);
   }
 
   public static multiply(value: DecimalSource, other: DecimalSource) {
     return D(value).mul(other);
   }
 
+  public times(value: DecimalSource) {
+    return this.mul(value);
+  }
+
   public static times(value: DecimalSource, other: DecimalSource) {
     return D(value).mul(other);
+  }
+
+  //#endregion
+
+  //#region div
+
+  public div(value: DecimalSource) {
+    return this.mul(D(value).recip());
   }
 
   public static div(value: DecimalSource, other: DecimalSource) {
     return D(value).div(other);
   }
 
+  public divide(value: DecimalSource) {
+    return this.div(value);
+  }
+
   public static divide(value: DecimalSource, other: DecimalSource) {
     return D(value).div(other);
+  }
+
+  public divideBy(value: DecimalSource) {
+    return this.div(value);
+  }
+
+  public dividedBy(value: DecimalSource) {
+    return this.div(value);
+  }
+
+  //#endregion
+
+  //#region recip
+
+  public recip() {
+    return ME(1 / this.m, -this.e);
   }
 
   public static recip(value: DecimalSource) {
     return D(value).recip();
   }
 
+  public reciprocal() {
+    return this.recip();
+  }
+
   public static reciprocal(value: DecimalSource) {
     return D(value).recip();
+  }
+
+  public reciprocate() {
+    return this.recip();
   }
 
   public static reciprocate(value: DecimalSource) {
     return D(value).reciprocate();
   }
 
+  //#endregion
+
+  //#region cmp
+
+  /**
+   * -1 for less than value, 0 for equals value, 1 for greater than value
+   */
+  public cmp(value: DecimalSource) {
+    const decimal = D(value);
+    if (this.isNaN()) {
+      if (decimal.isNaN()) {
+        return 0;
+      }
+
+      return -1;
+    }
+
+    if (decimal.isNaN()) {
+      return 1;
+    }
+
+    return cmp(this, decimal);
+  }
+
   public static cmp(value: DecimalSource, other: DecimalSource) {
     return D(value).cmp(other);
+  }
+
+  public compare(value: DecimalSource) {
+    return this.cmp(value);
   }
 
   public static compare(value: DecimalSource, other: DecimalSource) {
     return D(value).cmp(other);
   }
 
+  //#endregion
+
+  //#region eq
+
+  public eq(value: DecimalSource) {
+    const decimal = D(value);
+    return this.e === decimal.e && this.m === decimal.m;
+  }
+
   public static eq(value: DecimalSource, other: DecimalSource) {
     return D(value).eq(other);
+  }
+
+  public equals(value: DecimalSource) {
+    return this.eq(value);
   }
 
   public static equals(value: DecimalSource, other: DecimalSource) {
     return D(value).eq(other);
   }
 
+  //#endregion
+
+  //#region neq
+
+  public neq(value: DecimalSource) {
+    return !this.eq(value);
+  }
+
   public static neq(value: DecimalSource, other: DecimalSource) {
     return D(value).neq(other);
+  }
+
+  public notEquals(value: DecimalSource) {
+    return this.neq(value);
   }
 
   public static notEquals(value: DecimalSource, other: DecimalSource) {
     return D(value).notEquals(other);
   }
 
+  //#endregion
+
+  //#region lt
+
+  public lt(value: DecimalSource) {
+    const decimal = D(value);
+    if (this.m === 0) {
+      return decimal.m > 0;
+    }
+    if (decimal.m === 0) {
+      return this.m <= 0;
+    }
+    if (this.e === decimal.e) {
+      return this.m < decimal.m;
+    }
+    if (this.m > 0) {
+      return decimal.m > 0 && this.e < decimal.e;
+    }
+    return decimal.m > 0 || this.e > decimal.e;
+  }
+
   public static lt(value: DecimalSource, other: DecimalSource) {
     return D(value).lt(other);
+  }
+
+  public lessThan(other: DecimalSource) {
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) < 0;
+  }
+
+  //#endregion
+
+  //#region lte
+
+  public lte(value: DecimalSource) {
+    return !this.gt(value);
   }
 
   public static lte(value: DecimalSource, other: DecimalSource) {
     return D(value).lte(other);
   }
 
+  public lessThanOrEqualTo(other: DecimalSource) {
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) < 1;
+  }
+
+  //#endregion
+
+  //#region gt
+
+  public gt(value: DecimalSource) {
+    const decimal = D(value);
+    if (this.m === 0) {
+      return decimal.m < 0;
+    }
+    if (decimal.m === 0) {
+      return this.m > 0;
+    }
+    if (this.e === decimal.e) {
+      return this.m > decimal.m;
+    }
+    if (this.m > 0) {
+      return decimal.m < 0 || this.e > decimal.e;
+    }
+    return decimal.m < 0 && this.e < decimal.e;
+  }
+
   public static gt(value: DecimalSource, other: DecimalSource) {
     return D(value).gt(other);
+  }
+
+  public greaterThan(other: DecimalSource) {
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) > 0;
+  }
+
+  //#endregion
+
+  //#region gte
+
+  public gte(value: DecimalSource) {
+    return !this.lt(value);
   }
 
   public static gte(value: DecimalSource, other: DecimalSource) {
     return D(value).gte(other);
   }
 
+  public greaterThanOrEqualTo(other: DecimalSource) {
+    if (this.isNaN()) {
+      return false;
+    }
+
+    const decimal = D(other);
+    if (decimal.isNaN()) {
+      return false;
+    }
+
+    return cmp(this, decimal) > -1;
+  }
+
+  //#endregion
+
+  //#region max
+
+  public max(value: DecimalSource) {
+    const decimal = D(value);
+    return this.lt(decimal) ? decimal : this;
+  }
+
   public static max(value: DecimalSource, other: DecimalSource) {
     return D(value).max(other);
+  }
+
+  //#endregion
+
+  //#region min
+
+  public min(value: DecimalSource) {
+    const decimal = D(value);
+    return this.gt(decimal) ? decimal : this;
   }
 
   public static min(value: DecimalSource, other: DecimalSource) {
     return D(value).min(other);
   }
 
+  //#endregion
+
+  //#region clamp
+
+  public clamp(min: DecimalSource, max: DecimalSource) {
+    return this.max(min).min(max);
+  }
+
   public static clamp(value: DecimalSource, min: DecimalSource, max: DecimalSource) {
     return D(value).clamp(min, max);
+  }
+
+  //#endregion
+
+  //#region clampMin
+
+  public clampMin(min: DecimalSource) {
+    return this.max(min);
   }
 
   public static clampMin(value: DecimalSource, min: DecimalSource) {
     return D(value).clampMin(min);
   }
 
+  //#endregion
+
+  //#region clampMax
+
+  public clampMax(max: DecimalSource) {
+    return this.min(max);
+  }
+
   public static clampMax(value: DecimalSource, max: DecimalSource) {
     return D(value).clampMax(max);
+  }
+
+  //#endregion
+
+  //#region cmp_tolerance
+
+  public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
   }
 
   public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).cmp_tolerance(other, tolerance);
   }
 
+  public compare_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    return this.cmp_tolerance(value, tolerance);
+  }
+
   public static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).cmp_tolerance(other, tolerance);
+  }
+
+  //#endregion
+
+  //#region eq_tolerance
+
+  /**
+   * Tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments.
+   * For example, if you put in 1e-9, then any number closer to the
+   * larger number than (larger number)*1e-9 will be considered equal.
+   */
+  public eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    // https://stackoverflow.com/a/33024979
+    // return abs(a-b) <= tolerance * max(abs(a), abs(b))
+
+    return Decimal.lte(
+      this.sub(decimal).abs(),
+      Decimal.max(this.abs(), decimal.abs()).mul(tolerance),
+    );
   }
 
   public static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).eq_tolerance(other, tolerance);
   }
 
+  public equals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    return this.eq_tolerance(value, tolerance);
+  }
+
   public static equals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).eq_tolerance(other, tolerance);
+  }
+
+  //#endregion
+
+  //#region neq_tolerance
+
+  public neq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    return !this.eq_tolerance(value, tolerance);
   }
 
   public static neq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).neq_tolerance(other, tolerance);
   }
 
+  public notEquals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    return this.neq_tolerance(value, tolerance);
+  }
+
   public static notEquals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).notEquals_tolerance(other, tolerance);
+  }
+
+  //#endregion
+
+  //#region lt_tolerance
+
+  public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    return !this.eq_tolerance(decimal, tolerance) && this.lt(decimal);
   }
 
   public static lt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).lt_tolerance(other, tolerance);
   }
 
+  //#endregion
+
+  //#region lte_tolerance
+
+  public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    return this.eq_tolerance(decimal, tolerance) || this.lt(decimal);
+  }
+
   public static lte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).lte_tolerance(other, tolerance);
+  }
+
+  //#endregion
+
+  //#region gt_tolerance
+
+  public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    return !this.eq_tolerance(decimal, tolerance) && this.gt(decimal);
   }
 
   public static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).gt_tolerance(other, tolerance);
   }
 
+  //#endregion
+
+  //#region gte_tolerance
+
+  public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+    const decimal = D(value);
+    return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
+  }
+
   public static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
     return D(value).gte_tolerance(other, tolerance);
+  }
+
+  //#endregion
+
+  //#region log10
+
+  public log10() {
+    return this.e + Math.log10(this.m);
   }
 
   public static log10(value: DecimalSource) {
     return D(value).log10();
   }
 
+  //#endregion
+
+  //#region absLog10
+
+  public absLog10() {
+    return this.e + Math.log10(Math.abs(this.m));
+  }
+
   public static absLog10(value: DecimalSource) {
     return D(value).absLog10();
+  }
+
+  //#endregion
+
+  //#region pLog10
+
+  public pLog10() {
+    return this.m <= 0 || this.e < 0 ? 0 : this.log10();
   }
 
   public static pLog10(value: DecimalSource) {
     return D(value).pLog10();
   }
 
+  //#endregion
+
+  //#region log
+
+  public log(base: number) {
+    // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
+    // We assume this to be true and thus only need to return a number, not a Decimal,
+    // and don't do any other kind of error checking.
+    return (Math.LN10 / Math.log(base)) * this.log10();
+  }
+
   public static log(value: DecimalSource, base: number) {
     return D(value).log(base);
+  }
+
+  public logarithm(base: number) {
+    return this.log(base);
+  }
+
+  public static logarithm(value: DecimalSource, base: number) {
+    return D(value).log(base);
+  }
+
+  //#endregion
+
+  //#region log2
+
+  public log2() {
+    return 3.321928094887362 * this.log10();
   }
 
   public static log2(value: DecimalSource) {
     return D(value).log2();
   }
 
+  //#endregion
+
+  //#region ln
+
+  public ln() {
+    return 2.302585092994045 * this.log10();
+  }
+
   public static ln(value: DecimalSource) {
     return D(value).ln();
   }
 
-  public static logarithm(value: DecimalSource, base: number) {
-    return D(value).logarithm(base);
-  }
+  //#endregion
+
+  //#region pow10
 
   public static pow10(value: number) {
     if (Number.isInteger(value)) {
       return ME_NN(1, value);
     }
     return ME(Math.pow(10, value % 1), Math.trunc(value));
+  }
+
+  //#endregion
+
+  //#region pow
+
+  public pow(value: number | Decimal) {
+    // UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
+    // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
+    //  makes an exponent of -0! Is a negative zero ever a problem?
+
+    const numberValue = value instanceof Decimal ? value.toNumber() : value;
+
+    // TODO: Fast track seems about neutral for performance.
+    //  It might become faster if an integer pow is implemented,
+    //  or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
+
+    // Fast track: If (this.e*value) is an integer and mantissa^value
+    // fits in a Number, we can do a very fast method.
+    const temp = this.e * numberValue;
+    let newMantissa;
+    if (Number.isSafeInteger(temp)) {
+      newMantissa = Math.pow(this.m, numberValue);
+      if (isFinite(newMantissa) && newMantissa !== 0) {
+        return ME(newMantissa, temp);
+      }
+    }
+
+    // Same speed and usually more accurate.
+
+    const newExponent = Math.trunc(temp);
+    const residue = temp - newExponent;
+    newMantissa = Math.pow(10, numberValue * Math.log10(this.m) + residue);
+    if (isFinite(newMantissa) && newMantissa !== 0) {
+      return ME(newMantissa, newExponent);
+    }
+
+    // return Decimal.exp(value*this.ln());
+    const result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
+    if (this.sign() === -1) {
+      if (Math.abs(numberValue % 2) === 1) {
+        return result.neg();
+      } else if (Math.abs(numberValue % 2) === 0) {
+        return result;
+      }
+      return DECIMAL_NaN;
+    }
+    return result;
   }
 
   public static pow(value: DecimalSource, other: number | Decimal) {
@@ -454,33 +1189,129 @@ export default class Decimal {
     return D(value).pow(other);
   }
 
+  //#endregion
+
+  //#region exp
+
+  public exp() {
+    const x = this.toNumber();
+    // Fast track: if -706 < this < 709, we can use regular exp.
+    if (-706 < x && x < 709) {
+      return Decimal.fromNumber(Math.exp(x));
+    }
+    return Decimal.pow(Math.E, x);
+  }
+
   public static exp(value: DecimalSource) {
     return D(value).exp();
+  }
+
+  //#endregion
+
+  //#region sqr
+
+  public sqr() {
+    return ME(Math.pow(this.m, 2), this.e * 2);
   }
 
   public static sqr(value: DecimalSource) {
     return D(value).sqr();
   }
 
+  //#endregion
+
+  //#region sqrt
+
+  public sqrt() {
+    if (this.m < 0) {
+      return DECIMAL_NaN;
+    }
+    if (this.e % 2 !== 0) {
+      return ME(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
+    }
+    // Mod of a negative number is negative, so != means '1 or -1'
+    return ME(Math.sqrt(this.m), Math.floor(this.e / 2));
+  }
+
   public static sqrt(value: DecimalSource) {
     return D(value).sqrt();
+  }
+
+  //#endregion
+
+  //#region cube
+
+  public cube() {
+    return ME(Math.pow(this.m, 3), this.e * 3);
   }
 
   public static cube(value: DecimalSource) {
     return D(value).cube();
   }
 
+  //#endregion
+
+  //#region cbrt
+
+  public cbrt() {
+    let sign = 1;
+    let mantissa = this.m;
+    if (mantissa < 0) {
+      sign = -1;
+      mantissa = -mantissa;
+    }
+    const newMantissa = sign * Math.pow(mantissa, 1 / 3);
+
+    const mod = this.e % 3;
+    if (mod === 1 || mod === -1) {
+      return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
+    }
+    if (mod !== 0) {
+      return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
+    }
+    // mod != 0 at this point means 'mod == 2 || mod == -2'
+    return ME(newMantissa, Math.floor(this.e / 3));
+  }
+
   public static cbrt(value: DecimalSource) {
     return D(value).cbrt();
+  }
+
+  //#endregion
+
+  //#region cbrt
+
+  public dp() {
+    if (!this.isFinite()) {
+      return NaN;
+    }
+    if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
+      return 0;
+    }
+
+    const mantissa = this.mantissa;
+    let places = -this.exponent;
+    let e = 1;
+    while (Math.abs(Math.round(mantissa * e) / e - mantissa) > ROUND_TOLERANCE) {
+      e *= 10;
+      places++;
+    }
+    return places > 0 ? places : 0;
   }
 
   public static dp(value: DecimalSource) {
     return D(value).dp();
   }
 
+  public decimalPlaces() {
+    return this.dp();
+  }
+
   public static decimalPlaces(value: DecimalSource) {
     return D(value).dp();
   }
+
+  //#endregion
 
   /**
    * If you're willing to spend 'resourcesAvailable' and want to buy something
@@ -601,34 +1432,6 @@ export default class Decimal {
   }
 
   /**
-   * A number (double) with absolute value between [1, 10) OR exactly 0.
-   * If mantissa is ever 10 or greater, it should be normalized
-   * (divide by 10 and add 1 to exponent until it is less than 10,
-   * or multiply by 10 and subtract 1 from exponent until it is 1 or greater).
-   * Infinity/-Infinity/NaN will cause bad things to happen.
-   */
-  public mantissa = NaN;
-
-  /**
-   * A number (integer) between -EXP_LIMIT and EXP_LIMIT.
-   * Non-integral/out of bounds will cause bad things to happen.
-   */
-  public exponent = NaN;
-
-  constructor(value?: DecimalSource) {
-    if (value === undefined) {
-      this.m = 0;
-      this.e = 0;
-    } else if (value instanceof Decimal) {
-      this.fromDecimal(value);
-    } else if (typeof value === "number") {
-      this.fromNumber(value);
-    } else {
-      this.fromString(value);
-    }
-  }
-
-  /**
    * When mantissa is very denormalized, use this to normalize much faster.
    */
   public normalize() {
@@ -648,88 +1451,6 @@ export default class Decimal {
       this.m * 10 / 1e-323 :
       this.m / powerOf10(tempExponent);
     this.e += tempExponent;
-    return this;
-  }
-
-  public fromMantissaExponent(mantissa: number, exponent: number) {
-    // SAFETY: don't let in non-numbers
-    if (!isFinite(mantissa) || !isFinite(exponent)) {
-      return this.fromDecimal(DECIMAL_NaN);
-    }
-    this.m = mantissa;
-    this.e = exponent;
-    // Non-normalized mantissas can easily get here, so this is mandatory.
-    this.normalize();
-    return this;
-  }
-
-  /**
-   * Well, you know what you're doing!
-   */
-  public fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
-    this.m = mantissa;
-    this.e = exponent;
-    return this;
-  }
-
-  public fromDecimal(value: Decimal) {
-    this.m = value.m;
-    this.e = value.e;
-    return this;
-  }
-
-  public fromNumber(value: number) {
-    if (!isFinite(value)) {
-      return this.fromMantissaExponent_noNormalize(value, 0);
-    }
-
-    if (value === 0) {
-      this.m = 0;
-      this.e = 0;
-      return this;
-    }
-
-    this.e = Math.floor(Math.log10(Math.abs(value)));
-    // SAFETY: handle 5e-324, -5e-324 separately
-    this.m = this.e === NUMBER_EXP_MIN ?
-      value * 10 / 1e-323 :
-      value / powerOf10(this.e);
-    // SAFETY: Prevent weirdness.
-    this.normalize();
-    return this;
-  }
-
-  public fromString(value: string) {
-    if (value.indexOf("e") !== -1) {
-      const parts = value.split("e");
-      this.m = parseFloat(parts[0]);
-      this.e = parseFloat(parts[1]);
-      return this.normalize();
-    }
-
-    if (value === "NaN") {
-      return this.fromDecimal(DECIMAL_NaN);
-    }
-
-    this.fromNumber(parseFloat(value));
-    if (this.isNaN()) {
-      throw Error("[DecimalError] Invalid argument: " + value);
-    }
-    return this;
-  }
-
-  public fromValue(value?: DecimalSource) {
-    if (value instanceof Decimal) {
-      return this.fromDecimal(value);
-    }
-    if (typeof value === "number") {
-      return this.fromNumber(value);
-    }
-    if (typeof value === "string") {
-      return this.fromString(value);
-    }
-    this.m = 0;
-    this.e = 0;
     return this;
   }
 
@@ -888,425 +1609,6 @@ export default class Decimal {
     return this.toExponential(places);
   }
 
-  public abs() {
-    return ME_NN(Math.abs(this.m), this.e);
-  }
-
-  public neg() {
-    return ME_NN(-this.m, this.e);
-  }
-
-  public negate() {
-    return this.neg();
-  }
-
-  public negated() {
-    return this.neg();
-  }
-
-  public sign() {
-    return Math.sign(this.m);
-  }
-
-  public sgn() {
-    return this.sign();
-  }
-
-  public round() {
-    if (this.e < -1) {
-      return new Decimal(0);
-    }
-    if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.round(this.toNumber()));
-    }
-    return this;
-  }
-
-  public floor() {
-    if (!this.isFinite()) {
-      return this;
-    }
-
-    if (this.e < -1) {
-      return Math.sign(this.m) >= 0 ? new Decimal(0) : new Decimal(-1);
-    }
-
-    if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.floor(this.toNumber()));
-    }
-
-    return this;
-  }
-
-  public ceil() {
-    if (this.e < -1) {
-      return Math.sign(this.m) > 0 ? new Decimal(1) : new Decimal(0);
-    }
-    if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.ceil(this.toNumber()));
-    }
-    return this;
-  }
-
-  public trunc() {
-    if (this.e < 0) {
-      return new Decimal(0);
-    }
-    if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.trunc(this.toNumber()));
-    }
-    return this;
-  }
-
-  public add(value: DecimalSource) {
-    // figure out which is bigger, shrink the mantissa of the smaller
-    // by the difference in exponents, add mantissas, normalize and return
-
-    // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
-
-    if (!this.isFinite()) {
-      return this;
-    }
-
-    const decimal = D(value);
-
-    if (!decimal.isFinite()) {
-      return decimal;
-    }
-
-    if (this.m === 0) {
-      return decimal;
-    }
-
-    if (decimal.m === 0) {
-      return this;
-    }
-
-    let biggerDecimal;
-    let smallerDecimal;
-    if (this.e >= decimal.e) {
-      biggerDecimal = this;
-      smallerDecimal = decimal;
-    } else {
-      biggerDecimal = decimal;
-      smallerDecimal = this;
-    }
-
-    if (biggerDecimal.e - smallerDecimal.e > MAX_SIGNIFICANT_DIGITS) {
-      return biggerDecimal;
-    }
-
-    // Have to do this because adding numbers that were once integers but scaled down is imprecise.
-    // Example: 299 + 18
-    const mantissa = Math.round(1e14 * biggerDecimal.m +
-      1e14 * smallerDecimal.m * powerOf10(smallerDecimal.e - biggerDecimal.e));
-    return ME(mantissa, biggerDecimal.e - 14);
-  }
-
-  public plus(value: DecimalSource) {
-    return this.add(value);
-  }
-
-  public sub(value: DecimalSource) {
-    return this.add(D(value).neg());
-  }
-
-  public subtract(value: DecimalSource) {
-    return this.sub(value);
-  }
-
-  public minus(value: DecimalSource) {
-    return this.sub(value);
-  }
-
-  public mul(value: DecimalSource) {
-    // This version avoids an extra conversion to Decimal, if possible. Since the
-    // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
-    if (typeof value === "number") {
-      if (value < 1e307 && value > -1e307) {
-        return ME(this.m * value, this.e);
-      }
-      // If the value is larger than 1e307, we can divide that out of mantissa (since it's
-      // greater than 1, it won't underflow)
-      return ME(this.m * 1e-307 * value, this.e + 307);
-    }
-    const decimal = typeof value === "string" ? new Decimal(value) : value;
-    return ME(this.m * decimal.m, this.e + decimal.e);
-  }
-
-  public multiply(value: DecimalSource) {
-    return this.mul(value);
-  }
-
-  public times(value: DecimalSource) {
-    return this.mul(value);
-  }
-
-  public div(value: DecimalSource) {
-    return this.mul(D(value).recip());
-  }
-
-  public divide(value: DecimalSource) {
-    return this.div(value);
-  }
-
-  public divideBy(value: DecimalSource) {
-    return this.div(value);
-  }
-
-  public dividedBy(value: DecimalSource) {
-    return this.div(value);
-  }
-
-  public recip() {
-    return ME(1 / this.m, -this.e);
-  }
-
-  public reciprocal() {
-    return this.recip();
-  }
-
-  public reciprocate() {
-    return this.recip();
-  }
-
-  /**
-   * -1 for less than value, 0 for equals value, 1 for greater than value
-   */
-  public cmp(value: DecimalSource) {
-    const decimal = D(value);
-    if (this.isNaN()) {
-      if (decimal.isNaN()) {
-        return 0;
-      }
-
-      return -1;
-    }
-
-    if (decimal.isNaN()) {
-      return 1;
-    }
-
-    return cmp(this, decimal);
-  }
-
-  public compare(value: DecimalSource) {
-    return this.cmp(value);
-  }
-
-  public eq(value: DecimalSource) {
-    const decimal = D(value);
-    return this.e === decimal.e && this.m === decimal.m;
-  }
-
-  public equals(value: DecimalSource) {
-    return this.eq(value);
-  }
-
-  public neq(value: DecimalSource) {
-    return !this.eq(value);
-  }
-
-  public notEquals(value: DecimalSource) {
-    return this.neq(value);
-  }
-
-  public lt(value: DecimalSource) {
-    const decimal = D(value);
-    if (this.m === 0) {
-      return decimal.m > 0;
-    }
-    if (decimal.m === 0) {
-      return this.m <= 0;
-    }
-    if (this.e === decimal.e) {
-      return this.m < decimal.m;
-    }
-    if (this.m > 0) {
-      return decimal.m > 0 && this.e < decimal.e;
-    }
-    return decimal.m > 0 || this.e > decimal.e;
-  }
-
-  public lte(value: DecimalSource) {
-    return !this.gt(value);
-  }
-
-  public gt(value: DecimalSource) {
-    const decimal = D(value);
-    if (this.m === 0) {
-      return decimal.m < 0;
-    }
-    if (decimal.m === 0) {
-      return this.m > 0;
-    }
-    if (this.e === decimal.e) {
-      return this.m > decimal.m;
-    }
-    if (this.m > 0) {
-      return decimal.m < 0 || this.e > decimal.e;
-    }
-    return decimal.m < 0 && this.e < decimal.e;
-  }
-
-  public gte(value: DecimalSource) {
-    return !this.lt(value);
-  }
-
-  public max(value: DecimalSource) {
-    const decimal = D(value);
-    return this.lt(decimal) ? decimal : this;
-  }
-
-  public min(value: DecimalSource) {
-    const decimal = D(value);
-    return this.gt(decimal) ? decimal : this;
-  }
-
-  public clamp(min: DecimalSource, max: DecimalSource) {
-    return this.max(min).min(max);
-  }
-
-  public clampMin(min: DecimalSource) {
-    return this.max(min);
-  }
-
-  public clampMax(max: DecimalSource) {
-    return this.min(max);
-  }
-
-  public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
-  }
-
-  public compare_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    return this.cmp_tolerance(value, tolerance);
-  }
-
-  /**
-   * Tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments.
-   * For example, if you put in 1e-9, then any number closer to the
-   * larger number than (larger number)*1e-9 will be considered equal.
-   */
-  public eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    // https://stackoverflow.com/a/33024979
-    // return abs(a-b) <= tolerance * max(abs(a), abs(b))
-
-    return Decimal.lte(
-      this.sub(decimal).abs(),
-      Decimal.max(this.abs(), decimal.abs()).mul(tolerance),
-    );
-  }
-
-  public equals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    return this.eq_tolerance(value, tolerance);
-  }
-
-  public neq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    return !this.eq_tolerance(value, tolerance);
-  }
-
-  public notEquals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    return this.neq_tolerance(value, tolerance);
-  }
-
-  public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    return !this.eq_tolerance(decimal, tolerance) && this.lt(decimal);
-  }
-
-  public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    return this.eq_tolerance(decimal, tolerance) || this.lt(decimal);
-  }
-
-  public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    return !this.eq_tolerance(decimal, tolerance) && this.gt(decimal);
-  }
-
-  public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
-    const decimal = D(value);
-    return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
-  }
-
-  public log10() {
-    return this.e + Math.log10(this.m);
-  }
-
-  public absLog10() {
-    return this.e + Math.log10(Math.abs(this.m));
-  }
-
-  public pLog10() {
-    return this.m <= 0 || this.e < 0 ? 0 : this.log10();
-  }
-
-  public log(base: number) {
-    // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
-    // We assume this to be true and thus only need to return a number, not a Decimal,
-    // and don't do any other kind of error checking.
-    return (Math.LN10 / Math.log(base)) * this.log10();
-  }
-
-  public log2() {
-    return 3.321928094887362 * this.log10();
-  }
-
-  public ln() {
-    return 2.302585092994045 * this.log10();
-  }
-
-  public logarithm(base: number) {
-    return this.log(base);
-  }
-
-  public pow(value: number | Decimal) {
-    // UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
-    // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
-    //  makes an exponent of -0! Is a negative zero ever a problem?
-
-    const numberValue = value instanceof Decimal ? value.toNumber() : value;
-
-    // TODO: Fast track seems about neutral for performance.
-    //  It might become faster if an integer pow is implemented,
-    //  or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
-
-    // Fast track: If (this.e*value) is an integer and mantissa^value
-    // fits in a Number, we can do a very fast method.
-    const temp = this.e * numberValue;
-    let newMantissa;
-    if (Number.isSafeInteger(temp)) {
-      newMantissa = Math.pow(this.m, numberValue);
-      if (isFinite(newMantissa) && newMantissa !== 0) {
-        return ME(newMantissa, temp);
-      }
-    }
-
-    // Same speed and usually more accurate.
-
-    const newExponent = Math.trunc(temp);
-    const residue = temp - newExponent;
-    newMantissa = Math.pow(10, numberValue * Math.log10(this.m) + residue);
-    if (isFinite(newMantissa) && newMantissa !== 0) {
-      return ME(newMantissa, newExponent);
-    }
-
-    // return Decimal.exp(value*this.ln());
-    const result = Decimal.pow10(numberValue * this.absLog10()); // this is 2x faster and gives same values AFAIK
-    if (this.sign() === -1) {
-      if (Math.abs(numberValue % 2) === 1) {
-        return result.neg();
-      } else if (Math.abs(numberValue % 2) === 0) {
-        return result;
-      }
-      return DECIMAL_NaN;
-    }
-    return result;
-  }
-
   public pow_base(value: DecimalSource) {
     return D(value).pow(this);
   }
@@ -1320,54 +1622,6 @@ export default class Decimal {
     return Decimal.pow(
       (n / Math.E) * Math.sqrt(n * Math.sinh(1 / n) + 1 /
       (810 * Math.pow(n, 6))), n).mul(Math.sqrt(2 * Math.PI / n));
-  }
-
-  public exp() {
-    const x = this.toNumber();
-    // Fast track: if -706 < this < 709, we can use regular exp.
-    if (-706 < x && x < 709) {
-      return Decimal.fromNumber(Math.exp(x));
-    }
-    return Decimal.pow(Math.E, x);
-  }
-
-  public sqr() {
-    return ME(Math.pow(this.m, 2), this.e * 2);
-  }
-
-  public sqrt() {
-    if (this.m < 0) {
-      return DECIMAL_NaN;
-    }
-    if (this.e % 2 !== 0) {
-      return ME(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
-    }
-    // Mod of a negative number is negative, so != means '1 or -1'
-    return ME(Math.sqrt(this.m), Math.floor(this.e / 2));
-  }
-
-  public cube() {
-    return ME(Math.pow(this.m, 3), this.e * 3);
-  }
-
-  public cbrt() {
-    let sign = 1;
-    let mantissa = this.m;
-    if (mantissa < 0) {
-      sign = -1;
-      mantissa = -mantissa;
-    }
-    const newMantissa = sign * Math.pow(mantissa, 1 / 3);
-
-    const mod = this.e % 3;
-    if (mod === 1 || mod === -1) {
-      return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
-    }
-    if (mod !== 0) {
-      return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
-    }
-    // mod != 0 at this point means 'mod == 2 || mod == -2'
-    return ME(newMantissa, Math.floor(this.e / 3));
   }
 
   // Some hyperbolic trig functions that happen to be easy
@@ -1413,80 +1667,6 @@ export default class Decimal {
    */
   public egg() {
     return this.add(9);
-  }
-
-  public lessThanOrEqualTo(other: DecimalSource) {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) < 1;
-  }
-
-  public lessThan(other: DecimalSource) {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) < 0;
-  }
-
-  public greaterThanOrEqualTo(other: DecimalSource) {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) > -1;
-  }
-
-  public greaterThan(other: DecimalSource) {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) > 0;
-  }
-
-  public decimalPlaces() {
-    return this.dp();
-  }
-
-  public dp() {
-    if (!this.isFinite()) {
-      return NaN;
-    }
-    if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
-      return 0;
-    }
-
-    const mantissa = this.mantissa;
-    let places = -this.exponent;
-    let e = 1;
-    while (Math.abs(Math.round(mantissa * e) / e - mantissa) > ROUND_TOLERANCE) {
-      e *= 10;
-      places++;
-    }
-    return places > 0 ? places : 0;
   }
 
   public isFinite() {
