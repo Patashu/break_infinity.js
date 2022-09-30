@@ -1263,13 +1263,13 @@ export default class Decimal {
     const newMantissa = sign * Math.pow(mantissa, 1 / 3);
 
     const mod = this.e % 3;
-    if (mod === 1 || mod === -1) {
+    if (mod === 1 || mod === -2) {
       return ME(newMantissa * 2.154434690031883, Math.floor(this.e / 3));
     }
     if (mod !== 0) {
       return ME(newMantissa * 4.641588833612778, Math.floor(this.e / 3));
     }
-    // mod != 0 at this point means 'mod == 2 || mod == -2'
+    // mod != 0 at this point means 'mod == 2 || mod == -1'
     return ME(newMantissa, Math.floor(this.e / 3));
   }
 
