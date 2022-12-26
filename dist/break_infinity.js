@@ -340,7 +340,7 @@
         return this.normalize();
       }
 
-      if (value === "NaN") {
+      if (value === "nan") {
         return this.fromDecimal(DECIMAL_NaN);
       }
 
