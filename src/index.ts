@@ -277,14 +277,13 @@ export default class Decimal {
   //#region fromString
 
   public fromString(value: string) {
-	value = value.toLowerCase();
+    value = value.toLowerCase();
     if (value.indexOf("e") !== -1) {
       const parts = value.split("e");
       this.m = parseFloat(parts[0]);
-	  if (isNaN(this.m))
-	  {
-		this.m = 1;
-	  }
+      if (isNaN(this.m)) {
+        this.m = 1;
+      }
       this.e = parseFloat(parts[1]);
       return this.normalize();
     }
