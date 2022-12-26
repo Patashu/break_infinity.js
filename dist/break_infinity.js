@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.Decimal = factory());
-}(this, (function () { 'use strict';
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Decimal = factory());
+})(this, (function () { 'use strict';
 
   // For example: if two exponents are more than 17 apart,
   // consider adding them together pointless, just return the larger one
@@ -326,9 +326,16 @@
 
 
     Decimal.prototype.fromString = function (value) {
+      value = value.toLowerCase();
+
       if (value.indexOf("e") !== -1) {
         var parts = value.split("e");
         this.m = parseFloat(parts[0]);
+
+        if (isNaN(this.m)) {
+          this.m = 1;
+        }
+
         this.e = parseFloat(parts[1]);
         return this.normalize();
       }
@@ -1375,14 +1382,14 @@
       return ME(mantissa, exponent);
       /*
         Examples:
-             randomly test pow:
-             var a = Decimal.randomDecimalForTesting(1000);
+              randomly test pow:
+              var a = Decimal.randomDecimalForTesting(1000);
         var pow = Math.random()*20-10;
         if (Math.random()*2 < 1) { pow = Math.round(pow); }
         var result = Decimal.pow(a, pow);
         ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
-             randomly test add:
-             var a = Decimal.randomDecimalForTesting(1000);
+              randomly test add:
+              var a = Decimal.randomDecimalForTesting(1000);
         var b = Decimal.randomDecimalForTesting(17);
         var c = a.mul(b);
         var result = a.add(c);
@@ -1710,4 +1717,4 @@
 
   return Decimal;
 
-})));
+}));
