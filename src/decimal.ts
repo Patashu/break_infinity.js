@@ -120,11 +120,19 @@ export class Decimal {
 
   //#endregion
 
+  //#region copyFrom
+
+  public copyFrom(value: Decimal) {
+    this.m = value.m;
+    this.e = value.e;
+  }
+
+  //#endregion
+
   //#region fromDecimal
 
   public fromDecimal(value: Decimal) {
-    this.m = value.m;
-    this.e = value.e;
+    this.copyFrom(value);
     return this;
   }
 
