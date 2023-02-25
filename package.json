@@ -2,19 +2,25 @@
   "name": "break_infinity.js",
   "version": "2.0.0",
   "description": "Performance-oriented decimal.js replacement for incremental games.",
-  "main": "dist/break_infinity.common.js",
+  "type": "module",
+  "main": "dist/break_infinity.cjs.js",
   "module": "dist/break_infinity.esm.js",
   "unpkg": "dist/break_infinity.min.js",
   "jsdelivr": "dist/break_infinity.min.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/break_infinity.esm.js",
+      "require": "./dist/break_infinity.cjs.js"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "npm run build:prepare && npm run build:dist && npm run build:docs",
-    "docs": "npm run build:prepare && npm run build:docs",
-    "build:prepare": "husky install",
-    "build:dist": "bili && node build/post-build.js",
+    "prebuild": "husky install",
+    "build": "npm run build:dist && npm run build:docs",
+    "build:dist": "vite build -c .config/vite.config.js && vite build -c .config/vite.config.umd.js",
     "build:docs": "typedoc --options typedoc.ts",
     "test": "jest",
     "test:coverage": "jest --collectCoverage"
@@ -45,17 +51,16 @@
     "@types/jest": "^27.0.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
-    "bili": "^5.0.5",
     "eslint": "^8.3.0",
     "husky": "^7.0.0",
     "jest": "^27.3.1",
     "jest-each": "^27.3.1",
     "jest-html-reporter": "^3.4.1",
     "lint-staged": "^12.0.3",
-    "rollup-plugin-typescript2": "^0.31.0",
     "ts-jest": "^27.0.7",
+    "tsup": "^6.6.3",
     "typedoc": "^0.22.9",
-    "typedoc-plugin-rename-defaults": "^0.4.0",
-    "typescript": "^4.4.4"
+    "typescript": "^4.9.3",
+    "vite": "^4.1.4"
   }
 }
