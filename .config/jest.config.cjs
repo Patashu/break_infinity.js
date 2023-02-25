@@ -3,6 +3,7 @@ module.exports = {
   moduleFileExtensions: ["js", "ts", "d.ts"],
   preset: "ts-jest",
   testEnvironment: "node",
+  rootDir: "..",
   reporters: [
     "default",
     ["./node_modules/jest-html-reporter", {
