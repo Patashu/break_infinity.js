@@ -21,7 +21,7 @@
     "prebuild": "husky install",
     "build": "npm run build:dist && npm run build:docs",
     "build:dist": "vite build -c .config/vite.config.js && vite build -c .config/vite.config.umd.js",
-    "build:docs": "typedoc --options typedoc.ts",
+    "build:docs": "typedoc",
     "test": "jest",
     "test:coverage": "jest --collectCoverage"
   },
@@ -59,7 +59,7 @@
     "lint-staged": "^12.0.3",
     "ts-jest": "^27.0.7",
     "tsup": "^6.6.3",
-    "typedoc": "^0.22.9",
+    "typedoc": "^0.23.25",
     "typescript": "^4.9.3",
     "vite": "^4.1.4"
   }
