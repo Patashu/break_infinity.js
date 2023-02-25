@@ -14,17 +14,14 @@ NEW:
 
 ## Load
 
-The library is a single JavaScript file *break_infinity.js* (or minified, *break_infinity.min.js*)
-which can be found on https://github.com/Patashu/break_infinity.js/releases page.
-
-It can be loaded using a script tag in an HTML document for the browser
+You can use break_infinity.js directly from a CDN via a script tag:
 
 ```html
-    <!-- You can load it as a local file... -->
-    <script src="path/to/break_infinity.js"></script>
-
-    <!-- ...or from CDN -->
+    <!-- You can load it as a minified file (recommended) -->
     <script src="https://cdn.jsdelivr.net/npm/break_infinity.js"></script>
+
+    <!-- ...or as a non-minified file (for debugging) -->
+    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js/dist/break_infinity.js"></script>
 ```
 
 or as a JS module using import
@@ -107,12 +104,12 @@ cd break_infinity.js
 
 Then install npm dependencies
 ```
-npm install
+npm ci
 ```
 
 And then run build command which will build all targets to the dist directory.
 ```
-npm run build
+npm run build:dist
 ```
 
 ## Acknowledgements
