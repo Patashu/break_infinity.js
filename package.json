@@ -19,9 +19,8 @@
   ],
   "scripts": {
     "prebuild": "husky install",
-    "build": "npm run build:dist && npm run build:docs",
-    "build:dist": "vite build -c .config/vite.config.js && vite build -c .config/vite.config.umd.js",
-    "build:docs": "typedoc",
+    "build": "vite build -c .config/vite.config.js && vite build -c .config/vite.config.umd.js",
+    "docs": "typedoc",
     "test": "jest -c .config/jest.config.cjs",
     "test:coverage": "jest -c .config/jest.config.cjs --collectCoverage"
   },

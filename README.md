@@ -109,7 +109,7 @@ npm ci
 
 And then run build command which will build all targets to the dist directory.
 ```
-npm run build:dist
+npm run build
 ```
 
 ## Acknowledgements
