@@ -1038,6 +1038,10 @@ export class Decimal {
   //#region pow
 
   public pow(value: number | Decimal) {
+    if (this.m === 0) {
+      return this;
+    }
+
     // UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
     // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
     //  makes an exponent of -0! Is a negative zero ever a problem?
