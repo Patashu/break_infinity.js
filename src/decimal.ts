@@ -8,6 +8,7 @@ import {
   affordGeometricSeries, sumGeometricSeries, affordArithmeticSeries,
   sumArithmeticSeries, efficiencyOfPurchase, cmp
 } from "./math";
+import { makeConstant } from "./decimal-constants";
 
 const D = (value: DecimalSource) =>
   value instanceof Decimal ? value : new Decimal(value);
@@ -1578,6 +1579,26 @@ export class Decimal {
     return this.mantissa === NEGATIVE_INFINITY.mantissa;
   }
 
+  public static const(value: number | string) {
+    return makeConstant(value);
+  }
+
+  public static constant(value: number | string) {
+    return Decimal.const(value);
+  }
+
+  public static get ZERO() {
+    return ZERO;
+  }
+
+  public static get ONE() {
+    return ONE;
+  }
+
+  public static get MINUS_ONE() {
+    return MINUS_ONE;
+  }
+
   public static get MAX_VALUE() {
     return MAX_VALUE;
   }
@@ -1609,8 +1630,11 @@ export class Decimal {
 
 const MAX_VALUE = ME_NN(1, EXP_LIMIT);
 const MIN_VALUE = ME_NN(1, -EXP_LIMIT);
-const NUMBER_MAX_VALUE = D(Number.MAX_VALUE);
-const NUMBER_MIN_VALUE = D(Number.MIN_VALUE);
+const ZERO = makeConstant(0);
+const ONE = makeConstant(1);
+const MINUS_ONE = makeConstant(-1);
+const NUMBER_MAX_VALUE = makeConstant(Number.MAX_VALUE);
+const NUMBER_MIN_VALUE = makeConstant(Number.MIN_VALUE);
 const DECIMAL_NaN = ME_NN(Number.NaN, 0);
 const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, 0);
 const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, 0);
