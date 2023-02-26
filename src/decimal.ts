@@ -1,17 +1,26 @@
 import { powerOf10 } from "./power-of-10";
 import { repeatZeroes, trailZeroes } from "./repeat-zeroes";
+import { EXP_LIMIT, MAX_SIGNIFICANT_DIGITS, NUMBER_EXP_MAX, NUMBER_EXP_MIN, ROUND_TOLERANCE, } from "./constants";
 import {
-  MAX_SIGNIFICANT_DIGITS, EXP_LIMIT,
-  NUMBER_EXP_MAX, NUMBER_EXP_MIN, ROUND_TOLERANCE,
-} from "./constants";
-import {
-  affordGeometricSeries, sumGeometricSeries, affordArithmeticSeries,
-  sumArithmeticSeries, efficiencyOfPurchase, cmp
+  affordArithmeticSeries,
+  affordGeometricSeries,
+  cmp,
+  efficiencyOfPurchase,
+  sumArithmeticSeries,
+  sumGeometricSeries
 } from "./math";
 import { getOrAddPooled, tryGetPooled } from "./decimal-pool";
+import {
+  assertFiniteInputExponent,
+  assertFiniteInputMantissa,
+  assertFiniteInputNumber,
+  NonFiniteError
+} from "./non-finite-error";
 
 function D(value?: DecimalSource): Decimal {
   if (value instanceof Decimal) {
+    assertFiniteInputMantissa(value.mantissa);
+    assertFiniteInputExponent(value.exponent);
     return value;
   }
   if (typeof value === "number") {
@@ -24,15 +33,20 @@ function D(value?: DecimalSource): Decimal {
     return ZERO;
   }
   if (value.mantissa !== undefined && value.exponent !== undefined) {
-    return ME(value.mantissa, value.exponent);
+    return Decimal.fromMantissaExponent(value.mantissa, value.exponent);
   }
 
   throw Error("Unsupported Decimal source type.");
 }
 
+// ME and ME_NN are special functions for returning results in
+// math functions. Don't use them anywhere else.
 function ME(mantissa: number, exponent: number): Decimal {
   const result = new Decimal();
-  result.setMantissaExponent(mantissa, exponent);
+  // Here we don't use setMantissaExponent to not trigger
+  // non-finite asserts on input.
+  result.setMantissaExponent_noNormalize(mantissa, exponent);
+  result.normalize();
   return result;
 }
 
@@ -64,18 +78,17 @@ export class Decimal {
    * or multiply by 10 and subtract 1 from exponent until it is 1 or greater).
    * Infinity/-Infinity/NaN will cause bad things to happen.
    */
-  public mantissa = NaN;
+  public mantissa = 0.0;
 
   /**
    * A number (integer) between -EXP_LIMIT and EXP_LIMIT.
    * Non-integral/out of bounds will cause bad things to happen.
    */
-  public exponent = NaN;
+  public exponent = 0.0;
 
   constructor(value?: DecimalSource) {
     if (value === undefined || value === null) {
-      this.m = 0;
-      this.e = 0;
+      return;
     } else if (typeof value === "number") {
       this.setFromNumber(value);
     } else if (typeof value === "string") {
@@ -123,19 +136,18 @@ export class Decimal {
   //#region fromMantissaExponent
 
   public setMantissaExponent(mantissa: number, exponent: number): void {
-    // SAFETY: don't let in non-numbers
-    if (!isFinite(mantissa) || !isFinite(exponent)) {
-      this.copyFrom(DECIMAL_NaN);
-      return;
-    }
+    assertFiniteInputMantissa(mantissa);
+    assertFiniteInputExponent(exponent);
+
     this.m = mantissa;
     this.e = exponent;
-    // Non-normalized mantissas can easily get here, so this is mandatory.
     this.normalize();
   }
 
   public static fromMantissaExponent(mantissa: number, exponent: number): Decimal {
-    return ME(mantissa, exponent);
+    const result = new Decimal();
+    result.setMantissaExponent(mantissa, exponent);
+    return result;
   }
 
   //#endregion
@@ -176,10 +188,7 @@ export class Decimal {
   //#region fromNumber
 
   public setFromNumber_bypassCache(value: number): void {
-    if (!isFinite(value)) {
-      this.setMantissaExponent_noNormalize(value, 0);
-      return;
-    }
+    assertFiniteInputNumber(value);
 
     if (value === 0) {
       this.m = 0;
@@ -223,24 +232,14 @@ export class Decimal {
     value = value.toLowerCase();
     if (value.indexOf("e") !== -1) {
       const parts = value.split("e");
-      this.m = parseFloat(parts[0]);
-      if (isNaN(this.m)) {
-        this.m = 1;
-      }
+      const m = parseFloat(parts[0]);
+      this.m = isNaN(m) ? 1 : m;
       this.e = parseFloat(parts[1]);
       this.normalize();
       return;
     }
 
-    if (value === "nan") {
-      this.copyFrom(DECIMAL_NaN);
-      return;
-    }
-
     this.setFromNumber(parseFloat(value));
-    if (this.isNaN()) {
-      throw Error("[DecimalError] Invalid argument: " + value);
-    }
   }
 
   public setFromString(value: string): Decimal {
@@ -355,18 +354,12 @@ export class Decimal {
   //#region floor
 
   public floor(): Decimal {
-    if (!this.isFinite()) {
-      return this;
-    }
-
     if (this.e < -1) {
       return Math.sign(this.m) >= 0 ? ZERO : MINUS_ONE;
     }
-
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
       return Decimal.fromNumber(Math.floor(this.toNumber()));
     }
-
     return this;
   }
 
@@ -420,15 +413,7 @@ export class Decimal {
 
     // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
 
-    if (!this.isFinite()) {
-      return this;
-    }
-
     const decimal = D(value);
-
-    if (!decimal.isFinite()) {
-      return decimal;
-    }
 
     if (this.m === 0) {
       return decimal;
@@ -602,20 +587,7 @@ export class Decimal {
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
   public cmp(value: DecimalSource): number {
-    const decimal = D(value);
-    if (this.isNaN()) {
-      if (decimal.isNaN()) {
-        return 0;
-      }
-
-      return -1;
-    }
-
-    if (decimal.isNaN()) {
-      return 1;
-    }
-
-    return cmp(this, decimal);
+    return cmp(this, D(value));
   }
 
   public static cmp(value: DecimalSource, other: DecimalSource): number {
@@ -697,16 +669,7 @@ export class Decimal {
   }
 
   public lessThan(other: DecimalSource): boolean {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) < 0;
+    return this.lt(other);
   }
 
   //#endregion
@@ -722,16 +685,7 @@ export class Decimal {
   }
 
   public lessThanOrEqualTo(other: DecimalSource): boolean {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) < 1;
+    return this.lte(other);
   }
 
   //#endregion
@@ -760,16 +714,7 @@ export class Decimal {
   }
 
   public greaterThan(other: DecimalSource): boolean {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) > 0;
+    return this.gt(other);
   }
 
   //#endregion
@@ -785,16 +730,7 @@ export class Decimal {
   }
 
   public greaterThanOrEqualTo(other: DecimalSource): boolean {
-    if (this.isNaN()) {
-      return false;
-    }
-
-    const decimal = D(other);
-    if (decimal.isNaN()) {
-      return false;
-    }
-
-    return cmp(this, decimal) > -1;
+    return this.gte(other);
   }
 
   //#endregion
@@ -1083,15 +1019,19 @@ export class Decimal {
   //#region pow
 
   public pow(value: number | Decimal): Decimal {
-    if (this.m === 0) {
-      return this;
-    }
-
     // UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
     // TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
     //  makes an exponent of -0! Is a negative zero ever a problem?
 
     const numberValue = value instanceof Decimal ? value.toNumber() : value;
+
+    if (numberValue === 0) {
+      return ONE;
+    }
+
+    if (this.m === 0) {
+      return this;
+    }
 
     // TODO: Fast track seems about neutral for performance.
     //  It might become faster if an integer pow is implemented,
@@ -1125,7 +1065,7 @@ export class Decimal {
       } else if (Math.abs(numberValue % 2) === 0) {
         return result;
       }
-      return DECIMAL_NaN;
+      throw NonFiniteError.result("NaN");
     }
     return result;
   }
@@ -1174,7 +1114,7 @@ export class Decimal {
 
   public sqrt(): Decimal {
     if (this.m < 0) {
-      return DECIMAL_NaN;
+      throw NonFiniteError.result("NaN");
     }
     if (this.e % 2 !== 0) {
       return ME(Math.sqrt(this.m) * 3.16227766016838, Math.floor(this.e / 2));
@@ -1232,9 +1172,6 @@ export class Decimal {
   //#region cbrt
 
   public dp(): number {
-    if (!this.isFinite()) {
-      return NaN;
-    }
     if (this.exponent >= MAX_SIGNIFICANT_DIGITS) {
       return 0;
     }
@@ -1349,7 +1286,7 @@ export class Decimal {
     // NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
     // 5% of the time, have a mantissa of 0
     if (Math.random() * 20 < 1) {
-      return ME_NN(0, 0);
+      return Decimal.fromMantissaExponent_noNormalize(0, 0);
     }
     let mantissa = Math.random() * 10;
     // 10% of the time, have a simple mantissa
@@ -1358,7 +1295,7 @@ export class Decimal {
     }
     mantissa *= Math.sign(Math.random() * 2 - 1);
     const exponent = Math.floor(Math.random() * absMaxExponent * 2) - absMaxExponent;
-    return ME(mantissa, exponent);
+    return Decimal.fromMantissaExponent(mantissa, exponent);
 
     /*
       Examples:
@@ -1397,10 +1334,18 @@ export class Decimal {
     }
 
     const tempExponent = Math.floor(Math.log10(Math.abs(this.m)));
-    this.m = tempExponent === NUMBER_EXP_MIN ?
+    const m = tempExponent === NUMBER_EXP_MIN ?
       this.m * 10 / 1e-323 :
       this.m / powerOf10(tempExponent);
-    this.e += tempExponent;
+    const e = this.e + tempExponent;
+    if (!isFinite(m)) {
+      throw new NonFiniteError("Mantissa is non-finite after normalization.");
+    }
+    if (!isFinite(e)) {
+      throw new NonFiniteError("Exponent is non-finite after normalization.");
+    }
+    this.m = m;
+    this.e = e;
     return this;
   }
 
@@ -1422,10 +1367,6 @@ export class Decimal {
     // AFTER toNumber() if you are confident you started with an integer.
 
     // var result = this.m*Math.pow(10, this.e);
-
-    if (!this.isFinite()) {
-      return this.mantissa;
-    }
 
     if (this.e > NUMBER_EXP_MAX) {
       return this.m > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
@@ -1450,10 +1391,6 @@ export class Decimal {
   }
 
   public mantissaWithDecimalPlaces(places: number): number {
-    if (!this.isFinite()) {
-      return this.mantissa;
-    }
-
     if (this.m === 0) {
       return 0;
     }
@@ -1466,9 +1403,6 @@ export class Decimal {
   }
 
   public toString(): string {
-    if (!this.isFinite()) {
-      return this.mantissa.toString();
-    }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0";
     }
@@ -1491,9 +1425,6 @@ export class Decimal {
     // TBH I'm tempted to just say it's a feature.
     // If you're doing pretty formatting then why don't you know how many decimal places you want...?
 
-    if (!this.isFinite()) {
-      return this.mantissa.toString();
-    }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0" + trailZeroes(places) + "e+0";
     }
@@ -1518,9 +1449,6 @@ export class Decimal {
   }
 
   public toFixed(places: number): string {
-    if (!this.isFinite()) {
-      return this.mantissa.toString();
-    }
     if (this.e <= -EXP_LIMIT || this.m === 0) {
       return "0" + trailZeroes(places);
     }
@@ -1620,20 +1548,7 @@ export class Decimal {
   }
 
   public isFinite(): boolean {
-    return isFinite(this.mantissa);
-  }
-
-  public isNaN(): boolean {
-    // NaN is the only value to be not equal to self.
-    return this.mantissa !== this.mantissa;
-  }
-
-  public isPositiveInfinity(): boolean {
-    return this.mantissa === POSITIVE_INFINITY.mantissa;
-  }
-
-  public isNegativeInfinity(): boolean {
-    return this.mantissa === NEGATIVE_INFINITY.mantissa;
+    return isFinite(this.mantissa) && isFinite(this.exponent);
   }
 
   public static const(value: number | string): Decimal {
@@ -1671,18 +1586,6 @@ export class Decimal {
   public static get NUMBER_MIN_VALUE(): Decimal {
     return NUMBER_MIN_VALUE;
   }
-
-  public static get NaN(): Decimal {
-    return DECIMAL_NaN;
-  }
-
-  public static get POSITIVE_INFINITY(): Decimal {
-    return POSITIVE_INFINITY;
-  }
-
-  public static get NEGATIVE_INFINITY(): Decimal {
-    return NEGATIVE_INFINITY;
-  }
 }
 
 const MAX_VALUE = ME_NN(1, EXP_LIMIT);
@@ -1692,6 +1595,3 @@ const ONE = getOrAddPooled(1);
 const MINUS_ONE = getOrAddPooled(-1);
 const NUMBER_MAX_VALUE = getOrAddPooled(Number.MAX_VALUE);
 const NUMBER_MIN_VALUE = getOrAddPooled(Number.MIN_VALUE);
-const DECIMAL_NaN = ME_NN(Number.NaN, 0);
-const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, 0);
-const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, 0);
