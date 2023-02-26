@@ -2,7 +2,7 @@ import { Decimal } from "./decimal";
 
 export function affordGeometricSeries(
   resourcesAvailable: Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal,
-) {
+): Decimal {
   const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
 
   return Decimal.floor(
@@ -12,7 +12,7 @@ export function affordGeometricSeries(
 
 export function sumGeometricSeries(
   numItems: number | Decimal, priceStart: Decimal, priceRatio: Decimal, currentOwned: number | Decimal,
-) {
+): Decimal {
   return priceStart
     .mul(priceRatio.pow(currentOwned))
     .mul(Decimal.sub(1, priceRatio.pow(numItems)))
@@ -21,7 +21,7 @@ export function sumGeometricSeries(
 
 export function affordArithmeticSeries(
   resourcesAvailable: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal,
-) {
+): Decimal {
   // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
   // where a is actualStart, d is priceAdd and S is resourcesAvailable
   // then floor it and you're done!
@@ -38,7 +38,7 @@ export function affordArithmeticSeries(
 
 export function sumArithmeticSeries(
   numItems: Decimal, priceStart: Decimal, priceAdd: Decimal, currentOwned: Decimal,
-) {
+): Decimal {
 
   const actualStart = priceStart.add(currentOwned.mul(priceAdd));
 
@@ -48,11 +48,11 @@ export function sumArithmeticSeries(
     .mul(actualStart.mul(2).plus(numItems.sub(1).mul(priceAdd)));
 }
 
-export function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Decimal) {
+export function efficiencyOfPurchase(cost: Decimal, currentRpS: Decimal, deltaRpS: Decimal): Decimal {
   return cost.div(currentRpS).add(cost.div(deltaRpS));
 }
 
-export function cmp(left: Decimal, right: Decimal) {
+export function cmp(left: Decimal, right: Decimal): number {
   // TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
   if (left.m === 0) {
     if (right.m === 0) {

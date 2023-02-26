@@ -10,6 +10,6 @@ for (let i = NUMBER_EXP_MIN + 1; i <= NUMBER_EXP_MAX; i++) {
 }
 const indexOf0InPowersOf10 = 323;
 
-export function powerOf10(power: number) {
+export function powerOf10(power: number): number {
   return powersOf10[power + indexOf0InPowersOf10];
 }

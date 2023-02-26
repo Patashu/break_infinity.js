@@ -1,4 +1,4 @@
-function createZeroes(count: number) {
+function createZeroes(count: number): string {
   let result = "";
   while (result.length < count) {
     result += "0";
@@ -9,7 +9,7 @@ function createZeroes(count: number) {
 
 const cache: string[] = [];
 
-export function repeatZeroes(count: number) {
+export function repeatZeroes(count: number): string {
   if (count <= 0) {
     return "";
   }
@@ -24,6 +24,6 @@ export function repeatZeroes(count: number) {
   return computed;
 }
 
-export function trailZeroes(places: number) {
+export function trailZeroes(places: number): string {
   return places > 0 ? "." + repeatZeroes(places) : "";
 }

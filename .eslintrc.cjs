@@ -17,6 +17,13 @@ module.exports = {
     "@typescript-eslint",
   ],
   rules: {
+    "@typescript-eslint/explicit-function-return-type": [
+      "error",
+      {
+        "allowExpressions": true,
+        "allowHigherOrderFunctions": true,
+      }
+    ],
     "brace-style": [
       "error",
       "1tbs",

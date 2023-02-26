@@ -10,12 +10,17 @@ import {
 } from "./math";
 import { makeConstant } from "./decimal-constants";
 
-const D = (value: DecimalSource) =>
-  value instanceof Decimal ? value : new Decimal(value);
-const ME = (mantissa: number, exponent: number) =>
-  new Decimal().fromMantissaExponent(mantissa, exponent);
-const ME_NN = (mantissa: number, exponent: number) =>
-  new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
+function D(value: DecimalSource): Decimal {
+  return value instanceof Decimal ? value : new Decimal(value);
+}
+
+function ME(mantissa: number, exponent: number): Decimal {
+  return new Decimal().fromMantissaExponent(mantissa, exponent);
+}
+
+function ME_NN(mantissa: number, exponent: number): Decimal {
+  return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
+}
 
 export type DecimalSource = Decimal | number | string;
 
@@ -52,27 +57,27 @@ export class Decimal {
     }
   }
 
-  get m() {
+  get m(): number {
     return this.mantissa;
   }
 
-  set m(value) {
+  set m(value: number) {
     this.mantissa = value;
   }
 
-  get e() {
+  get e(): number {
     return this.exponent;
   }
 
-  set e(value) {
+  set e(value: number) {
     this.exponent = value;
   }
 
-  get s() {
+  get s(): number {
     return this.sign();
   }
 
-  set s(value) {
+  set s(value: number) {
     if (value === 0) {
       this.e = 0;
       this.m = 0;
@@ -85,7 +90,7 @@ export class Decimal {
 
   //#region fromMantissaExponent
 
-  public fromMantissaExponent(mantissa: number, exponent: number) {
+  public fromMantissaExponent(mantissa: number, exponent: number): Decimal {
     // SAFETY: don't let in non-numbers
     if (!isFinite(mantissa) || !isFinite(exponent)) {
       return this.fromDecimal(DECIMAL_NaN);
@@ -97,7 +102,7 @@ export class Decimal {
     return this;
   }
 
-  public static fromMantissaExponent(mantissa: number, exponent: number) {
+  public static fromMantissaExponent(mantissa: number, exponent: number): Decimal {
     return new Decimal().fromMantissaExponent(mantissa, exponent);
   }
 
@@ -108,13 +113,13 @@ export class Decimal {
   /**
    * Well, you know what you're doing!
    */
-  public fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
+  public fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal {
     this.m = mantissa;
     this.e = exponent;
     return this;
   }
 
-  public static fromMantissaExponent_noNormalize(mantissa: number, exponent: number) {
+  public static fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal {
     return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
   }
 
@@ -122,7 +127,7 @@ export class Decimal {
 
   //#region copyFrom
 
-  public copyFrom(value: Decimal) {
+  public copyFrom(value: Decimal): void {
     this.m = value.m;
     this.e = value.e;
   }
@@ -131,12 +136,12 @@ export class Decimal {
 
   //#region fromDecimal
 
-  public fromDecimal(value: Decimal) {
+  public fromDecimal(value: Decimal): Decimal {
     this.copyFrom(value);
     return this;
   }
 
-  public static fromDecimal(value: Decimal) {
+  public static fromDecimal(value: Decimal): Decimal {
     return new Decimal().fromDecimal(value);
   }
 
@@ -144,7 +149,7 @@ export class Decimal {
 
   //#region fromNumber
 
-  public fromNumber(value: number) {
+  public fromNumber(value: number): Decimal {
     if (!isFinite(value)) {
       return this.fromMantissaExponent_noNormalize(value, 0);
     }
@@ -165,7 +170,7 @@ export class Decimal {
     return this;
   }
 
-  public static fromNumber(value: number) {
+  public static fromNumber(value: number): Decimal {
     return new Decimal().fromNumber(value);
   }
 
@@ -173,7 +178,7 @@ export class Decimal {
 
   //#region fromString
 
-  public fromString(value: string) {
+  public fromString(value: string): Decimal {
     value = value.toLowerCase();
     if (value.indexOf("e") !== -1) {
       const parts = value.split("e");
@@ -196,7 +201,7 @@ export class Decimal {
     return this;
   }
 
-  public static fromString(value: string) {
+  public static fromString(value: string): Decimal {
     return new Decimal().fromString(value);
   }
 
@@ -204,7 +209,7 @@ export class Decimal {
 
   //#region fromValue
 
-  public fromValue(value?: DecimalSource) {
+  public fromValue(value?: DecimalSource): Decimal {
     if (value instanceof Decimal) {
       return this.fromDecimal(value);
     }
@@ -219,11 +224,11 @@ export class Decimal {
     return this;
   }
 
-  public static fromValue(value: DecimalSource) {
+  public static fromValue(value: DecimalSource): Decimal {
     return new Decimal().fromValue(value);
   }
 
-  public static fromValue_noAlloc(value: DecimalSource) {
+  public static fromValue_noAlloc(value: DecimalSource): Decimal {
     return value instanceof Decimal ? value : new Decimal(value);
   }
 
@@ -231,11 +236,11 @@ export class Decimal {
 
   //#region abs
 
-  public abs() {
+  public abs(): Decimal {
     return ME_NN(Math.abs(this.m), this.e);
   }
 
-  public static abs(value: DecimalSource) {
+  public static abs(value: DecimalSource): Decimal {
     return D(value).abs();
   }
 
@@ -243,27 +248,27 @@ export class Decimal {
 
   //#region neg
 
-  public neg() {
+  public neg(): Decimal {
     return ME_NN(-this.m, this.e);
   }
 
-  public static neg(value: DecimalSource) {
+  public static neg(value: DecimalSource): Decimal {
     return D(value).neg();
   }
 
-  public negate() {
+  public negate(): Decimal {
     return this.neg();
   }
 
-  public static negate(value: DecimalSource) {
+  public static negate(value: DecimalSource): Decimal {
     return D(value).neg();
   }
 
-  public negated() {
+  public negated(): Decimal {
     return this.neg();
   }
 
-  public static negated(value: DecimalSource) {
+  public static negated(value: DecimalSource): Decimal {
     return D(value).neg();
   }
 
@@ -271,19 +276,19 @@ export class Decimal {
 
   //#region sgn
 
-  public sgn() {
+  public sgn(): number {
     return Math.sign(this.m);
   }
 
-  public static sgn(value: DecimalSource) {
+  public static sgn(value: DecimalSource): number {
     return D(value).sgn();
   }
 
-  public sign() {
+  public sign(): number {
     return this.sgn();
   }
 
-  public static sign(value: DecimalSource) {
+  public static sign(value: DecimalSource): number {
     return D(value).sgn();
   }
 
@@ -291,7 +296,7 @@ export class Decimal {
 
   //#region round
 
-  public round() {
+  public round(): Decimal {
     if (this.e < -1) {
       return new Decimal(0);
     }
@@ -301,7 +306,7 @@ export class Decimal {
     return this;
   }
 
-  public static round(value: DecimalSource) {
+  public static round(value: DecimalSource): Decimal {
     return D(value).round();
   }
 
@@ -309,7 +314,7 @@ export class Decimal {
 
   //#region floor
 
-  public floor() {
+  public floor(): Decimal {
     if (!this.isFinite()) {
       return this;
     }
@@ -325,7 +330,7 @@ export class Decimal {
     return this;
   }
 
-  public static floor(value: DecimalSource) {
+  public static floor(value: DecimalSource): Decimal {
     return D(value).floor();
   }
 
@@ -333,7 +338,7 @@ export class Decimal {
 
   //#region ceil
 
-  public ceil() {
+  public ceil(): Decimal {
     if (this.e < -1) {
       return Math.sign(this.m) > 0 ? new Decimal(1) : new Decimal(0);
     }
@@ -343,7 +348,7 @@ export class Decimal {
     return this;
   }
 
-  public static ceil(value: DecimalSource) {
+  public static ceil(value: DecimalSource): Decimal {
     return D(value).ceil();
   }
 
@@ -351,7 +356,7 @@ export class Decimal {
 
   //#region trunc
 
-  public trunc() {
+  public trunc(): Decimal {
     if (this.e < 0) {
       return new Decimal(0);
     }
@@ -361,7 +366,7 @@ export class Decimal {
     return this;
   }
 
-  public static trunc(value: DecimalSource) {
+  public static trunc(value: DecimalSource): Decimal {
     return D(value).trunc();
   }
 
@@ -369,7 +374,7 @@ export class Decimal {
 
   //#region add
 
-  public add(value: DecimalSource) {
+  public add(value: DecimalSource): Decimal {
     // figure out which is bigger, shrink the mantissa of the smaller
     // by the difference in exponents, add mantissas, normalize and return
 
@@ -414,15 +419,15 @@ export class Decimal {
     return ME(mantissa, biggerDecimal.e - 14);
   }
 
-  public static add(value: DecimalSource, other: DecimalSource) {
+  public static add(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).add(other);
   }
 
-  public plus(value: DecimalSource) {
+  public plus(value: DecimalSource): Decimal {
     return this.add(value);
   }
 
-  public static plus(value: DecimalSource, other: DecimalSource) {
+  public static plus(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).add(other);
   }
 
@@ -430,27 +435,27 @@ export class Decimal {
 
   //#region sub
 
-  public sub(value: DecimalSource) {
+  public sub(value: DecimalSource): Decimal {
     return this.add(D(value).neg());
   }
 
-  public static sub(value: DecimalSource, other: DecimalSource) {
+  public static sub(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).sub(other);
   }
 
-  public subtract(value: DecimalSource) {
+  public subtract(value: DecimalSource): Decimal {
     return this.sub(value);
   }
 
-  public static subtract(value: DecimalSource, other: DecimalSource) {
+  public static subtract(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).sub(other);
   }
 
-  public static minus(value: DecimalSource, other: DecimalSource) {
+  public static minus(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).sub(other);
   }
 
-  public minus(value: DecimalSource) {
+  public minus(value: DecimalSource): Decimal {
     return this.sub(value);
   }
 
@@ -458,7 +463,7 @@ export class Decimal {
 
   //#region mul
 
-  public mul(value: DecimalSource) {
+  public mul(value: DecimalSource): Decimal {
     // This version avoids an extra conversion to Decimal, if possible. Since the
     // mantissa is -10...10, any number short of MAX/10 can be safely multiplied in
     if (typeof value === "number") {
@@ -473,23 +478,23 @@ export class Decimal {
     return ME(this.m * decimal.m, this.e + decimal.e);
   }
 
-  public static mul(value: DecimalSource, other: DecimalSource) {
+  public static mul(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).mul(other);
   }
 
-  public multiply(value: DecimalSource) {
+  public multiply(value: DecimalSource): Decimal {
     return this.mul(value);
   }
 
-  public static multiply(value: DecimalSource, other: DecimalSource) {
+  public static multiply(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).mul(other);
   }
 
-  public times(value: DecimalSource) {
+  public times(value: DecimalSource): Decimal {
     return this.mul(value);
   }
 
-  public static times(value: DecimalSource, other: DecimalSource) {
+  public static times(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).mul(other);
   }
 
@@ -497,27 +502,27 @@ export class Decimal {
 
   //#region div
 
-  public div(value: DecimalSource) {
+  public div(value: DecimalSource): Decimal {
     return this.mul(D(value).recip());
   }
 
-  public static div(value: DecimalSource, other: DecimalSource) {
+  public static div(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).div(other);
   }
 
-  public divide(value: DecimalSource) {
+  public divide(value: DecimalSource): Decimal {
     return this.div(value);
   }
 
-  public static divide(value: DecimalSource, other: DecimalSource) {
+  public static divide(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).div(other);
   }
 
-  public divideBy(value: DecimalSource) {
+  public divideBy(value: DecimalSource): Decimal {
     return this.div(value);
   }
 
-  public dividedBy(value: DecimalSource) {
+  public dividedBy(value: DecimalSource): Decimal {
     return this.div(value);
   }
 
@@ -525,27 +530,27 @@ export class Decimal {
 
   //#region recip
 
-  public recip() {
+  public recip(): Decimal {
     return ME(1 / this.m, -this.e);
   }
 
-  public static recip(value: DecimalSource) {
+  public static recip(value: DecimalSource): Decimal {
     return D(value).recip();
   }
 
-  public reciprocal() {
+  public reciprocal(): Decimal {
     return this.recip();
   }
 
-  public static reciprocal(value: DecimalSource) {
+  public static reciprocal(value: DecimalSource): Decimal {
     return D(value).recip();
   }
 
-  public reciprocate() {
+  public reciprocate(): Decimal {
     return this.recip();
   }
 
-  public static reciprocate(value: DecimalSource) {
+  public static reciprocate(value: DecimalSource): Decimal {
     return D(value).reciprocate();
   }
 
@@ -556,7 +561,7 @@ export class Decimal {
   /**
    * -1 for less than value, 0 for equals value, 1 for greater than value
    */
-  public cmp(value: DecimalSource) {
+  public cmp(value: DecimalSource): number {
     const decimal = D(value);
     if (this.isNaN()) {
       if (decimal.isNaN()) {
@@ -573,15 +578,15 @@ export class Decimal {
     return cmp(this, decimal);
   }
 
-  public static cmp(value: DecimalSource, other: DecimalSource) {
+  public static cmp(value: DecimalSource, other: DecimalSource): number {
     return D(value).cmp(other);
   }
 
-  public compare(value: DecimalSource) {
+  public compare(value: DecimalSource): number {
     return this.cmp(value);
   }
 
-  public static compare(value: DecimalSource, other: DecimalSource) {
+  public static compare(value: DecimalSource, other: DecimalSource): number {
     return D(value).cmp(other);
   }
 
@@ -589,20 +594,20 @@ export class Decimal {
 
   //#region eq
 
-  public eq(value: DecimalSource) {
+  public eq(value: DecimalSource): boolean {
     const decimal = D(value);
     return this.e === decimal.e && this.m === decimal.m;
   }
 
-  public static eq(value: DecimalSource, other: DecimalSource) {
+  public static eq(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).eq(other);
   }
 
-  public equals(value: DecimalSource) {
+  public equals(value: DecimalSource): boolean {
     return this.eq(value);
   }
 
-  public static equals(value: DecimalSource, other: DecimalSource) {
+  public static equals(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).eq(other);
   }
 
@@ -610,19 +615,19 @@ export class Decimal {
 
   //#region neq
 
-  public neq(value: DecimalSource) {
+  public neq(value: DecimalSource): boolean {
     return !this.eq(value);
   }
 
-  public static neq(value: DecimalSource, other: DecimalSource) {
+  public static neq(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).neq(other);
   }
 
-  public notEquals(value: DecimalSource) {
+  public notEquals(value: DecimalSource): boolean {
     return this.neq(value);
   }
 
-  public static notEquals(value: DecimalSource, other: DecimalSource) {
+  public static notEquals(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).notEquals(other);
   }
 
@@ -630,7 +635,7 @@ export class Decimal {
 
   //#region lt
 
-  public lt(value: DecimalSource) {
+  public lt(value: DecimalSource): boolean {
     const decimal = D(value);
     if (this.m === 0) {
       return decimal.m > 0;
@@ -647,11 +652,11 @@ export class Decimal {
     return decimal.m > 0 || this.e > decimal.e;
   }
 
-  public static lt(value: DecimalSource, other: DecimalSource) {
+  public static lt(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).lt(other);
   }
 
-  public lessThan(other: DecimalSource) {
+  public lessThan(other: DecimalSource): boolean {
     if (this.isNaN()) {
       return false;
     }
@@ -668,15 +673,15 @@ export class Decimal {
 
   //#region lte
 
-  public lte(value: DecimalSource) {
+  public lte(value: DecimalSource): boolean {
     return !this.gt(value);
   }
 
-  public static lte(value: DecimalSource, other: DecimalSource) {
+  public static lte(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).lte(other);
   }
 
-  public lessThanOrEqualTo(other: DecimalSource) {
+  public lessThanOrEqualTo(other: DecimalSource): boolean {
     if (this.isNaN()) {
       return false;
     }
@@ -693,7 +698,7 @@ export class Decimal {
 
   //#region gt
 
-  public gt(value: DecimalSource) {
+  public gt(value: DecimalSource): boolean {
     const decimal = D(value);
     if (this.m === 0) {
       return decimal.m < 0;
@@ -710,11 +715,11 @@ export class Decimal {
     return decimal.m < 0 && this.e < decimal.e;
   }
 
-  public static gt(value: DecimalSource, other: DecimalSource) {
+  public static gt(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).gt(other);
   }
 
-  public greaterThan(other: DecimalSource) {
+  public greaterThan(other: DecimalSource): boolean {
     if (this.isNaN()) {
       return false;
     }
@@ -731,15 +736,15 @@ export class Decimal {
 
   //#region gte
 
-  public gte(value: DecimalSource) {
+  public gte(value: DecimalSource): boolean {
     return !this.lt(value);
   }
 
-  public static gte(value: DecimalSource, other: DecimalSource) {
+  public static gte(value: DecimalSource, other: DecimalSource): boolean {
     return D(value).gte(other);
   }
 
-  public greaterThanOrEqualTo(other: DecimalSource) {
+  public greaterThanOrEqualTo(other: DecimalSource): boolean {
     if (this.isNaN()) {
       return false;
     }
@@ -756,12 +761,12 @@ export class Decimal {
 
   //#region max
 
-  public max(value: DecimalSource) {
+  public max(value: DecimalSource): Decimal {
     const decimal = D(value);
     return this.lt(decimal) ? decimal : this;
   }
 
-  public static max(value: DecimalSource, other: DecimalSource) {
+  public static max(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).max(other);
   }
 
@@ -769,12 +774,12 @@ export class Decimal {
 
   //#region min
 
-  public min(value: DecimalSource) {
+  public min(value: DecimalSource): Decimal {
     const decimal = D(value);
     return this.gt(decimal) ? decimal : this;
   }
 
-  public static min(value: DecimalSource, other: DecimalSource) {
+  public static min(value: DecimalSource, other: DecimalSource): Decimal {
     return D(value).min(other);
   }
 
@@ -782,11 +787,11 @@ export class Decimal {
 
   //#region clamp
 
-  public clamp(min: DecimalSource, max: DecimalSource) {
+  public clamp(min: DecimalSource, max: DecimalSource): Decimal {
     return this.max(min).min(max);
   }
 
-  public static clamp(value: DecimalSource, min: DecimalSource, max: DecimalSource) {
+  public static clamp(value: DecimalSource, min: DecimalSource, max: DecimalSource): Decimal {
     return D(value).clamp(min, max);
   }
 
@@ -794,11 +799,11 @@ export class Decimal {
 
   //#region clampMin
 
-  public clampMin(min: DecimalSource) {
+  public clampMin(min: DecimalSource): Decimal {
     return this.max(min);
   }
 
-  public static clampMin(value: DecimalSource, min: DecimalSource) {
+  public static clampMin(value: DecimalSource, min: DecimalSource): Decimal {
     return D(value).clampMin(min);
   }
 
@@ -806,11 +811,11 @@ export class Decimal {
 
   //#region clampMax
 
-  public clampMax(max: DecimalSource) {
+  public clampMax(max: DecimalSource): Decimal {
     return this.min(max);
   }
 
-  public static clampMax(value: DecimalSource, max: DecimalSource) {
+  public static clampMax(value: DecimalSource, max: DecimalSource): Decimal {
     return D(value).clampMax(max);
   }
 
@@ -818,20 +823,20 @@ export class Decimal {
 
   //#region cmp_tolerance
 
-  public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public cmp_tolerance(value: DecimalSource, tolerance: DecimalSource): number {
     const decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) ? 0 : this.cmp(decimal);
   }
 
-  public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static cmp_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): number {
     return D(value).cmp_tolerance(other, tolerance);
   }
 
-  public compare_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public compare_tolerance(value: DecimalSource, tolerance: DecimalSource): number {
     return this.cmp_tolerance(value, tolerance);
   }
 
-  public static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static compare_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): number {
     return D(value).cmp_tolerance(other, tolerance);
   }
 
@@ -844,7 +849,7 @@ export class Decimal {
    * For example, if you put in 1e-9, then any number closer to the
    * larger number than (larger number)*1e-9 will be considered equal.
    */
-  public eq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public eq_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     const decimal = D(value);
     // https://stackoverflow.com/a/33024979
     // return abs(a-b) <= tolerance * max(abs(a), abs(b))
@@ -855,15 +860,15 @@ export class Decimal {
     );
   }
 
-  public static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static eq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).eq_tolerance(other, tolerance);
   }
 
-  public equals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public equals_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     return this.eq_tolerance(value, tolerance);
   }
 
-  public static equals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static equals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).eq_tolerance(other, tolerance);
   }
 
@@ -871,19 +876,19 @@ export class Decimal {
 
   //#region neq_tolerance
 
-  public neq_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public neq_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     return !this.eq_tolerance(value, tolerance);
   }
 
-  public static neq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static neq_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).neq_tolerance(other, tolerance);
   }
 
-  public notEquals_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public notEquals_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     return this.neq_tolerance(value, tolerance);
   }
 
-  public static notEquals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static notEquals_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).notEquals_tolerance(other, tolerance);
   }
 
@@ -891,12 +896,12 @@ export class Decimal {
 
   //#region lt_tolerance
 
-  public lt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public lt_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     const decimal = D(value);
     return !this.eq_tolerance(decimal, tolerance) && this.lt(decimal);
   }
 
-  public static lt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static lt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).lt_tolerance(other, tolerance);
   }
 
@@ -904,12 +909,12 @@ export class Decimal {
 
   //#region lte_tolerance
 
-  public lte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public lte_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     const decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) || this.lt(decimal);
   }
 
-  public static lte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static lte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).lte_tolerance(other, tolerance);
   }
 
@@ -917,12 +922,12 @@ export class Decimal {
 
   //#region gt_tolerance
 
-  public gt_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public gt_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     const decimal = D(value);
     return !this.eq_tolerance(decimal, tolerance) && this.gt(decimal);
   }
 
-  public static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static gt_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).gt_tolerance(other, tolerance);
   }
 
@@ -930,12 +935,12 @@ export class Decimal {
 
   //#region gte_tolerance
 
-  public gte_tolerance(value: DecimalSource, tolerance: DecimalSource) {
+  public gte_tolerance(value: DecimalSource, tolerance: DecimalSource): boolean {
     const decimal = D(value);
     return this.eq_tolerance(decimal, tolerance) || this.gt(decimal);
   }
 
-  public static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource) {
+  public static gte_tolerance(value: DecimalSource, other: DecimalSource, tolerance: DecimalSource): boolean {
     return D(value).gte_tolerance(other, tolerance);
   }
 
@@ -943,11 +948,11 @@ export class Decimal {
 
   //#region log10
 
-  public log10() {
+  public log10(): number {
     return this.e + Math.log10(this.m);
   }
 
-  public static log10(value: DecimalSource) {
+  public static log10(value: DecimalSource): number {
     return D(value).log10();
   }
 
@@ -955,11 +960,11 @@ export class Decimal {
 
   //#region absLog10
 
-  public absLog10() {
+  public absLog10(): number {
     return this.e + Math.log10(Math.abs(this.m));
   }
 
-  public static absLog10(value: DecimalSource) {
+  public static absLog10(value: DecimalSource): number {
     return D(value).absLog10();
   }
 
@@ -967,11 +972,11 @@ export class Decimal {
 
   //#region pLog10
 
-  public pLog10() {
+  public pLog10(): number {
     return this.m <= 0 || this.e < 0 ? 0 : this.log10();
   }
 
-  public static pLog10(value: DecimalSource) {
+  public static pLog10(value: DecimalSource): number {
     return D(value).pLog10();
   }
 
@@ -979,22 +984,22 @@ export class Decimal {
 
   //#region log
 
-  public log(base: number) {
+  public log(base: number): number {
     // UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater).
     // We assume this to be true and thus only need to return a number, not a Decimal,
     // and don't do any other kind of error checking.
     return (Math.LN10 / Math.log(base)) * this.log10();
   }
 
-  public static log(value: DecimalSource, base: number) {
+  public static log(value: DecimalSource, base: number): number {
     return D(value).log(base);
   }
 
-  public logarithm(base: number) {
+  public logarithm(base: number): number {
     return this.log(base);
   }
 
-  public static logarithm(value: DecimalSource, base: number) {
+  public static logarithm(value: DecimalSource, base: number): number {
     return D(value).log(base);
   }
 
@@ -1002,11 +1007,11 @@ export class Decimal {
 
   //#region log2
 
-  public log2() {
+  public log2(): number {
     return 3.321928094887362 * this.log10();
   }
 
-  public static log2(value: DecimalSource) {
+  public static log2(value: DecimalSource): number {
     return D(value).log2();
   }
 
@@ -1014,11 +1019,11 @@ export class Decimal {
 
   //#region ln
 
-  public ln() {
+  public ln(): number {
     return 2.302585092994045 * this.log10();
   }
 
-  public static ln(value: DecimalSource) {
+  public static ln(value: DecimalSource): number {
     return D(value).ln();
   }
 
@@ -1026,7 +1031,7 @@ export class Decimal {
 
   //#region pow10
 
-  public static pow10(value: number) {
+  public static pow10(value: number): Decimal {
     if (Number.isInteger(value)) {
       return ME_NN(1, value);
     }
@@ -1037,7 +1042,7 @@ export class Decimal {
 
   //#region pow
 
-  public pow(value: number | Decimal) {
+  public pow(value: number | Decimal): Decimal {
     if (this.m === 0) {
       return this;
     }
@@ -1085,7 +1090,7 @@ export class Decimal {
     return result;
   }
 
-  public static pow(value: DecimalSource, other: number | Decimal) {
+  public static pow(value: DecimalSource, other: number | Decimal): Decimal {
     // Fast track: 10^integer
     if (typeof value === "number" && value === 10 && typeof other === "number" && Number.isInteger(other)) {
       return ME_NN(1, other);
@@ -1098,7 +1103,7 @@ export class Decimal {
 
   //#region exp
 
-  public exp() {
+  public exp(): Decimal {
     const x = this.toNumber();
     // Fast track: if -706 < this < 709, we can use regular exp.
     if (-706 < x && x < 709) {
@@ -1107,7 +1112,7 @@ export class Decimal {
     return Decimal.pow(Math.E, x);
   }
 
-  public static exp(value: DecimalSource) {
+  public static exp(value: DecimalSource): Decimal {
     return D(value).exp();
   }
 
@@ -1115,11 +1120,11 @@ export class Decimal {
 
   //#region sqr
 
-  public sqr() {
+  public sqr(): Decimal {
     return ME(Math.pow(this.m, 2), this.e * 2);
   }
 
-  public static sqr(value: DecimalSource) {
+  public static sqr(value: DecimalSource): Decimal {
     return D(value).sqr();
   }
 
@@ -1127,7 +1132,7 @@ export class Decimal {
 
   //#region sqrt
 
-  public sqrt() {
+  public sqrt(): Decimal {
     if (this.m < 0) {
       return DECIMAL_NaN;
     }
@@ -1138,7 +1143,7 @@ export class Decimal {
     return ME(Math.sqrt(this.m), Math.floor(this.e / 2));
   }
 
-  public static sqrt(value: DecimalSource) {
+  public static sqrt(value: DecimalSource): Decimal {
     return D(value).sqrt();
   }
 
@@ -1146,11 +1151,11 @@ export class Decimal {
 
   //#region cube
 
-  public cube() {
+  public cube(): Decimal {
     return ME(Math.pow(this.m, 3), this.e * 3);
   }
 
-  public static cube(value: DecimalSource) {
+  public static cube(value: DecimalSource): Decimal {
     return D(value).cube();
   }
 
@@ -1158,7 +1163,7 @@ export class Decimal {
 
   //#region cbrt
 
-  public cbrt() {
+  public cbrt(): Decimal {
     let sign = 1;
     let mantissa = this.m;
     if (mantissa < 0) {
@@ -1178,7 +1183,7 @@ export class Decimal {
     return ME(newMantissa, Math.floor(this.e / 3));
   }
 
-  public static cbrt(value: DecimalSource) {
+  public static cbrt(value: DecimalSource): Decimal {
     return D(value).cbrt();
   }
 
@@ -1186,7 +1191,7 @@ export class Decimal {
 
   //#region cbrt
 
-  public dp() {
+  public dp(): number {
     if (!this.isFinite()) {
       return NaN;
     }
@@ -1204,15 +1209,15 @@ export class Decimal {
     return places > 0 ? places : 0;
   }
 
-  public static dp(value: DecimalSource) {
+  public static dp(value: DecimalSource): number {
     return D(value).dp();
   }
 
-  public decimalPlaces() {
+  public decimalPlaces(): number {
     return this.dp();
   }
 
-  public static decimalPlaces(value: DecimalSource) {
+  public static decimalPlaces(value: DecimalSource): number {
     return D(value).dp();
   }
 
@@ -1226,7 +1231,7 @@ export class Decimal {
    */
   public static affordGeometricSeries(
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
-    priceRatio: DecimalSource, currentOwned: number | Decimal) {
+    priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal {
 
     return affordGeometricSeries(
       D(resourcesAvailable),
@@ -1242,7 +1247,7 @@ export class Decimal {
    */
   public static sumGeometricSeries(
     numItems: number | Decimal, priceStart: DecimalSource,
-    priceRatio: DecimalSource, currentOwned: number | Decimal) {
+    priceRatio: DecimalSource, currentOwned: number | Decimal): Decimal {
 
     return sumGeometricSeries(
       numItems,
@@ -1259,7 +1264,7 @@ export class Decimal {
    */
   public static affordArithmeticSeries(
     resourcesAvailable: DecimalSource, priceStart: DecimalSource,
-    priceAdd: DecimalSource, currentOwned: DecimalSource) {
+    priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal {
 
     return affordArithmeticSeries(
       D(resourcesAvailable),
@@ -1276,7 +1281,7 @@ export class Decimal {
    */
   public static sumArithmeticSeries(
     numItems: DecimalSource, priceStart: DecimalSource,
-    priceAdd: DecimalSource, currentOwned: DecimalSource) {
+    priceAdd: DecimalSource, currentOwned: DecimalSource): Decimal {
 
     return sumArithmeticSeries(
       D(numItems),
@@ -1292,7 +1297,7 @@ export class Decimal {
    * From Frozen Cookies:
    * http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
    */
-  public static efficiencyOfPurchase(cost: DecimalSource, currentRpS: DecimalSource, deltaRpS: DecimalSource) {
+  public static efficiencyOfPurchase(cost: DecimalSource, currentRpS: DecimalSource, deltaRpS: DecimalSource): Decimal {
     return efficiencyOfPurchase(
       D(cost),
       D(currentRpS),
@@ -1300,7 +1305,7 @@ export class Decimal {
     );
   }
 
-  public static randomDecimalForTesting(absMaxExponent: number) {
+  public static randomDecimalForTesting(absMaxExponent: number): Decimal {
     // NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
     // 5% of the time, have a mantissa of 0
     if (Math.random() * 20 < 1) {
@@ -1339,7 +1344,7 @@ export class Decimal {
   /**
    * When mantissa is very denormalized, use this to normalize much faster.
    */
-  public normalize() {
+  public normalize(): Decimal {
     if (this.m >= 1 && this.m < 10) {
       return this;
     }
@@ -1359,7 +1364,7 @@ export class Decimal {
     return this;
   }
 
-  public toNumber() {
+  public toNumber(): number {
     // Problem: new Decimal(116).toNumber() returns 115.99999999999999.
     // TODO: How to fix in general case? It's clear that if toNumber() is
     //  VERY close to an integer, we want exactly the integer.
@@ -1404,7 +1409,7 @@ export class Decimal {
     return result;
   }
 
-  public mantissaWithDecimalPlaces(places: number) {
+  public mantissaWithDecimalPlaces(places: number): number {
     if (!this.isFinite()) {
       return this.mantissa;
     }
@@ -1420,7 +1425,7 @@ export class Decimal {
     return parseFloat(rounded.toFixed(Math.max(len - numDigits, 0)));
   }
 
-  public toString() {
+  public toString(): string {
     if (!this.isFinite()) {
       return this.mantissa.toString();
     }
@@ -1435,7 +1440,7 @@ export class Decimal {
     return this.m + "e" + (this.e >= 0 ? "+" : "") + this.e;
   }
 
-  public toExponential(places: number) {
+  public toExponential(places: number): string {
     // https://stackoverflow.com/a/37425022
 
     // TODO: Some unfixed cases:
@@ -1472,7 +1477,7 @@ export class Decimal {
     return rounded.toFixed(Math.max(len - numDigits, 0)) + "e" + (this.e >= 0 ? "+" : "") + this.e;
   }
 
-  public toFixed(places: number) {
+  public toFixed(places: number): string {
     if (!this.isFinite()) {
       return this.mantissa.toString();
     }
@@ -1492,7 +1497,7 @@ export class Decimal {
     return this.toNumber().toFixed(places);
   }
 
-  public toPrecision(places: number) {
+  public toPrecision(places: number): string {
     if (this.e <= -7) {
       return this.toExponential(places - 1);
     }
@@ -1502,23 +1507,23 @@ export class Decimal {
     return this.toExponential(places - 1);
   }
 
-  public valueOf() {
+  public valueOf(): string {
     return this.toString();
   }
 
-  public toJSON() {
+  public toJSON(): string {
     return this.toString();
   }
 
-  public toStringWithDecimalPlaces(places: number) {
+  public toStringWithDecimalPlaces(places: number): string {
     return this.toExponential(places);
   }
 
-  public pow_base(value: DecimalSource) {
+  public pow_base(value: DecimalSource): Decimal {
     return D(value).pow(this);
   }
 
-  public factorial() {
+  public factorial(): Decimal {
     // Using Stirling's Approximation.
     // https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
 
@@ -1530,27 +1535,27 @@ export class Decimal {
   }
 
   // Some hyperbolic trig functions that happen to be easy
-  public sinh() {
+  public sinh(): Decimal {
     return this.exp().sub(this.negate().exp()).div(2);
   }
 
-  public cosh() {
+  public cosh(): Decimal {
     return this.exp().add(this.negate().exp()).div(2);
   }
 
-  public tanh() {
+  public tanh(): Decimal {
     return this.sinh().div(this.cosh());
   }
 
-  public asinh() {
+  public asinh(): number {
     return Decimal.ln(this.add(this.sqr().add(1).sqrt()));
   }
 
-  public acosh() {
+  public acosh(): number {
     return Decimal.ln(this.add(this.sqr().sub(1).sqrt()));
   }
 
-  public atanh() {
+  public atanh(): number {
     if (this.abs().gte(1)) {
       return Number.NaN;
     }
@@ -1560,7 +1565,7 @@ export class Decimal {
   /**
    * Joke function from Realm Grinder
    */
-  public ascensionPenalty(ascensions: number) {
+  public ascensionPenalty(ascensions: number): Decimal {
     if (ascensions === 0) {
       return this;
     }
@@ -1570,72 +1575,72 @@ export class Decimal {
   /**
    * Joke function from Cookie Clicker. It's 'egg'
    */
-  public egg() {
+  public egg(): Decimal {
     return this.add(9);
   }
 
-  public isFinite() {
+  public isFinite(): boolean {
     return isFinite(this.mantissa);
   }
 
-  public isNaN() {
+  public isNaN(): boolean {
     // NaN is the only value to be not equal to self.
     return this.mantissa !== this.mantissa;
   }
 
-  public isPositiveInfinity() {
+  public isPositiveInfinity(): boolean {
     return this.mantissa === POSITIVE_INFINITY.mantissa;
   }
 
-  public isNegativeInfinity() {
+  public isNegativeInfinity(): boolean {
     return this.mantissa === NEGATIVE_INFINITY.mantissa;
   }
 
-  public static const(value: number | string) {
+  public static const(value: number | string): Decimal {
     return makeConstant(value);
   }
 
-  public static constant(value: number | string) {
+  public static constant(value: number | string): Decimal {
     return Decimal.const(value);
   }
 
-  public static get ZERO() {
+  public static get ZERO(): Decimal {
     return ZERO;
   }
 
-  public static get ONE() {
+  public static get ONE(): Decimal {
     return ONE;
   }
 
-  public static get MINUS_ONE() {
+  public static get MINUS_ONE(): Decimal {
     return MINUS_ONE;
   }
 
-  public static get MAX_VALUE() {
+  public static get MAX_VALUE(): Decimal {
     return MAX_VALUE;
   }
 
-  public static get MIN_VALUE() {
+  public static get MIN_VALUE(): Decimal {
     return MIN_VALUE;
   }
 
-  public static get NUMBER_MAX_VALUE() {
+  public static get NUMBER_MAX_VALUE(): Decimal {
     return NUMBER_MAX_VALUE;
   }
 
-  public static get NUMBER_MIN_VALUE() {
+  public static get NUMBER_MIN_VALUE(): Decimal {
     return NUMBER_MIN_VALUE;
   }
 
-  public static get NaN() {
+  public static get NaN(): Decimal {
     return DECIMAL_NaN;
   }
 
-  public static get POSITIVE_INFINITY() {
+  public static get POSITIVE_INFINITY(): Decimal {
     return POSITIVE_INFINITY;
   }
 
-  public static get NEGATIVE_INFINITY() {
+  public static get NEGATIVE_INFINITY(): Decimal {
     return NEGATIVE_INFINITY;
   }
 }

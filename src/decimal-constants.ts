@@ -2,7 +2,7 @@ import { Decimal } from "./decimal";
 
 const cache = new Map<number | string, Decimal>();
 
-export function makeConstant(value: number | string) {
+export function makeConstant(value: number | string): Decimal {
   let cached = cache.get(value);
   if (cached === undefined) {
     cached = Object.freeze(new Decimal(value));
