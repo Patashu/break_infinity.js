@@ -1322,6 +1322,10 @@ export class Decimal {
    */
   public normalize(): Decimal {
     if (this.m >= 1 && this.m < 10) {
+      if (!isFinite(this.e)) {
+        throw new NonFiniteError("Exponent is non-finite after normalization.");
+      }
+
       return this;
     }
 
