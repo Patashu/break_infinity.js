@@ -23,6 +23,9 @@ function D(value?: DecimalSource): Decimal {
   if (value === undefined || value === null) {
     return ZERO;
   }
+  if (value.mantissa !== undefined && value.exponent !== undefined) {
+    return ME(value.mantissa, value.exponent);
+  }
 
   throw Error("Unsupported Decimal source type.");
 }
@@ -39,7 +42,15 @@ function ME_NN(mantissa: number, exponent: number): Decimal {
   return result;
 }
 
-export type DecimalSource = Decimal | number | string;
+/**
+ * Use this interface to create your own Decimal-compatible classes
+ */
+export interface MantissaExponent {
+  mantissa: number;
+  exponent: number;
+}
+
+export type DecimalSource = MantissaExponent | number | string;
 
 /**
  * The Decimal's value is simply mantissa * 10^exponent.
@@ -70,6 +81,8 @@ export class Decimal {
     } else if (typeof value === "string") {
       this.setFromString(value);
     } else if (value instanceof Decimal) {
+      this.copyFrom(value);
+    } else if (value.mantissa !== undefined && value.exponent !== undefined) {
       this.copyFrom(value);
     } else {
       throw Error("Unsupported Decimal source type.");
@@ -145,9 +158,9 @@ export class Decimal {
 
   //#region fromDecimal
 
-  public copyFrom(value: Decimal): void {
-    this.m = value.m;
-    this.e = value.e;
+  public copyFrom(value: MantissaExponent): void {
+    this.m = value.mantissa;
+    this.e = value.exponent;
   }
 
   //#endregion
