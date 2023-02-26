@@ -232,8 +232,7 @@ export class Decimal {
     value = value.toLowerCase();
     if (value.indexOf("e") !== -1) {
       const parts = value.split("e");
-      const m = parseFloat(parts[0]);
-      this.m = isNaN(m) ? 1 : m;
+      this.m = parts[0] === "" ? 1 : parseFloat(parts[0]);
       this.e = parseFloat(parts[1]);
       this.normalize();
       return;
