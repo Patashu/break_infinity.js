@@ -51,13 +51,7 @@ describe("from-", () => {
   });
 
   // Exhaustive set of tests covering a wide range of values can be found
-  // in decimal.tets. The tests below are just for smoke-testing.
-
-  test("fromDecimal", () => {
-    const value = new Decimal(6e9);
-    const decimal = Decimal.fromDecimal(value);
-    expect(decimal).toHaveMantissaExponent(6, 9);
-  });
+  // in decimal.test. The tests below are just for smoke-testing.
 
   test("fromNumber", () => {
     const decimal = Decimal.fromNumber(6e9);
@@ -67,41 +61,5 @@ describe("from-", () => {
   test("fromString", () => {
     const decimal = Decimal.fromString("6e9");
     expect(decimal).toHaveMantissaExponent(6, 9);
-  });
-
-  describe("fromValue", () => {
-    test("decimal", () => {
-      const value = new Decimal(6e9);
-      const decimal = Decimal.fromValue(value);
-      expect(decimal).toHaveMantissaExponent(6, 9);
-    });
-
-    test("number", () => {
-      const decimal = Decimal.fromValue(6e9);
-      expect(decimal).toHaveMantissaExponent(6, 9);
-    });
-
-    test("string", () => {
-      const decimal = Decimal.fromValue("6e9");
-      expect(decimal).toHaveMantissaExponent(6, 9);
-    });
-  });
-
-  describe("fromValue_noAlloc", () => {
-    test("decimal", () => {
-      const value = new Decimal(6e9);
-      const decimal = Decimal.fromValue_noAlloc(value);
-      expect(decimal).toBe(value);
-    });
-
-    test("number", () => {
-      const decimal = Decimal.fromValue_noAlloc(6e9);
-      expect(decimal).toHaveMantissaExponent(6, 9);
-    });
-
-    test("string", () => {
-      const decimal = Decimal.fromValue_noAlloc("6e9");
-      expect(decimal).toHaveMantissaExponent(6, 9);
-    });
   });
 });

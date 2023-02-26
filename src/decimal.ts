@@ -8,18 +8,35 @@ import {
   affordGeometricSeries, sumGeometricSeries, affordArithmeticSeries,
   sumArithmeticSeries, efficiencyOfPurchase, cmp
 } from "./math";
-import { makeConstant } from "./decimal-constants";
+import { getOrAddPooled, tryGetPooled } from "./decimal-pool";
 
-function D(value: DecimalSource): Decimal {
-  return value instanceof Decimal ? value : new Decimal(value);
+function D(value?: DecimalSource): Decimal {
+  if (value instanceof Decimal) {
+    return value;
+  }
+  if (typeof value === "number") {
+    return Decimal.fromNumber(value);
+  }
+  if (typeof value === "string") {
+    return Decimal.fromString(value);
+  }
+  if (value === undefined || value === null) {
+    return ZERO;
+  }
+
+  throw Error("Unsupported Decimal source type.");
 }
 
 function ME(mantissa: number, exponent: number): Decimal {
-  return new Decimal().fromMantissaExponent(mantissa, exponent);
+  const result = new Decimal();
+  result.setMantissaExponent(mantissa, exponent);
+  return result;
 }
 
 function ME_NN(mantissa: number, exponent: number): Decimal {
-  return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
+  const result = new Decimal();
+  result.setMantissaExponent_noNormalize(mantissa, exponent);
+  return result;
 }
 
 export type DecimalSource = Decimal | number | string;
@@ -45,15 +62,17 @@ export class Decimal {
   public exponent = NaN;
 
   constructor(value?: DecimalSource) {
-    if (value === undefined) {
+    if (value === undefined || value === null) {
       this.m = 0;
       this.e = 0;
-    } else if (value instanceof Decimal) {
-      this.fromDecimal(value);
     } else if (typeof value === "number") {
-      this.fromNumber(value);
+      this.setFromNumber(value);
+    } else if (typeof value === "string") {
+      this.setFromString(value);
+    } else if (value instanceof Decimal) {
+      this.copyFrom(value);
     } else {
-      this.fromString(value);
+      throw Error("Unsupported Decimal source type.");
     }
   }
 
@@ -90,20 +109,20 @@ export class Decimal {
 
   //#region fromMantissaExponent
 
-  public fromMantissaExponent(mantissa: number, exponent: number): Decimal {
+  public setMantissaExponent(mantissa: number, exponent: number): void {
     // SAFETY: don't let in non-numbers
     if (!isFinite(mantissa) || !isFinite(exponent)) {
-      return this.fromDecimal(DECIMAL_NaN);
+      this.copyFrom(DECIMAL_NaN);
+      return;
     }
     this.m = mantissa;
     this.e = exponent;
     // Non-normalized mantissas can easily get here, so this is mandatory.
     this.normalize();
-    return this;
   }
 
   public static fromMantissaExponent(mantissa: number, exponent: number): Decimal {
-    return new Decimal().fromMantissaExponent(mantissa, exponent);
+    return ME(mantissa, exponent);
   }
 
   //#endregion
@@ -113,19 +132,18 @@ export class Decimal {
   /**
    * Well, you know what you're doing!
    */
-  public fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal {
+  public setMantissaExponent_noNormalize(mantissa: number, exponent: number): void {
     this.m = mantissa;
     this.e = exponent;
-    return this;
   }
 
   public static fromMantissaExponent_noNormalize(mantissa: number, exponent: number): Decimal {
-    return new Decimal().fromMantissaExponent_noNormalize(mantissa, exponent);
+    return ME_NN(mantissa, exponent);
   }
 
   //#endregion
 
-  //#region copyFrom
+  //#region fromDecimal
 
   public copyFrom(value: Decimal): void {
     this.m = value.m;
@@ -134,30 +152,26 @@ export class Decimal {
 
   //#endregion
 
-  //#region fromDecimal
+  //#region clone
 
-  public fromDecimal(value: Decimal): Decimal {
-    this.copyFrom(value);
-    return this;
-  }
-
-  public static fromDecimal(value: Decimal): Decimal {
-    return new Decimal().fromDecimal(value);
+  public clone(): Decimal {
+    return ME_NN(this.m, this.e);
   }
 
   //#endregion
 
   //#region fromNumber
 
-  public fromNumber(value: number): Decimal {
+  public setFromNumber_bypassCache(value: number): void {
     if (!isFinite(value)) {
-      return this.fromMantissaExponent_noNormalize(value, 0);
+      this.setMantissaExponent_noNormalize(value, 0);
+      return;
     }
 
     if (value === 0) {
       this.m = 0;
       this.e = 0;
-      return this;
+      return;
     }
 
     this.e = Math.floor(Math.log10(Math.abs(value)));
@@ -165,20 +179,34 @@ export class Decimal {
     this.m = this.e === NUMBER_EXP_MIN ?
       value * 10 / 1e-323 :
       value / powerOf10(this.e);
-    // SAFETY: Prevent weirdness.
     this.normalize();
-    return this;
+  }
+
+  public setFromNumber(value: number): void {
+    const cached = tryGetPooled(value);
+    if (cached === undefined) {
+      this.setFromNumber_bypassCache(value);
+    } else {
+      this.copyFrom(cached);
+    }
+  }
+
+  public static fromNumber_bypassCache(value: number): Decimal {
+    const result = new Decimal();
+    result.setFromNumber_bypassCache(value);
+    return result;
   }
 
   public static fromNumber(value: number): Decimal {
-    return new Decimal().fromNumber(value);
+    const cached = tryGetPooled(value);
+    return cached === undefined ? Decimal.fromNumber_bypassCache(value) : cached;
   }
 
   //#endregion
 
   //#region fromString
 
-  public fromString(value: string): Decimal {
+  public setFromString_bypassCache(value: string): void {
     value = value.toLowerCase();
     if (value.indexOf("e") !== -1) {
       const parts = value.split("e");
@@ -187,49 +215,48 @@ export class Decimal {
         this.m = 1;
       }
       this.e = parseFloat(parts[1]);
-      return this.normalize();
+      this.normalize();
+      return;
     }
 
     if (value === "nan") {
-      return this.fromDecimal(DECIMAL_NaN);
+      this.copyFrom(DECIMAL_NaN);
+      return;
     }
 
-    this.fromNumber(parseFloat(value));
+    this.setFromNumber(parseFloat(value));
     if (this.isNaN()) {
       throw Error("[DecimalError] Invalid argument: " + value);
+    }
+  }
+
+  public setFromString(value: string): Decimal {
+    const cached = tryGetPooled(value);
+    if (cached === undefined) {
+      this.setFromString_bypassCache(value);
+    } else {
+      this.copyFrom(cached);
     }
     return this;
   }
 
+  public static fromString_bypassCache(value: string): Decimal {
+    const result = new Decimal();
+    result.setFromString_bypassCache(value);
+    return result;
+  }
+
   public static fromString(value: string): Decimal {
-    return new Decimal().fromString(value);
+    const cached = tryGetPooled(value);
+    return cached === undefined ? Decimal.fromString_bypassCache(value) : cached;
   }
 
   //#endregion
 
   //#region fromValue
 
-  public fromValue(value?: DecimalSource): Decimal {
-    if (value instanceof Decimal) {
-      return this.fromDecimal(value);
-    }
-    if (typeof value === "number") {
-      return this.fromNumber(value);
-    }
-    if (typeof value === "string") {
-      return this.fromString(value);
-    }
-    this.m = 0;
-    this.e = 0;
-    return this;
-  }
-
-  public static fromValue(value: DecimalSource): Decimal {
-    return new Decimal().fromValue(value);
-  }
-
   public static fromValue_noAlloc(value: DecimalSource): Decimal {
-    return value instanceof Decimal ? value : new Decimal(value);
+    return D(value);
   }
 
   //#endregion
@@ -298,10 +325,10 @@ export class Decimal {
 
   public round(): Decimal {
     if (this.e < -1) {
-      return new Decimal(0);
+      return ZERO;
     }
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.round(this.toNumber()));
+      return Decimal.fromNumber(Math.round(this.toNumber()));
     }
     return this;
   }
@@ -320,11 +347,11 @@ export class Decimal {
     }
 
     if (this.e < -1) {
-      return Math.sign(this.m) >= 0 ? new Decimal(0) : new Decimal(-1);
+      return Math.sign(this.m) >= 0 ? ZERO : MINUS_ONE;
     }
 
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.floor(this.toNumber()));
+      return Decimal.fromNumber(Math.floor(this.toNumber()));
     }
 
     return this;
@@ -340,10 +367,10 @@ export class Decimal {
 
   public ceil(): Decimal {
     if (this.e < -1) {
-      return Math.sign(this.m) > 0 ? new Decimal(1) : new Decimal(0);
+      return Math.sign(this.m) > 0 ? ONE : ZERO;
     }
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.ceil(this.toNumber()));
+      return Decimal.fromNumber(Math.ceil(this.toNumber()));
     }
     return this;
   }
@@ -358,10 +385,10 @@ export class Decimal {
 
   public trunc(): Decimal {
     if (this.e < 0) {
-      return new Decimal(0);
+      return ZERO;
     }
     if (this.e < MAX_SIGNIFICANT_DIGITS) {
-      return new Decimal(Math.trunc(this.toNumber()));
+      return Decimal.fromNumber(Math.trunc(this.toNumber()));
     }
     return this;
   }
@@ -474,7 +501,7 @@ export class Decimal {
       // greater than 1, it won't underflow)
       return ME(this.m * 1e-307 * value, this.e + 307);
     }
-    const decimal = typeof value === "string" ? new Decimal(value) : value;
+    const decimal = D(value);
     return ME(this.m * decimal.m, this.e + decimal.e);
   }
 
@@ -1548,18 +1575,18 @@ export class Decimal {
   }
 
   public asinh(): number {
-    return Decimal.ln(this.add(this.sqr().add(1).sqrt()));
+    return Decimal.ln(this.add(this.sqr().add(ONE).sqrt()));
   }
 
   public acosh(): number {
-    return Decimal.ln(this.add(this.sqr().sub(1).sqrt()));
+    return Decimal.ln(this.add(this.sqr().sub(ONE).sqrt()));
   }
 
   public atanh(): number {
     if (this.abs().gte(1)) {
       return Number.NaN;
     }
-    return Decimal.ln(this.add(1).div(new Decimal(1).sub(this))) / 2;
+    return Decimal.ln(this.add(ONE).div(ONE.sub(this))) / 2;
   }
 
   /**
@@ -1597,11 +1624,11 @@ export class Decimal {
   }
 
   public static const(value: number | string): Decimal {
-    return makeConstant(value);
+    return getOrAddPooled(value);
   }
 
   public static constant(value: number | string): Decimal {
-    return Decimal.const(value);
+    return getOrAddPooled(value);
   }
 
   public static get ZERO(): Decimal {
@@ -1647,11 +1674,11 @@ export class Decimal {
 
 const MAX_VALUE = ME_NN(1, EXP_LIMIT);
 const MIN_VALUE = ME_NN(1, -EXP_LIMIT);
-const ZERO = makeConstant(0);
-const ONE = makeConstant(1);
-const MINUS_ONE = makeConstant(-1);
-const NUMBER_MAX_VALUE = makeConstant(Number.MAX_VALUE);
-const NUMBER_MIN_VALUE = makeConstant(Number.MIN_VALUE);
+const ZERO = getOrAddPooled(0);
+const ONE = getOrAddPooled(1);
+const MINUS_ONE = getOrAddPooled(-1);
+const NUMBER_MAX_VALUE = getOrAddPooled(Number.MAX_VALUE);
+const NUMBER_MIN_VALUE = getOrAddPooled(Number.MIN_VALUE);
 const DECIMAL_NaN = ME_NN(Number.NaN, 0);
 const POSITIVE_INFINITY = ME_NN(Number.POSITIVE_INFINITY, 0);
 const NEGATIVE_INFINITY = ME_NN(Number.NEGATIVE_INFINITY, 0);
