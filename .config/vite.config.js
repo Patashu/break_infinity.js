@@ -5,6 +5,7 @@ import {entry, outDir} from "./vite.paths";
 export default defineConfig({
   build: {
     outDir: outDir,
+    sourcemap: true,
     lib: {
       entry: entry,
       name: "Decimal",

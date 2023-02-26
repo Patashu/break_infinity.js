@@ -6,6 +6,7 @@ export default defineConfig({
   build: {
     outDir: outDir,
     emptyOutDir: false,
+    sourcemap: true,
     minify: false,
     lib: {
       entry: entry,
