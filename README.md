@@ -18,10 +18,10 @@ You can use break_infinity.js directly from a CDN via a script tag:
 
 ```html
     <!-- You can load it as a minified file (recommended) -->
-    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js"></script>
+    <script src="https://cdn.jsdelivr.net@2/npm/break_infinity.js"></script>
 
     <!-- ...or as a non-minified file (for debugging) -->
-    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js/dist/break_infinity.js"></script>
+    <script src="https://cdn.jsdelivr.net@2/npm/break_infinity.js/dist/break_infinity.js"></script>
 ```
 
 or as a JS module using import
