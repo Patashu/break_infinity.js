@@ -68,10 +68,10 @@ The methods that return a Decimal can be chained.
 ````
 
 For the complete list of functions refer to
-[Typescript definitions](https://github.com/Patashu/break_infinity.js/blob/master/dist/index.d.ts),
+[API docs](https://patashu.github.io/break_infinity.js/classes/default.html),
 [decimal.js docs](http://mikemcl.github.io/decimal.js/)
 or check out
-[generated API docs](https://patashu.github.io/break_infinity.js/classes/Decimal.html) 
+[Typescript definitions](https://cdn.jsdelivr.net/npm/break_infinity.js@2/dist/index.d.ts)
 
 ## Benchmarks
 
